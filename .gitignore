@@ -43,3 +43,6 @@ docs/business-rules/.staging/
 
 # kv-engineering: per-feature worktrees (to-spec)
 .worktrees/
+
+# Reqnroll generated code-behind for linked living docs (Coaching.Acceptance)
+features/**/*.feature.cs
