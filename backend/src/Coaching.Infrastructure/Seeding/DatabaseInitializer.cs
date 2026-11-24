@@ -12,7 +12,7 @@ using DomainEmail = Coaching.Domain.Common.Email;
 
 namespace Coaching.Infrastructure.Seeding;
 
-/// <summary>Chạy migration, tạo role và tài khoản admin (idempotent).</summary>
+/// <summary>Kiểm schema (do Liquibase tạo), tạo role và tài khoản admin (idempotent).</summary>
 public static class DatabaseInitializer
 {
     public static async Task InitializeAsync(IServiceProvider services, CancellationToken cancellationToken = default)
@@ -22,7 +22,8 @@ public static class DatabaseInitializer
         var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DatabaseInitializer));
         var db = sp.GetRequiredService<AppDbContext>();
 
-        await db.Database.MigrateAsync(cancellationToken);
+        // @ADR-f00-codebase-011: schema do Liquibase quản lý; API không migrate, chỉ kiểm schema đã có rồi seed
+        await EnsureSchemaExistsAsync(db, cancellationToken);
 
         var roleManager = sp.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         foreach (var role in Roles.All)
@@ -72,5 +73,15 @@ public static class DatabaseInitializer
         if (!result.Succeeded)
             throw new InvalidOperationException(
                 $"Không thể {action}: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+    }
+
+    private static async Task EnsureSchemaExistsAsync(AppDbContext db, CancellationToken cancellationToken)
+    {
+        var applied = await db.Database
+            .SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM sys.tables WHERE name = 'DATABASECHANGELOG'")
+            .SingleAsync(cancellationToken);
+        if (applied == 0)
+            throw new InvalidOperationException(
+                "Database chưa có schema. Chạy Liquibase (`liquibase update`, xem database/) trước khi khởi động API.");
     }
 }

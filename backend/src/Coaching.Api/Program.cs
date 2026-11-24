@@ -25,7 +25,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue("Database:InitializeOnStartup", true))
+if (app.Configuration.GetValue("Database:SeedOnStartup", true))
     await app.Services.InitializeDatabaseAsync();
 
 app.UseExceptionHandler();

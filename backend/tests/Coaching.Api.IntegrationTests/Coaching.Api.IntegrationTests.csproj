@@ -15,5 +15,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Coaching.Api\Coaching.Api.csproj" />
+    <ProjectReference Include="..\Coaching.TestSupport\Coaching.TestSupport.csproj" />
   </ItemGroup>
 </Project>

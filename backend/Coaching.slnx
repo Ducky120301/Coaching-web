@@ -10,5 +10,6 @@
     <Project Path="tests/Coaching.Api.IntegrationTests/Coaching.Api.IntegrationTests.csproj" />
     <Project Path="tests/Coaching.Application.Tests/Coaching.Application.Tests.csproj" />
     <Project Path="tests/Coaching.Domain.Tests/Coaching.Domain.Tests.csproj" />
+    <Project Path="tests/Coaching.TestSupport/Coaching.TestSupport.csproj" />
   </Folder>
 </Solution>

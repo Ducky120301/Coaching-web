@@ -1,0 +1,6 @@
+# Copy thành liquibase.properties (KHÔNG commit) để chạy Liquibase bằng tay.
+changelog-file=db.changelog-master.xml
+search-path=changelog
+url=jdbc:sqlserver://localhost:1433;databaseName=Coaching;encrypt=false;trustServerCertificate=true
+username=sa
+password=Dev_Passw0rd!

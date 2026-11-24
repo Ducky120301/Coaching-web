@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Testcontainers.MsSql;
+using Coaching.TestSupport;
 
 namespace Coaching.Api.IntegrationTests;
 
@@ -16,25 +16,26 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Admin@12345";
 
-    private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    private readonly DatabaseFixture _database = new();
+    private string _connectionString = string.Empty;
 
     public async Task InitializeAsync()
     {
-        await _sql.StartAsync();
-        // Truy cập Services để khởi động host → chạy migration + seed admin.
-        _ = Services;
+        await _database.StartAsync();
+        _connectionString = await _database.NewDatabaseAsync();
+        _ = Services; // khởi động host → seed admin
     }
 
     public new async Task DisposeAsync()
     {
         await base.DisposeAsync();
-        await _sql.DisposeAsync();
+        await _database.DisposeAsync();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting("ConnectionStrings:Default", _sql.GetConnectionString());
+        builder.UseSetting("ConnectionStrings:Default", _connectionString);
         builder.UseSetting("Jwt:SigningKey", "integration-test-signing-key-0123456789abcdef");
         builder.UseSetting("AdminSeed:Email", AdminEmail);
         builder.UseSetting("AdminSeed:Password", AdminPassword);

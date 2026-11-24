@@ -1,32 +1,28 @@
-using Microsoft.Data.SqlClient;
+using Coaching.TestSupport;
 using Reqnroll;
-using Testcontainers.MsSql;
 
 namespace Coaching.Acceptance.Support;
 
 [Binding]
 public sealed class SqlServerHooks
 {
-    private static MsSqlContainer? _sql;
+    private static DatabaseFixture? _database;
 
     [BeforeTestRun]
     public static async Task StartSqlServer()
     {
-        _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
-        await _sql.StartAsync();
+        _database = new DatabaseFixture();
+        await _database.StartAsync();
     }
 
     [AfterTestRun]
     public static async Task StopSqlServer()
     {
-        if (_sql is not null)
-            await _sql.DisposeAsync();
+        if (_database is not null)
+            await _database.DisposeAsync();
     }
 
-    /// <summary>Mỗi scenario 1 database mới trên cùng container → scenario độc lập nhau.</summary>
+    /// <summary>Mỗi scenario 1 database mới (restore từ database mẫu đã chạy Liquibase) → scenario độc lập nhau.</summary>
     public static string NewDatabaseConnectionString() =>
-        new SqlConnectionStringBuilder(_sql!.GetConnectionString())
-        {
-            InitialCatalog = $"acc_{Guid.NewGuid():N}",
-        }.ConnectionString;
+        _database!.NewDatabaseAsync().GetAwaiter().GetResult();
 }

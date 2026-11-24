@@ -46,3 +46,6 @@ docs/business-rules/.staging/
 
 # Reqnroll generated code-behind for linked living docs (Coaching.Acceptance)
 features/**/*.feature.cs
+
+# Liquibase local connection settings
+database/liquibase.properties
