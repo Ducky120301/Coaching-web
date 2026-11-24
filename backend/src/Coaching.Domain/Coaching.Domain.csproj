@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domain: KHÔNG phụ thuộc package hạ tầng nào (EF Core, ASP.NET...) -->
+</Project>

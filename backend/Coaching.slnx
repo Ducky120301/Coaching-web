@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Coaching.Api/Coaching.Api.csproj" />
+    <Project Path="src/Coaching.Application/Coaching.Application.csproj" />
+    <Project Path="src/Coaching.Domain/Coaching.Domain.csproj" />
+    <Project Path="src/Coaching.Infrastructure/Coaching.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Coaching.Api.IntegrationTests/Coaching.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Coaching.Application.Tests/Coaching.Application.Tests.csproj" />
+    <Project Path="tests/Coaching.Domain.Tests/Coaching.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
