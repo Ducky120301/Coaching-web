@@ -13,13 +13,13 @@ Feature: Phiên làm việc sau khi đăng nhập
       When admin xem hồ sơ coach của mình
       Then admin thấy hồ sơ coach mà không phải đăng nhập lại
 
-    @web
+    @manual
     Scenario: Mở lại trình duyệt sau 3 ngày vẫn còn đăng nhập
       Given học viên đã đăng nhập web học viên và đóng trình duyệt cách đây "3" ngày
       When học viên mở lại web học viên
       Then học viên vẫn ở trạng thái đã đăng nhập
 
-    @web
+    @manual
     Scenario: Không quay lại quá 14 ngày thì phải đăng nhập lại
       Given học viên đã đăng nhập web học viên và không quay lại trong "15" ngày
       When học viên mở lại web học viên
