@@ -34,7 +34,9 @@ internal static class AuthenticationSetup
             });
 
         services.AddAuthorizationBuilder()
+            // @BR-f00-codebase-001
             .AddPolicy(Policies.AdminOnly, p => p.RequireAuthenticatedUser().RequireRole(Roles.Admin))
+            // @BR-f00-codebase-002
             .AddPolicy(Policies.StudentOnly, p => p.RequireAuthenticatedUser().RequireRole(Roles.Student));
 
         return services;

@@ -10,5 +10,6 @@ namespace Coaching.Api.Controllers.Client;
 /// </summary>
 [ApiController]
 [Route("api/client/[controller]")]
+// @BR-f00-codebase-002
 [Authorize(Policy = Policies.StudentOnly)]
 public abstract class ClientControllerBase : ControllerBase;
