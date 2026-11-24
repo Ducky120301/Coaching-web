@@ -24,3 +24,22 @@ Thumbs.db
 .env
 *.env.local
 appsettings.*.local.json
+
+# kv-engineering: ignore .kv scratch, keep issue-tracker config
+.kv/*
+!.kv/issue-tracker.json
+
+# kv-engineering: keep living-docs config (extract skill)
+!.kv/living-docs.json
+
+# kv-engineering: keep codebase-graph config (per-submodule index)
+!.kv/codebase-graph.json
+
+# kv-engineering: learn skill staging (transient Maker/Verifier handoff)
+docs/technical/.staging/
+
+# kv-engineering: extract skill staging (transient Maker/Verifier handoff)
+docs/business-rules/.staging/
+
+# kv-engineering: per-feature worktrees (to-spec)
+.worktrees/
