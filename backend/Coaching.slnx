@@ -6,6 +6,7 @@
     <Project Path="src/Coaching.Infrastructure/Coaching.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Coaching.Acceptance/Coaching.Acceptance.csproj" />
     <Project Path="tests/Coaching.Api.IntegrationTests/Coaching.Api.IntegrationTests.csproj" />
     <Project Path="tests/Coaching.Application.Tests/Coaching.Application.Tests.csproj" />
     <Project Path="tests/Coaching.Domain.Tests/Coaching.Domain.Tests.csproj" />
