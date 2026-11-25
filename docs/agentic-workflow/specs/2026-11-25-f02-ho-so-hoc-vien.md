@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-25-f02-ho-so-hoc-vien
-status: ready
+status: completed
 ---
 
 # Spec: F02 — Hồ sơ học viên & trạng thái coaching

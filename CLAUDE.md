@@ -167,7 +167,7 @@ Không hard-code mã màu trong component. Luôn dùng `var(--…)`.
 **Typography** (Google Fonts: `Barlow Condensed` 600/700/800, `Be Vietnam Pro` 400/500/600, `Yellowtail`):
 - Body / UI: `'Be Vietnam Pro', sans-serif`.
 - Tiêu đề & số liệu lớn: `'Barlow Condensed', 'Be Vietnam Pro', sans-serif`, weight 800, `line-height:1`, `letter-spacing:-.01em`.
-  - H1 trang: **54px** (≥ 880px) / **38px** (< 880px).
+  - H1 trang: ≥ 880px lấy **đúng cỡ của từng page trong prototype** (vd. Admin-Dashboard 48px, AdTaoHoSo 46px, AdHoSo 43px); < 880px dùng **38px**.
 - Logo chữ ký "duobexiuuu": `'Yellowtail', cursive`, 34px, màu `var(--sig)`, `line-height:1`.
 - Thang cỡ chữ đang dùng: 11 · 11.5 · 12 · 13 · 13.5 · **14 (mặc định)** · 15 · 16 · 20 · 22 · 24 · 26 · 34 · 48px. Không thêm cỡ ngoài thang này nếu prototype không có.
 - Font-weight: 400 / 500 / **600 (nhấn chính)** / 700 / 800 (heading). Line-height đoạn văn 1.5–1.6.
