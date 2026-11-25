@@ -1,0 +1,37 @@
+<div class="page">
+  <section class="cover" aria-label="Thương hiệu">
+    <p class="domain">Unfiltered Coaching Team</p>
+    <div class="cover-mid">
+      <p class="sig" aria-hidden="true">duobexiuuu</p>
+      <p class="headline cover-type">online<br>physique<br>coaching</p>
+    </div>
+    <div class="cover-foot">
+      <span>@duobexiuuu/instagram</span>
+      <span>Hotline (Zalo): 0366 868 658</span>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Đăng nhập">
+    <div class="stack-24">
+      <div class="stack-8">
+        <h1>Lift the fxxking weights.</h1>
+        <p class="lead">Đăng nhập để xem buổi tập hôm nay, ghi nhật ký và nộp review tuần cho Coach Duobexiuuu nhaa.</p>
+      </div>
+      <form class="stack-16" (ngSubmit)="submit()">
+        <div class="stack-8">
+          <label for="em">Email</label>
+          <input id="em" name="email" type="email" autocomplete="email" required [(ngModel)]="email">
+        </div>
+        <div class="stack-8">
+          <div class="label-row"><label for="pw">Mật khẩu</label></div>
+          <input id="pw" name="password" type="password" autocomplete="current-password" required [(ngModel)]="password">
+        </div>
+        @if (error(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
+        <button type="submit" [disabled]="submitting()">Đăng nhập</button>
+      </form>
+      <p class="hint">Lần đầu vào? Dùng mật khẩu tạm trong email mời của coach. Sau khi đăng nhập, bạn sẽ đặt mật khẩu riêng.</p>
+    </div>
+  </section>
+</div>

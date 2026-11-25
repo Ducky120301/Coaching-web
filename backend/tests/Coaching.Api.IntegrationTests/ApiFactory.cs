@@ -43,9 +43,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
     }
 
-    public async Task<AuthTokens> LoginAsync(string email, string password)
+    public async Task<AuthTokens> LoginAsync(string email, string password, ClientApp? app = null)
     {
-        var response = await CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password));
+        var resolvedApp = app ?? (email == AdminEmail ? ClientApp.Admin : ClientApp.Client);
+        var response = await CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password, resolvedApp));
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<AuthTokens>())!;
     }

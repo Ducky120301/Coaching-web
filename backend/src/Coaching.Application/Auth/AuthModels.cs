@@ -1,6 +1,16 @@
+using System.Text.Json.Serialization;
+
 namespace Coaching.Application.Auth;
 
-public sealed record LoginRequest(string Email, string Password);
+/// <summary>@ADR-f00-codebase-001: web đang đăng nhập; API kiểm vai trò trước khi cấp token.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<ClientApp>))]
+public enum ClientApp
+{
+    [JsonStringEnumMemberName("admin")] Admin,
+    [JsonStringEnumMemberName("client")] Client,
+}
+
+public sealed record LoginRequest(string Email, string Password, ClientApp? App = null);
 
 public sealed record RefreshRequest(string RefreshToken);
 

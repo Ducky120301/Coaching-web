@@ -75,10 +75,24 @@ public sealed class AuthAndAuthorizationTests(ApiFactory factory)
     public async Task Wrong_password_returns_401_with_error_code()
     {
         var response = await factory.CreateClient()
-            .PostAsJsonAsync("/api/auth/login", new LoginRequest(ApiFactory.AdminEmail, "wrong-password"));
+            .PostAsJsonAsync("/api/auth/login", new LoginRequest(ApiFactory.AdminEmail, "wrong-password", ClientApp.Admin));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Contains("auth.invalid_credentials", await response.Content.ReadAsStringAsync());
+    }
+
+    // @BR-f00-codebase-004 @BR-f00-codebase-005 @ADR-f00-codebase-001
+    [Fact]
+    public async Task Student_logging_into_admin_web_gets_403_without_session()
+    {
+        var (email, password) = await factory.CreateStudentAsync();
+        var response = await factory.CreateClient()
+            .PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password, ClientApp.Admin));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("auth.wrong_app", body);
+        Assert.DoesNotContain("refreshToken", body);
     }
 
     // @BR-f00-codebase-011

@@ -1,0 +1,48 @@
+// Giá trị lấy nguyên văn từ prototype page "Main"
+:host { display: block; }
+.page {
+  min-height: 100vh; box-sizing: border-box; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); padding: 24px; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch;
+}
+.cover {
+  flex: 1 1 520px; min-height: 420px; background: var(--coverBg); color: var(--coverInk); border-radius: 14px;
+  padding: 40px 48px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.domain { margin: 0; font-family: var(--font-head); font-weight: 700; font-size: 20px; letter-spacing: .01em; }
+.cover-mid { position: relative; padding: 24px 0; }
+.sig {
+  margin: 0 0 -.16em; padding: 0 .2em 0 0; display: inline-block; transform: rotate(-6deg); transform-origin: left bottom;
+  font-family: var(--font-sig); font-size: clamp(58px, 7.6vw, 108px); color: var(--sig); line-height: 1;
+}
+.headline {
+  margin: 0; font-family: var(--font-head); font-weight: 800; font-size: clamp(56px, 9.6vw, 148px);
+  line-height: .84; letter-spacing: -.01em; text-transform: uppercase;
+}
+.cover-foot { display: flex; flex-wrap: wrap; gap: 8px 32px; font-size: 14px; color: var(--coverMuted); }
+.panel {
+  flex: 1 1 400px; max-width: 560px; display: flex; flex-direction: column; justify-content: center;
+  padding: 32px clamp(8px, 4vw, 56px); box-sizing: border-box;
+}
+.stack-24 { display: flex; flex-direction: column; gap: 24px; }
+.stack-16 { display: flex; flex-direction: column; gap: 16px; }
+.stack-8 { display: flex; flex-direction: column; gap: 8px; }
+h1 { margin: 0; font-family: var(--font-head); font-weight: 800; font-size: 48px; line-height: 1.05; }
+.lead { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+label { font-size: 14px; font-weight: 600; }
+.label-row { display: flex; justify-content: space-between; align-items: baseline; min-height: 29px; }
+input {
+  height: 52px; border-radius: 14px; border: 1px solid var(--field); background: var(--surface); color: var(--ink);
+  padding: 0 16px; font: inherit; font-size: 16px;
+}
+button {
+  height: 54px; border-radius: 999px; border: 0; background: var(--primary); color: var(--onPrimary);
+  font-family: var(--font-head); font-weight: 700; font-size: 22px; cursor: pointer; margin-top: 8px;
+}
+button:disabled { opacity: .7; cursor: progress; }
+.error { margin: 0; padding: 16px; border-radius: 12px; background: var(--warnBg); color: var(--warn); font-size: 14px; line-height: 1.6; }
+.hint { margin: 0; padding: 16px; border-radius: 12px; background: var(--surface); color: var(--ink2); font-size: 14px; line-height: 1.6; }
+@media (prefers-reduced-motion: no-preference) {
+  .sig { animation: sigIn .9s cubic-bezier(.2, .7, .2, 1) .2s both; }
+}
+@keyframes sigIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }

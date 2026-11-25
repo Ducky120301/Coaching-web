@@ -11,3 +11,4 @@ export * from './lib/auth/auth.interceptor';
 export * from './lib/auth/auth.guard';
 export * from './lib/auth/return-url';
 export * from './lib/auth/provide-auth';
+export * from './lib/login/login-page.component';

@@ -27,6 +27,9 @@ internal sealed class AuthService(
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password))
             return AuthErrors.InvalidCredentials;
 
+        if (request.App is not { } app)
+            return AuthErrors.AppRequired;
+
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
         if (user is null)
             return AuthErrors.InvalidCredentials;
@@ -48,6 +51,12 @@ internal sealed class AuthService(
             user.LockoutEnd = null;
             await userManager.UpdateAsync(user);
         }
+
+        // @ADR-f00-codebase-001 @BR-f00-codebase-004 @BR-f00-codebase-005: sai web → không cấp phiên.
+        // Kiểm SAU khi mật khẩu đúng: người chưa biết mật khẩu chỉ nhận thông báo chung (@BR-f00-codebase-006).
+        var requiredRole = app == ClientApp.Admin ? Roles.Admin : Roles.Student;
+        if (!await userManager.IsInRoleAsync(user, requiredRole))
+            return AuthErrors.WrongApp(app);
 
         return await IssueTokensAsync(user, cancellationToken);
     }

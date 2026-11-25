@@ -9,7 +9,7 @@ public sealed class LoginLockoutTests(ApiFactory factory)
 {
     private async Task<HttpStatusCode> LoginAsync(string email, string password)
     {
-        var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password));
+        var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password, ClientApp.Client));
         return response.StatusCode;
     }
 

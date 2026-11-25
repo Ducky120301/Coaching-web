@@ -12,4 +12,15 @@ public static class AuthErrors
 
     public static readonly Error InvalidRefreshToken =
         new("auth.invalid_refresh_token", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", ErrorKind.Unauthorized);
+
+    public static readonly Error AppRequired =
+        new("auth.app_required", "Thiếu thông tin web đăng nhập.", ErrorKind.Validation);
+
+    // @BR-f00-codebase-004 @BR-f00-codebase-005
+    public static Error WrongApp(ClientApp app) => new(
+        "auth.wrong_app",
+        app == ClientApp.Admin
+            ? "Tài khoản này không có quyền vào khu vực coach."
+            : "Tài khoản này không có quyền vào khu vực học viên.",
+        ErrorKind.Forbidden);
 }
