@@ -1990,7 +1990,7 @@ EOF
   - F02 — `CurrentCoach`, `IStudentRepository.GetAsync`, `StudentErrors.*`, `ConcurrencyConflictException`, `StudentApi`, `RegistrationLabels`, `RegistrationSamples.Complete()`, step `Given coach "…" đã đăng nhập`, F00 step `Then đăng nhập bị từ chối`, `Then hệ thống từ chối với thông báo "…"`.
 - Produces:
   - Domain: `Student.IsTempPasswordValid(DateTimeOffset now)`, `Student.RecordCredentialsSent(Guid actorUserId, DateTimeOffset at)`, `Student.Activate(DateTimeOffset at)` (kéo từ Task 5 lên — xem lệch so với skeleton).
-  - Application: `AccountErrors.AlreadyActivated/RequiredFieldsMissing(int)/EmailSendFailed`; `IAccountCredentials.SetTemporaryPasswordAsync`; `AccountTokenLifetimes.Activation` (30 phút); `AccountMail.SendAsync(IEmailSender, Result<EmailMessage>, CancellationToken) → Task<Result>` (internal); `CredentialsMailer.SendAsync(Student, CancellationToken) → Task<Result>`; `SendCredentialsHandler.HandleAsync(Guid id, CancellationToken) → Result<StudentDetailDto>`; `ActivationChallenge`, `LoginOutcome`; `IAuthService.LoginAsync → Task<Result<LoginOutcome>>`.
+  - Application: `AccountErrors.AlreadyActivated/RequiredFieldsMissing(int)` (`EmailSendFailed` có sẵn từ Task 2); `IAccountCredentials.SetTemporaryPasswordAsync`; `AccountTokenLifetimes.Activation` (30 phút); `AccountMail.SendAsync(IEmailSender, Result<EmailMessage>, CancellationToken) → Task<Result>` (internal); `CredentialsMailer.SendAsync(Student, CancellationToken) → Task<Result>`; `SendCredentialsHandler.HandleAsync(Guid id, CancellationToken) → Result<StudentDetailDto>`; `ActivationChallenge`, `LoginOutcome`; `IAuthService.LoginAsync → Task<Result<LoginOutcome>>`.
   - Infrastructure: `AccountCredentials : IAccountCredentials` (`TemporaryPasswordLength = 12`); `AuthService` trả `ActivationChallenge`; seed demo kích hoạt học viên demo còn Chờ kích hoạt.
   - API: `POST /api/admin/students/{id}/credentials` → 200 `StudentDetailDto` / 400 / 404 / 409 / 503; `POST /api/auth/login` → 200 `AuthTokens` hoặc 200 `{ activationRequired, activationToken, activationTokenExpiresAt }`.
   - Test: `AcceptanceContext.ClientBaseUrl`; `AccountApi` (`StudentName`, `DefaultOwnPassword`, `CredentialsSubject`, `Emails`, `TempPasswords`, `FocusTemp`, `ActivationToken`, `OwnPassword`, `MailCountBefore`, `HistoryBefore`, `SentBody`, `LastBody`, `LastDetail`, `Outbox`, `Email()`, `Id()`, `Mails()`, `CredentialMails()`, `CreateAsync()`, `TrySendCredentialsAsync()`, `SendOkAsync()`, `SendThenWaitAsync()`, `ViewAsync()`, `StudentLoginAsync()`, `AssertActivationChallengeAsync()`, `AssertProblemTitleAsync()`, `CreateActivatedAsync()`, `TempPassword()`, `Urls()`); `ApiFactory.ClientBaseUrl/Capture/Outbox/CaptureAdminClientAsync()`; `AccountRequests` (`CredentialsSubject`, `CreateCompleteAsync`, `SendCredentialsAsync`, `SendCredentialsOkAsync`, `LoginAsync`, `TempPassword`); step `When coach gửi thông tin đăng nhập cho học viên đó`, `When học viên đăng nhập web học viên bằng mật khẩu tạm đó`, `Then học viên được đưa tới bước đặt mật khẩu riêng`, `Given dịch vụ email đang không gửi được thư`, `Then coach được báo thông tin đăng nhập chưa gửi được`, `Then mật khẩu tạm đã gửi trước đó vẫn dùng được`, `When coach xem hồ sơ của học viên đó`, `Given một học viên có tài khoản Đã kích hoạt`, `Given một (hồ sơ) học viên đã được gửi thông tin đăng nhập(, tài khoản Chờ kích hoạt)` (dùng lại ở Task 5–7).
@@ -2660,7 +2660,7 @@ Expected: FAIL — build xanh (Domain đã có `Activate` từ Step 3), lỗi l�
 
 - [ ] **Step 8: Application — lỗi, port mật khẩu, thời hạn mã kích hoạt, gửi thư trong transaction**
 
-`backend/src/Coaching.Application/Accounts/AccountErrors.cs` — thêm 3 member vào đầu class `AccountErrors` (giữ nguyên `ClientUrlMissing` của Task 2):
+`backend/src/Coaching.Application/Accounts/AccountErrors.cs` — thêm 2 member vào đầu class `AccountErrors` (giữ nguyên `ClientUrlMissing` và `EmailSendFailed` đã có từ Task 2; chỉ thêm comment `// @BR-f01-p1-tai-khoan-hoc-vien-006 @ADR-f01-p1-tai-khoan-hoc-vien-004` ngay trên dòng khai báo `EmailSendFailed` sẵn có):
 ```csharp
     // @BR-f01-p1-tai-khoan-hoc-vien-001
     public static readonly Error AlreadyActivated = new(
@@ -2669,10 +2669,6 @@ Expected: FAIL — build xanh (Domain đã có `Activate` từ Step 3), lỗi l�
     // @BR-f01-p1-tai-khoan-hoc-vien-002
     public static Error RequiredFieldsMissing(int count) =>
         new("account.required_fields_missing", $"Còn {count} mục bắt buộc chưa điền.", ErrorKind.Validation);
-
-    // @BR-f01-p1-tai-khoan-hoc-vien-006 @ADR-f01-p1-tai-khoan-hoc-vien-004
-    public static readonly Error EmailSendFailed = new(
-        "account.email_send_failed", "Chưa gửi được email. Vui lòng thử lại sau.", ErrorKind.Unavailable);
 
 ```
 
