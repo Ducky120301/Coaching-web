@@ -1,0 +1,45 @@
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
+
+@Component({
+  selector: 'app-admin-shell',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UserMenuComponent],
+  template: `
+    <div class="root">
+      <aside class="rail">
+        <div class="brand">
+          <p class="sig">duobexiuuu</p>
+          <p class="area muted">Khu vực coach</p>
+        </div>
+        <nav aria-label="Admin">
+          <a routerLink="/trang-chu" routerLinkActive #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Trang chủ</a>
+        </nav>
+        <div class="user-block">
+          <dbx-user-menu [name]="auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
+        </div>
+      </aside>
+      <main><router-outlet /></main>
+    </div>
+  `,
+  styles: `
+    .root { min-height: 100vh; box-sizing: border-box; background: var(--bg); color: var(--ink); font-family: var(--font-body); display: flex; flex-wrap: wrap; }
+    .rail { flex: 1 1 220px; max-width: 260px; min-width: 220px; box-sizing: border-box; background: var(--chrome);
+      border-right: 1px solid var(--line); padding: 24px 16px; display: flex; flex-direction: column; gap: 28px; }
+    .brand { padding: 0 8px; }
+    .sig { margin: 0; font-family: var(--font-sig); font-size: 34px; color: var(--sig); line-height: 1; }
+    .area { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+    nav { display: flex; flex-direction: column; gap: 2px; }
+    nav a { text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; font-size: 15px; font-weight: 600; }
+    .user-block { margin-top: auto; }
+    main { flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px clamp(16px, 3vw, 48px) 48px; display: flex; flex-direction: column; gap: 24px; }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminShellComponent {
+  protected readonly auth = inject(AuthService);
+  protected readonly homeIcon = inject(DomSanitizer).bypassSecurityTrustHtml(ICONS.home);
+}

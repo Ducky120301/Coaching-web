@@ -12,3 +12,6 @@ export * from './lib/auth/auth.guard';
 export * from './lib/auth/return-url';
 export * from './lib/auth/provide-auth';
 export * from './lib/login/login-page.component';
+export * from './lib/format/vn-date';
+export * from './lib/ui/icons';
+export * from './lib/ui/user-menu.component';
