@@ -14,5 +14,11 @@ public interface IStudentRepository
     /// <summary>Hồ sơ của tài khoản đăng nhập (dùng cho /api/client — lọc theo user trong token).</summary>
     Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// @BR-f02-ho-so-hoc-vien-023: mọi hồ sơ của coach ở mọi trạng thái, tạo sau đứng trước.
+    /// @BR-f02-ho-so-hoc-vien-024: <paramref name="normalizedQuery"/> (đã qua SearchText.Normalize) rỗng = không lọc.
+    /// </summary>
+    Task<IReadOnlyList<StudentSummary>> ListAsync(Guid coachId, string normalizedQuery, CancellationToken cancellationToken = default);
+
     void Add(Student student);
 }

@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<UpdateInternalNoteHandler>();
         services.AddScoped<GetStudentSelfHandler>();
         services.AddScoped<ChangeCoachingStatusHandler>();
+        services.AddScoped<ListStudentsHandler>();
         return services;
     }
 }

@@ -70,6 +70,13 @@ public static class DatabaseInitializer
                 await db.SaveChangesAsync(cancellationToken);
             }
         }
+
+        // @ADR-f02-ho-so-hoc-vien-003: hồ sơ tạo trước khi có SearchKey (cột mặc định '') được tính lại một lần
+        var withoutSearchKey = await db.Students.Where(s => s.SearchKey == "").ToListAsync(cancellationToken);
+        foreach (var student in withoutSearchKey)
+            student.RefreshSearchKey();
+        if (withoutSearchKey.Count > 0)
+            await db.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task EnsureSchemaExistsAsync(AppDbContext db, CancellationToken cancellationToken)

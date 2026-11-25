@@ -53,6 +53,8 @@ internal sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         });
         builder.Navigation(s => s.StatusHistory).UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        // @ADR-f02-ho-so-hoc-vien-003
+        builder.Property(s => s.SearchKey).HasMaxLength(Student.SearchKeyMaxLength).IsRequired();
         builder.Ignore(s => s.DomainEvents);
     }
 }

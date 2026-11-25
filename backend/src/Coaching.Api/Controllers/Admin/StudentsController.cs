@@ -9,6 +9,12 @@ namespace Coaching.Api.Controllers.Admin;
 /// <summary>Hồ sơ học viên của coach đang đăng nhập. Không có endpoint xóa.</summary>
 public sealed class StudentsController : AdminControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<StudentListItemDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] string? q, [FromServices] ListStudentsHandler handler,
+        CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(q, cancellationToken)).ToActionResult(this);
+
     [HttpPost]
     [ProducesResponseType<StudentDetailDto>(StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateStudentCommand command,

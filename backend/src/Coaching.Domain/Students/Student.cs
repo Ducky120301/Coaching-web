@@ -12,6 +12,7 @@ public sealed class Student : AggregateRoot<Guid>
     public const int FullNameMaxLength = 100;
     public const int InternalNoteMaxLength = 5000; // @ADR-f02-ho-so-hoc-vien-009
     public const int ReasonMaxLength = 500; // @ADR-f02-ho-so-hoc-vien-009
+    public const int SearchKeyMaxLength = 400; // họ tên 100 + " " + email 256
 
     private readonly List<CoachingStatusChange> _statusHistory = [];
 
@@ -23,6 +24,9 @@ public sealed class Student : AggregateRoot<Guid>
     public string FullName { get; private set; } = default!;
 
     public Email Email { get; private set; } = default!;
+
+    /// <summary>@ADR-f02-ho-so-hoc-vien-003: họ tên + email đã bỏ dấu, lowercase — chỉ dùng để tìm kiếm.</summary>
+    public string SearchKey { get; private set; } = string.Empty;
 
     public AccountStatus AccountStatus { get; private set; }
 
@@ -66,7 +70,7 @@ public sealed class Student : AggregateRoot<Guid>
         if (userId == Guid.Empty)
             throw new DomainException("student.user_required", "Hồ sơ phải gắn với một tài khoản đăng nhập.");
 
-        return new Student(Guid.CreateVersion7())
+        var student = new Student(Guid.CreateVersion7())
         {
             CoachId = coachId, // @BR-f02-ho-so-hoc-vien-007
             UserId = userId,
@@ -77,6 +81,8 @@ public sealed class Student : AggregateRoot<Guid>
             CreatedAt = at,
             Registration = registration ?? RegistrationForm.CreateEmpty(),
         };
+        student.RefreshSearchKey();
+        return student;
     }
 
     /// <summary>
@@ -88,6 +94,7 @@ public sealed class Student : AggregateRoot<Guid>
         ArgumentNullException.ThrowIfNull(registration);
         var name = NormalizeFullName(fullName); // kiểm trước khi đổi gì
         FullName = name;
+        RefreshSearchKey();
         Registration = registration;
         UpdatedAt = at;
         UpdatedByUserId = actorUserId;
@@ -129,6 +136,9 @@ public sealed class Student : AggregateRoot<Guid>
         _statusHistory.Add(new CoachingStatusChange(CoachingStatus, newStatus, actorUserId, at, text));
         CoachingStatus = newStatus;
     }
+
+    /// <summary>@ADR-f02-ho-so-hoc-vien-003: tính lại SearchKey (gọi khi tạo, khi đổi tên, và khi backfill lúc khởi động).</summary>
+    public void RefreshSearchKey() => SearchKey = SearchText.Normalize($"{FullName} {Email.Value}");
 
     // @BR-f02-ho-so-hoc-vien-003
     private static string NormalizeFullName(string? fullName)

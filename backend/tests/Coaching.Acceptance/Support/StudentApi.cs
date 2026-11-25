@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Coaching.Application.Students;
+using Coaching.Application.Students.Queries;
 using Coaching.Domain.Students;
 
 namespace Coaching.Acceptance.Support;
@@ -104,6 +105,14 @@ public sealed class StudentApi(AcceptanceContext ctx)
         if (response.IsSuccessStatusCode)
             LastDetail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
         return response;
+    }
+
+    public async Task<IReadOnlyList<StudentListItemDto>> ListAsync(string? q)
+    {
+        var url = string.IsNullOrEmpty(q) ? "/api/admin/students" : $"/api/admin/students?q={Uri.EscapeDataString(q)}";
+        var response = await ctx.GetAsync(url, AdminToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<List<StudentListItemDto>>())!;
     }
 
     public async Task AssertErrorAsync(HttpStatusCode status, string code)
