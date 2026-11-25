@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-25-f01-p1-tai-khoan-hoc-vien
-status: draft
+status: ready
 ---
 
 # F01-P1 — Tài khoản học viên: Implementation Plan
