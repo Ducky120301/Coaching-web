@@ -1,15 +1,17 @@
 using Coaching.Api.Auth;
 using Coaching.Api.Common;
+using Coaching.Api.Controllers;
 using Coaching.Application;
 using Coaching.Application.Abstractions;
 using Coaching.Infrastructure;
+using Coaching.Infrastructure.Emailing;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
@@ -31,7 +33,15 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
 });
 
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+// @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 2 — /api/test/emails chỉ tồn tại khi Email:Provider=Capture
+var captureEmails = EmailProviders.IsCapture(builder.Configuration);
+builder.Services.AddControllers()
+    .ConfigureApplicationPartManager(parts =>
+    {
+        if (!captureEmails)
+            parts.FeatureProviders.Add(new ExcludeControllersFeatureProvider(typeof(TestEmailsController)));
+    })
+    .ConfigureApiBehaviorOptions(options =>
     // Lỗi model-binding tự động của [ApiController] cũng phải là ProblemDetails có `code` + tiêu đề tiếng Việt, giữ `errors`.
     options.InvalidModelStateResponseFactory = context =>
     {

@@ -5,6 +5,7 @@ using Coaching.Application.Auth;
 using Coaching.Application.Common;
 using Coaching.Domain.Common;
 using Coaching.Domain.Students;
+using Coaching.Infrastructure.Emailing;
 using Coaching.Infrastructure.Identity;
 using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
@@ -21,6 +22,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Admin@12345";
+    public const string ClientBaseUrl = "http://client.test";
+
+    /// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-007: hộp thư trong bộ nhớ của host test.</summary>
+    public EmailOutbox Outbox => Services.GetRequiredService<EmailOutbox>();
 
     private readonly DatabaseFixture _database = new();
     private string _connectionString = string.Empty;
@@ -45,7 +50,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:SigningKey", "integration-test-signing-key-0123456789abcdef");
         builder.UseSetting("AdminSeed:Email", AdminEmail);
         builder.UseSetting("AdminSeed:Password", AdminPassword);
-        builder.UseSetting("Email:Provider", "Log");
+        // @ADR-f01-p1-tai-khoan-hoc-vien-007: test đọc mật khẩu tạm / link đặt lại từ hộp thư trong bộ nhớ
+        builder.UseSetting("Email:Provider", "Capture");
+        // @ADR-f01-p1-tai-khoan-hoc-vien-008
+        builder.UseSetting("App:ClientBaseUrl", ClientBaseUrl);
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
     }
 

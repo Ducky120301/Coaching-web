@@ -1,4 +1,5 @@
 using Coaching.Application.Abstractions;
+using Coaching.Application.Accounts;
 using Coaching.Application.Auth;
 using Coaching.Application.Students;
 using Coaching.Domain.Coaches;
@@ -14,13 +15,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace Coaching.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration,
+        IHostEnvironment environment)
     {
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("Thiếu ConnectionStrings:Default.");
@@ -60,15 +63,24 @@ public static class DependencyInjection
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IStudentAccounts, StudentAccounts>();
 
-        AddEmail(services, configuration);
+        AddEmail(services, configuration, environment);
 
         return services;
     }
 
-    private static void AddEmail(IServiceCollection services, IConfiguration configuration)
+    private static void AddEmail(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        var provider = configuration.GetSection(EmailOptions.SectionName)[nameof(EmailOptions.Provider)] ?? "Log";
-        if (string.Equals(provider, "Resend", StringComparison.OrdinalIgnoreCase))
+        var provider = EmailProviders.Resolve(configuration);
+        if (EmailProviders.IsCapture(configuration))
+        {
+            // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 1 — hộp thư đọc được qua API, không bao giờ bật ở Production
+            if (environment.IsProduction())
+                throw new InvalidOperationException(
+                    "Email:Provider=Capture chỉ dùng cho dev/e2e, không được bật ở môi trường Production.");
+            services.AddSingleton<EmailOutbox>();
+            services.AddScoped<IEmailSender, CapturingEmailSender>();
+        }
+        else if (string.Equals(provider, EmailProviders.Resend, StringComparison.OrdinalIgnoreCase))
         {
             services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
                 client.BaseAddress = new Uri("https://api.resend.com/"));
@@ -77,6 +89,15 @@ public static class DependencyInjection
         {
             services.AddScoped<IEmailSender, LoggingEmailSender>();
         }
+
+        // Hàng đợi trong process cho email không cần chờ kết quả (Quên mật khẩu)
+        services.AddSingleton<QueuedEmailSender>();
+        services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<QueuedEmailSender>());
+        services.AddHostedService<EmailQueueWorker>();
+
+        // @ADR-f01-p1-tai-khoan-hoc-vien-008: thiếu App:ClientBaseUrl API vẫn chạy, chỉ lần gửi trả 503
+        services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));
+        services.AddSingleton<IAccountEmails, AccountEmails>();
     }
 
     public static Task InitializeDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default) =>

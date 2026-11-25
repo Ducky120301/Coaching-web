@@ -4,7 +4,7 @@ public sealed class EmailOptions
 {
     public const string SectionName = "Email";
 
-    /// <summary>"Log" (dev/test: chỉ ghi log, không gửi) hoặc "Resend".</summary>
+    /// <summary>"Log" (chỉ ghi log), "Resend" (gửi thật) hoặc "Capture" (dev/e2e: hộp thư trong bộ nhớ, cấm ở Production).</summary>
     public string Provider { get; set; } = "Log";
 
     /// <summary>Địa chỉ gửi, ví dụ "Duobexiuuu Coaching &lt;no-reply@your-domain.vn&gt;".</summary>

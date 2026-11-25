@@ -12,4 +12,7 @@
     <ProjectReference Include="..\Coaching.Application\Coaching.Application.csproj" />
     <ProjectReference Include="..\Coaching.Domain\Coaching.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Coaching.Api.IntegrationTests" />
+  </ItemGroup>
 </Project>
