@@ -67,7 +67,7 @@ export class AuthService {
   }
 
   hasSession(): boolean {
-    return this.store.refreshToken() !== null;
+    return this.user() !== null || this.store.refreshToken() !== null; // @BR-f00-codebase-010: tab khác có thể đã xoá token
   }
 
   /** @BR-f00-codebase-010: gia hạn, chỉ 1 lần dù nhiều request/tab cùng cần. */

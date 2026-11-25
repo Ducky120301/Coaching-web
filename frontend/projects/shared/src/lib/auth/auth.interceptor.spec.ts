@@ -1,11 +1,12 @@
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_CONFIG } from '../config/app-config';
 import { authInterceptor } from './auth.interceptor';
+import { AuthService } from './auth.service';
 import { CLIENT_APP } from './client-app';
 import { TokenStore } from './token-store';
 
@@ -88,6 +89,25 @@ describe('authInterceptor', () => {
     backend.expectNone('/api/auth/refresh');
   });
 
+  // @BR-f00-codebase-010, @BR-f00-codebase-015
+  it('có user trong bộ nhớ nhưng storage bị xoá (tab khác) gặp 401 thì kết thúc phiên và về /login', async () => {
+    const auth = TestBed.inject(AuthService);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const login = auth.login('a@b.vn', 'x');
+    backend.expectOne('/api/auth/login').flush(tokens('access-cu', 'refresh-1'));
+    await login;
+    expect(auth.user()).not.toBeNull();
+    localStorage.removeItem('dbx.admin.rt');
+
+    const result = firstValueFrom(http.get('/api/admin/profile')).catch((e) => e);
+    backend.expectOne('/api/admin/profile').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await result;
+    backend.expectNone('/api/auth/refresh');
+    expect(auth.user()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith('/login');
+  });
+
+  // @BR-f00-codebase-010
   it('không gắn Bearer cho request ngoài API', async () => {
     const result = firstValueFrom(http.get('/config.json'));
     const req = backend.expectOne('/config.json');

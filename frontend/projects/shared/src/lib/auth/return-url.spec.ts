@@ -10,7 +10,9 @@ describe('safeReturnUrl', () => {
     expect(safeReturnUrl('/trang-chu?next=https://y')).toBe('/trang-chu?next=https://y');
   });
   it.each([
-    ['/	/evil.com'],
+    ['/\t/evil.com'],
+    ['/\n/evil.com'],
+    ['/\u0000x'],
     ['https://evil.example.com'],
     ['//evil.example.com'],
     ['/\\evil.example.com'],
@@ -18,7 +20,7 @@ describe('safeReturnUrl', () => {
     [''],
     [null],
     [undefined],
-  ])('đưa %s về trang chủ', (raw) => {
+  ])('đưa %j về trang chủ', (raw) => {
     expect(safeReturnUrl(raw as string | null | undefined)).toBe('/');
   });
 });
