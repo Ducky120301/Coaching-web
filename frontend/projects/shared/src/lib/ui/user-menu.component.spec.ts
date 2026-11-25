@@ -67,6 +67,13 @@ describe('UserMenuComponent', () => {
     expect(el().querySelector('.avatar')!.textContent).toBe('?');
   });
 
+  it('uses first and last word initials like the prototype (Phạm Hoàng Quân → PQ)', () => {
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.name = 'Phạm Hoàng Quân';
+    fixture.detectChanges();
+    expect(el().querySelector('.avatar')!.textContent).toBe('PQ');
+  });
+
   it('logout calls AuthService.logout', () => {
     trigger().click();
     fixture.detectChanges();

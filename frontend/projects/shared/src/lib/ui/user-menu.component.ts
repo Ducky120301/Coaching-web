@@ -52,8 +52,13 @@ export class UserMenuComponent {
   readonly roleLabel = input.required<string>();
   readonly variant = input<'rail' | 'tab'>('rail');
   readonly open = signal(false);
-  readonly initials = computed(() =>
-    this.name().trim().split(/\s+/).filter(Boolean).map((w) => w[0]).slice(-2).join('').toUpperCase() || '?');
+  // Prototype: "Phạm Hoàng Quân" → "PQ" (chữ đầu của từ đầu + từ cuối)
+  readonly initials = computed(() => {
+    const words = this.name().trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return '?';
+    const picked = words.length === 1 ? [words[0]] : [words[0], words[words.length - 1]];
+    return picked.map((w) => w[0]).join('').toUpperCase();
+  });
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
