@@ -8543,7 +8543,7 @@ EOF
 
 **Owns:** —
 
-- [ ] **Step 1: Compose dùng hộp thư Capture + địa chỉ web học viên; chạy e2e — kỳ vọng FAIL**
+- [x] **Step 1: Compose dùng hộp thư Capture + địa chỉ web học viên; chạy e2e — kỳ vọng FAIL**
 
 `deploy/docker-compose.yml` — trong `api.environment`, thay dòng:
 ```yaml
@@ -8562,7 +8562,7 @@ Expected: các service `db`, `api`, `web` healthy/running; `curl -s "http://loca
 Run: `cd frontend && npm run e2e -- --tags "@web and (@BR-f01-p1-tai-khoan-hoc-vien-002 or @BR-f01-p1-tai-khoan-hoc-vien-007 or @BR-f01-p1-tai-khoan-hoc-vien-011 or @BR-f01-p1-tai-khoan-hoc-vien-016 or @BR-f01-p1-tai-khoan-hoc-vien-022)"`
 Expected: FAIL — `5 scenarios (5 undefined)` (`một hồ sơ học viên đủ mục bắt buộc, chưa gửi thông tin đăng nhập lần nào`, `một học viên vừa được gửi mật khẩu tạm`, `hôm nay là "13/10/2026"`, `học viên có tài khoản Đã kích hoạt với email "quan@gmail.com"`, …).
 
-- [ ] **Step 2: World giữ học viên của scenario; F02 bấm đúng "Chỉ lưu hồ sơ"; viết step defs `@web`**
+- [x] **Step 2: World giữ học viên của scenario; F02 bấm đúng "Chỉ lưu hồ sơ"; viết step defs `@web`**
 
 `frontend/e2e/support/world.ts` — trong `class E2EWorld`, thêm sau `refreshStatus: number | null = null;`:
 ```ts
@@ -8806,14 +8806,14 @@ Then('email {string} nhận được email có link đặt lại mật khẩu', 
 });
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng PASS**
+- [x] **Step 3: Chạy — kỳ vọng PASS**
 
 Run: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait` (build lại `web` có Task 8/9) rồi `cd frontend && npm run e2e -- --tags "@web and (@BR-f01-p1-tai-khoan-hoc-vien-002 or @BR-f01-p1-tai-khoan-hoc-vien-007 or @BR-f01-p1-tai-khoan-hoc-vien-011 or @BR-f01-p1-tai-khoan-hoc-vien-016 or @BR-f01-p1-tai-khoan-hoc-vien-022)"`
 Expected: `5 scenarios (5 passed)`.
 Run: `cd frontend && npm run e2e`
 Expected: không scenario nào failed/undefined (gồm `@web` F00 — đăng nhập học viên demo đã kích hoạt ở Task 5, so ảnh `màn đăng nhập` của web quản trị — và F02 BR-003, BR-024).
 
-- [ ] **Step 4: Cập nhật CLAUDE.md**
+- [x] **Step 4: Cập nhật CLAUDE.md**
 
 `CLAUDE.md` — trong bảng "Page key", thay dòng:
 ```markdown
@@ -8832,7 +8832,7 @@ Trong khối "Lệnh thường dùng", ngay sau dòng `# admin: http://localhost
 # compose dùng Email__Provider=Capture: thư gửi đi (mật khẩu tạm, link đặt lại) đọc ở http://localhost:8080/api/test/emails?to=<email>
 ```
 
-- [ ] **Step 5: Nghiệm thu toàn bộ F01-P1**
+- [x] **Step 5: Nghiệm thu toàn bộ F01-P1**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (mọi scenario `@api` của `features/hoc-vien/tai-khoan/*.feature` xanh).
@@ -8843,7 +8843,7 @@ Kiểm tay (ghi kết quả vào mô tả commit/MR, không chặn commit):
 - NFR-f01-p1-tai-khoan-hoc-vien-004: đo p95 của `POST /api/auth/login`, `/api/auth/activate`, `/api/auth/forgot-password`, `POST /api/admin/students/{id}/credentials` < 500 ms (không tính thời gian gọi Resend).
 - NFR-f01-p1-tai-khoan-hoc-vien-005: gửi coach 2 thư mẫu (đọc ở `/api/test/emails`) để duyệt nội dung trước khi bật Resend.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 ```bash
 git add frontend/e2e/steps/account.steps.ts frontend/e2e/steps/student-profile.steps.ts frontend/e2e/support/world.ts deploy/docker-compose.yml CLAUDE.md
 git commit -F - <<'EOF'
