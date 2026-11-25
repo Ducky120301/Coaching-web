@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 
 /** Khối avatar + tên + vai trò; bấm vào mở menu "Đăng xuất" (quyết định UX của PO). */
@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
   selector: 'dbx-user-menu',
   template: `
     <div class="wrap" [class.tab]="variant() === 'tab'">
-      <button type="button" class="user-block" [attr.aria-expanded]="open()" aria-haspopup="menu" (click)="open.set(!open())">
+      <button #trigger type="button" class="user-block" [attr.aria-expanded]="open()" aria-haspopup="menu" (click)="open.set(!open())">
         <span class="avatar" aria-hidden="true">{{ initials() }}</span>
         @if (variant() === 'rail') {
           <span class="who"><span class="name">{{ name() }}</span><span class="role muted">{{ roleLabel() }}</span></span>
@@ -21,7 +21,12 @@ import { AuthService } from '../auth/auth.service';
       }
     </div>
   `,
+  host: {
+    '(document:keydown.escape)': 'onEscape()',
+    '(document:click)': 'onDocumentClick($event)',
+  },
   styles: `
+    :host { display: block; }
     .wrap { position: relative; }
     .user-block { display: flex; align-items: center; gap: 10px; padding: 8px; width: 100%; border: 0; background: none;
       color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 12px; }
@@ -48,7 +53,20 @@ export class UserMenuComponent {
   readonly variant = input<'rail' | 'tab'>('rail');
   readonly open = signal(false);
   readonly initials = computed(() =>
-    this.name().trim().split(/\s+/).filter(Boolean).map((w) => w[0]).slice(-2).join('').toUpperCase());
+    this.name().trim().split(/\s+/).filter(Boolean).map((w) => w[0]).slice(-2).join('').toUpperCase() || '?');
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
+
+  onEscape(): void {
+    if (!this.open()) return;
+    this.open.set(false);
+    this.trigger()?.nativeElement.focus();
+  }
+
+  onDocumentClick(event: Event): void {
+    if (this.open() && !this.host.nativeElement.contains(event.target as Node)) this.open.set(false);
+  }
 
   logout(): void {
     this.open.set(false);
