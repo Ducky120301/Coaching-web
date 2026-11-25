@@ -3151,7 +3151,7 @@ EOF
 - Modify: `backend/src/Coaching.Domain/Students/Student.cs`, `backend/src/Coaching.Domain/Students/IStudentRepository.cs`
 - Modify: `backend/src/Coaching.Infrastructure/Persistence/Repositories/StudentRepository.cs`
 - Create: `backend/src/Coaching.Application/Students/Commands/UpdateInternalNote.cs`, `backend/src/Coaching.Application/Students/Queries/GetStudentSelf.cs`
-- Modify: `backend/src/Coaching.Application/Students/StudentDtos.cs`, `backend/src/Coaching.Application/DependencyInjection.cs`
+- Modify: `backend/src/Coaching.Application/Students/StudentDtos.cs`, `backend/src/Coaching.Application/Students/Commands/CreateStudent.cs`, `backend/src/Coaching.Application/DependencyInjection.cs`
 - Modify: `backend/src/Coaching.Api/Controllers/Admin/StudentsController.cs`, `backend/src/Coaching.Api/Controllers/Client/MeController.cs`
 - Test: `backend/tests/Coaching.Domain.Tests/Students/InternalNoteTests.cs`
 - Test: `backend/tests/Coaching.Acceptance/Support/StudentApi.cs` (M), `backend/tests/Coaching.Acceptance/Steps/StudentNoteSteps.cs`
@@ -3162,7 +3162,7 @@ EOF
 - Produces:
   - Domain: `Student.InternalNote (string?)`, `Student.InternalNoteUpdatedAt (DateTimeOffset?)`, `Student.UpdateInternalNote(string? note, DateTimeOffset at)`, `const Student.InternalNoteMaxLength = 5000`; `IStudentRepository.GetByUserIdAsync(Guid userId, CancellationToken ct = default)`.
   - Lỗi 400: `student.internal_note_too_long`.
-  - Application: `StudentDetailDto` thêm `string? InternalNote, DateTimeOffset? InternalNoteUpdatedAt`; `UpdateInternalNoteCommand(string? Note, string? Version)`, `UpdateInternalNoteHandler.HandleAsync(Guid id, cmd, ct)`; `StudentSelfDto(string FullName, string Email, string CoachingStatus, string AccountStatus)`, `GetStudentSelfHandler.HandleAsync(ct)`.
+  - Application: `StudentDetailDto` thêm `string? InternalNote, DateTimeOffset? InternalNoteUpdatedAt`; `CreateStudentCommand(string? FullName, string? Email, RegistrationInput? Registration, string? InternalNote = null)` — ghi chú (nếu có) lưu cùng request/transaction tạo hồ sơ; `UpdateInternalNoteCommand(string? Note, string? Version)`, `UpdateInternalNoteHandler.HandleAsync(Guid id, cmd, ct)`; `StudentSelfDto(string FullName, string Email, string CoachingStatus, string AccountStatus)`, `GetStudentSelfHandler.HandleAsync(ct)`.
   - API: `PUT /api/admin/students/{id}/internal-note` → 200 `StudentDetailDto`; `GET /api/client/me` → `StudentSelfDto` (404 `student.not_found` nếu user chưa có `Student`).
   - Test: `StudentApi.UpdateNoteOkAsync(string fullName, string? note)`.
 
@@ -3496,6 +3496,9 @@ using System.Net;
 using System.Net.Http.Json;
 using Coaching.Application.Students;
 using Coaching.Domain.Students;
+using Coaching.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Api.IntegrationTests.Students;
 
@@ -3551,6 +3554,39 @@ public sealed class InternalNoteTests(ApiFactory factory)
         Assert.Equal("Học viên Test", me.FullName);
         Assert.Equal("Active", me.CoachingStatus);
         Assert.Equal("PendingActivation", me.AccountStatus);
+    }
+
+    // @BR-f02-ho-so-hoc-vien-014 @BR-f02-ho-so-hoc-vien-016: tạo hồ sơ kèm ghi chú trong cùng request
+    // → coach thấy ghi chú + thời điểm sửa ghi chú; học viên vẫn không nhận được ghi chú
+    [Fact]
+    public async Task Create_with_note_stores_note_but_client_never_sees_it()
+    {
+        var admin = await factory.AdminClientAsync();
+        var email = StudentRequests.NewEmail();
+
+        var created = await admin.PostAsJsonAsync(StudentRequests.Url,
+            new { fullName = "Lan", email, internalNote = "  Tránh lunge sâu vì gối phải  " });
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var dto = (await created.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+        Assert.Equal("Tránh lunge sâu vì gối phải", dto.InternalNote);
+        Assert.Equal(dto.CreatedAt, dto.InternalNoteUpdatedAt);
+
+        const string password = "Student@123";
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            // Kích hoạt là việc của F01; đặt mật khẩu trực tiếp để học viên đăng nhập được.
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            Assert.True((await users.AddPasswordAsync((await users.FindByEmailAsync(email))!, password)).Succeeded);
+        }
+        var tokens = await factory.LoginAsync(email, password);
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", tokens.AccessToken);
+
+        var json = await client.GetStringAsync("/api/client/me");
+
+        Assert.DoesNotContain("note", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("lunge", json, StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record StudentSelfProbe(string FullName, string Email, string CoachingStatus, string AccountStatus);
@@ -3693,6 +3729,60 @@ public sealed class GetStudentSelfHandler(IStudentRepository students, ICurrentU
 }
 ```
 
+`backend/src/Coaching.Application/Students/Commands/CreateStudent.cs` — thay toàn bộ (tạo hồ sơ nhận thêm `internalNote`, lưu cùng request/transaction):
+```csharp
+using Coaching.Application.Abstractions;
+using Coaching.Application.Coaches;
+using Coaching.Application.Common;
+using Coaching.Domain.Common;
+using Coaching.Domain.Students;
+
+namespace Coaching.Application.Students.Commands;
+
+/// <summary>
+/// Không có trường trạng thái: field lạ trong body bị bỏ qua (@BR-f02-ho-so-hoc-vien-005, @BR-f02-ho-so-hoc-vien-006).
+/// <paramref name="InternalNote"/> tùy chọn — lưu cùng transaction tạo hồ sơ (@BR-f02-ho-so-hoc-vien-014).
+/// </summary>
+public sealed record CreateStudentCommand(
+    string? FullName, string? Email, RegistrationInput? Registration, string? InternalNote = null);
+
+public sealed class CreateStudentHandler(
+    CurrentCoach currentCoach,
+    IStudentRepository students,
+    IStudentAccounts accounts,
+    IUnitOfWork unitOfWork,
+    IClock clock)
+{
+    public async Task<Result<StudentDetailDto>> HandleAsync(CreateStudentCommand command, CancellationToken cancellationToken = default)
+    {
+        if (await currentCoach.GetAsync(cancellationToken) is not { } coach)
+            return StudentErrors.CoachNotFound;
+
+        var email = Email.Create(command.Email); // @BR-f02-ho-so-hoc-vien-002 → 400 email.required / email.invalid
+        // @ADR-f02-ho-so-hoc-vien-006: luật form ở Domain; @BR-f02-ho-so-hoc-vien-010: "hôm nay" theo giờ VN
+        var registration = RegistrationForm.Create(command.Registration ?? new RegistrationInput(), clock.Today);
+        var now = clock.UtcNow;
+        // Kiểm hồ sơ TRƯỚC khi tạo tài khoản; Id tài khoản sinh sẵn để Student giữ UserId.
+        var student = Student.Create(coach.Id, Guid.CreateVersion7(), command.FullName, email, now, registration);
+        // @BR-f02-ho-so-hoc-vien-014: ghi chú lúc tạo có thời điểm sửa ghi chú = thời điểm tạo; quá 5000 ký tự → 400 trước khi tạo tài khoản
+        student.UpdateInternalNote(command.InternalNote, now);
+
+        // @ADR-f02-ho-so-hoc-vien-001: tài khoản + hồ sơ (kèm ghi chú) cùng một transaction
+        return await unitOfWork.ExecuteInTransactionAsync<StudentDetailDto>(async ct =>
+        {
+            var account = await accounts.CreatePendingAsync(student.UserId, email, student.FullName, ct);
+            if (!account.IsSuccess)
+                return Result<StudentDetailDto>.Failure(account.Error!); // @BR-f02-ho-so-hoc-vien-001 → 409
+
+            students.Add(student);
+            await unitOfWork.SaveChangesAsync(ct);
+            return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+        }, cancellationToken);
+    }
+}
+```
+(`UpdateInternalNote` với ghi chú rỗng/null không đổi gì → `InternalNoteUpdatedAt` vẫn null.)
+
 `backend/src/Coaching.Application/DependencyInjection.cs` — thêm sau `services.AddScoped<UpdateStudentHandler>();`:
 ```csharp
         services.AddScoped<UpdateInternalNoteHandler>();
@@ -3735,7 +3825,7 @@ public sealed class MeController(GetStudentSelfHandler getSelf) : ClientControll
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-014|Category=BR-f02-ho-so-hoc-vien-016)&Category!=web"`
 Expected: `Passed: 4`, `Failed: 0`.
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Students|FullyQualifiedName~ClientDtoTests"`
-Expected: `Passed: 18`.
+Expected: `Passed: 19`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (F00 `AccessSteps` "học viên thấy đúng email và họ tên của mình" đọc `/api/client/me` mới — helper đã tạo `Student` cùng họ tên).
 
@@ -4420,7 +4510,7 @@ public sealed class ChangeCoachingStatusHandler(
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-017|Category=BR-f02-ho-so-hoc-vien-018|Category=BR-f02-ho-so-hoc-vien-019|Category=BR-f02-ho-so-hoc-vien-020|Category=BR-f02-ho-so-hoc-vien-021|Category=BR-f02-ho-so-hoc-vien-022)&Category!=web"`
 Expected: `Passed: 11`, `Failed: 0`.
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Students|FullyQualifiedName~ClientDtoTests"`
-Expected: `Passed: 26`.
+Expected: `Passed: 27`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
@@ -4872,7 +4962,7 @@ Expected: `Passed: 3`, `Failed: 0`.
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "Category!=web&Category!=manual"`
 Expected: không Failed — toàn bộ 49 scenario `@api` của F02 + scenario F00.
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Students|FullyQualifiedName~ClientDtoTests"`
-Expected: `Passed: 32`.
+Expected: `Passed: 33`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
@@ -4898,12 +4988,12 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Dashboard (danh 
 - Create: `frontend/projects/shared/src/lib/format/initials.ts`, `frontend/projects/shared/src/lib/format/initials.spec.ts`
 - Modify: `frontend/projects/shared/src/lib/ui/icons.ts`, `frontend/projects/shared/src/public-api.ts`
 - Create: `frontend/projects/admin/src/app/students/student.models.ts`, `student-status.ts`, `students.api.ts`, `student-list.component.ts`, `student-list.component.spec.ts`
-- Modify: `frontend/projects/admin/src/app/app.routes.ts`, `frontend/projects/admin/src/app/shell/admin-shell.component.ts`
+- Modify: `frontend/projects/admin/src/app/app.routes.ts`, `frontend/projects/admin/src/app/shell/admin-shell.component.ts`; Create: `frontend/projects/admin/src/app/shell/admin-shell.component.spec.ts`
 - Delete: `frontend/projects/admin/src/app/home/admin-home.component.ts`, `frontend/projects/admin/src/app/home/admin-home.component.spec.ts`
 - Modify: `frontend/e2e/steps/login.steps.ts`, `frontend/e2e/steps/session.steps.ts`
 
 **Interfaces:**
-- Consumes: Task 6 — `GET /api/admin/students?q=` → `StudentListItemDto[]` (`id, fullName, email, coachingStatus, accountStatus, createdAt`); F00 — `AuthService.apiUrl(path)`, `APP_CONFIG`, `CLIENT_APP`, `ICONS`, `formatVnDate(date, withYear)`, `UserMenuComponent`.
+- Consumes: Task 6 — `GET /api/admin/students?q=` → `StudentListItemDto[]` (`id, fullName, email, coachingStatus, accountStatus, createdAt`); F00 — `GET /api/admin/profile` (`CoachProfileDto.displayName`), `AuthService.apiUrl(path)`, `APP_CONFIG`, `CLIENT_APP`, `ICONS`, `formatVnDate(date, withYear)`, `UserMenuComponent`.
 - Produces:
   - shared: `type BadgeTone = 'ok' | 'warn' | 'paused' | 'ended'`; `<dbx-status-badge [tone] [dense]>` (`StatusBadgeComponent`); `initialsOf(name: string): string` ("Phạm Hoàng Quân" → "PQ", cùng luật với UserMenu); `ICONS.plus`, `ICONS.search`.
   - admin: `type CoachingStatus = 'Active' | 'Paused' | 'Ended'`, `type AccountStatus = 'PendingActivation' | 'Activated'`, `interface StudentListItem`; `COACHING_STATUS_LABEL`, `ACCOUNT_STATUS_LABEL`, `COACHING_STATUS_TONE`, `ACCOUNT_STATUS_TONE`; `StudentsApi.list(q: string): Observable<StudentListItem[]>`; route `dashboard` (lazy `StudentListComponent`), `''` và `trang-chu` → `dashboard`.
@@ -5361,16 +5451,115 @@ export const routes: Routes = [
 ];
 ```
 
-`frontend/projects/admin/src/app/shell/admin-shell.component.ts` — thay khối `<nav aria-label="Admin">…</nav>` bằng:
-```html
+`frontend/projects/admin/src/app/shell/admin-shell.component.spec.ts` (tên coach ở rail lấy từ hệ thống — thay "Xin chào, {coach}" của trang chủ cũ; giữ step thủ công F00 "admin thấy tên coach của mình lấy từ hệ thống"):
+```ts
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { APP_CONFIG, CLIENT_APP } from '@coaching/shared';
+import { describe, expect, it } from 'vitest';
+import { AdminShellComponent } from './admin-shell.component';
+
+describe('AdminShellComponent', () => {
+  function setup() {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: APP_CONFIG, useValue: { apiBaseUrl: '' } },
+        { provide: CLIENT_APP, useValue: 'admin' },
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    const fixture = TestBed.createComponent(AdminShellComponent);
+    fixture.detectChanges();
+    return { fixture, http: TestBed.inject(HttpTestingController), el: fixture.nativeElement as HTMLElement };
+  }
+
+  it('shows the coach name from /api/admin/profile in the rail user menu', () => {
+    const { fixture, http, el } = setup();
+    http.expectOne('/api/admin/profile').flush({ id: '1', displayName: 'Coach Duobexiuuu', email: 'c@x.vn' });
+    fixture.detectChanges();
+
+    expect(el.querySelector('aside.rail dbx-user-menu')?.textContent).toContain('Coach Duobexiuuu');
+    expect(el.querySelector('nav a')?.textContent?.trim()).toBe('Dashboard');
+  });
+
+  it('keeps the rail usable when the profile cannot be loaded', () => {
+    const { fixture, http, el } = setup();
+    http.expectOne('/api/admin/profile').flush('boom', { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    expect(el.querySelector('aside.rail dbx-user-menu')).not.toBeNull();
+  });
+});
+```
+
+`frontend/projects/admin/src/app/shell/admin-shell.component.ts` — thay toàn bộ (rail chỉ có "Dashboard"; tên coach lấy từ `/api/admin/profile`, dự phòng tên trong token):
+```ts
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { DomSanitizer } from '@angular/platform-browser';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
+import { catchError, map, of } from 'rxjs';
+
+interface CoachProfile { id: string; displayName: string; email: string; }
+
+@Component({
+  selector: 'app-admin-shell',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UserMenuComponent],
+  template: `
+    <div class="root">
+      <aside class="rail">
+        <div class="brand">
+          <p class="sig">duobexiuuu</p>
+          <p class="area muted">Khu vực coach</p>
+        </div>
         <nav aria-label="Admin">
           <a routerLink="/dashboard" routerLinkActive #dash="routerLinkActive" [attr.aria-current]="dash.isActive ? 'page' : null">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Dashboard</a>
         </nav>
+        <div class="user-block">
+          <dbx-user-menu [name]="coachName() ?? auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
+        </div>
+      </aside>
+      <main><router-outlet /></main>
+    </div>
+  `,
+  styles: `
+    .root { min-height: 100vh; box-sizing: border-box; background: var(--bg); color: var(--ink); font-family: var(--font-body); display: flex; flex-wrap: wrap; }
+    .rail { flex: 1 1 220px; max-width: 260px; min-width: 220px; box-sizing: border-box; background: var(--chrome);
+      border-right: 1px solid var(--line); padding: 24px 16px; display: flex; flex-direction: column; gap: 28px; }
+    .brand { padding: 0 8px; }
+    .sig { margin: 0; font-family: var(--font-sig); font-size: 34px; color: var(--sig); line-height: 1; }
+    .area { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+    nav { display: flex; flex-direction: column; gap: 2px; }
+    nav a { text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; font-size: 15px; font-weight: 600; }
+    .user-block { margin-top: auto; }
+    main { flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px clamp(16px, 3vw, 48px) 48px; display: flex; flex-direction: column; gap: 24px; }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminShellComponent {
+  private readonly sanitizer = inject(DomSanitizer);
+  protected readonly auth = inject(AuthService);
+  protected readonly homeIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.home);
+  /** Tên coach lấy từ hệ thống (hồ sơ coach) — thay lời chào ở trang chủ cũ. */
+  protected readonly coachName = toSignal(
+    inject(HttpClient).get<CoachProfile>(this.auth.apiUrl('/api/admin/profile')).pipe(
+      map((p) => p.displayName),
+      catchError(() => of(null)),
+    ),
+    { initialValue: null },
+  );
+}
 ```
 
-Xóa `frontend/projects/admin/src/app/home/admin-home.component.ts` và `frontend/projects/admin/src/app/home/admin-home.component.spec.ts` (trang chủ cũ được thay bằng dashboard; rail chỉ hiện mục đã có trang).
+Xóa `frontend/projects/admin/src/app/home/admin-home.component.ts` và `frontend/projects/admin/src/app/home/admin-home.component.spec.ts` (trang chủ cũ được thay bằng dashboard; rail chỉ hiện mục đã có trang). Tên coach lấy từ hệ thống giờ nằm ở user menu của rail (spec ở trên).
 
 - [ ] **Step 9: Cập nhật e2e F00 theo trang đích mới**
 
@@ -5471,7 +5660,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Tạo hồ sơ h
 - Modify: `frontend/projects/shared/src/lib/ui/icons.ts`
 
 **Interfaces:**
-- Consumes: Task 1–5 — `POST /api/admin/students` (`{ fullName, email, registration }` → 201 `StudentDetailDto`, 409 `student.email_taken`), `GET /api/admin/students/{id}`, `PUT /api/admin/students/{id}` (`{ fullName, registration, version }`, 409 `student.version_conflict`), `PUT /api/admin/students/{id}/internal-note` (`{ note, version }`); Task 7 — `StudentsApi`, `student.models.ts`, `ACCOUNT_STATUS_LABEL`, route config.
+- Consumes: Task 1–5 — `POST /api/admin/students` (`{ fullName, email, registration, internalNote? }` → 201 `StudentDetailDto`, 409 `student.email_taken`), `GET /api/admin/students/{id}`, `PUT /api/admin/students/{id}` (`{ fullName, registration, version }`, 409 `student.version_conflict`), `PUT /api/admin/students/{id}/internal-note` (`{ note, version }`); Task 7 — `StudentsApi`, `student.models.ts`, `ACCOUNT_STATUS_LABEL`, route config.
 - Produces:
   - `student.models.ts`: `RegistrationValue`, `Registration`, `StatusChange`, `StudentDetail`, `CreateStudentBody`, `UpdateStudentBody`.
   - `StudentsApi.get(id)`, `create(body)`, `update(id, body)`, `updateNote(id, note, version)` → `Observable<StudentDetail>`.
@@ -5582,6 +5771,8 @@ export interface CreateStudentBody {
   fullName: string;
   email: string;
   registration: Registration;
+  /** Tùy chọn — server lưu cùng transaction tạo hồ sơ. */
+  internalNote?: string;
 }
 
 export interface UpdateStudentBody {
@@ -5910,6 +6101,23 @@ describe('StudentFormComponent', () => {
     expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1');
   });
 
+  // @BR-f02-ho-so-hoc-vien-014: ghi chú nội bộ gửi trong cùng POST tạo hồ sơ, không gọi endpoint ghi chú
+  it('sends the internal note in the same create request', async () => {
+    const { http, el, navigate } = setup('create');
+    fill(el, 'fullName', 'Lan');
+    fill(el, 'email', 'lan@gmail.com');
+    fill(el, 'internalNote', ' Tránh lunge sâu vì gối phải ');
+
+    submit(el);
+    const request = http.expectOne('/api/admin/students');
+    expect(request.request.body.internalNote).toBe('Tránh lunge sâu vì gối phải');
+    request.flush(detail({ internalNote: 'Tránh lunge sâu vì gối phải' }));
+    await settle();
+
+    http.expectNone('/api/admin/students/s1/internal-note');
+    expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1');
+  });
+
   // NFR-f02-ho-so-hoc-vien-004: bản nháp chỉ nằm trên trình duyệt của coach
   it('restores the draft kept on this browser', () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ fullName: 'Quân', weightKg: '72,5' }));
@@ -6163,17 +6371,13 @@ export class StudentFormComponent implements OnInit {
   }
 
   private async saveCreate(payload: FormPayload): Promise<StudentDetail> {
+    // Ghi chú nội bộ đi cùng request tạo hồ sơ (một transaction phía server), không gọi thêm endpoint ghi chú
     const created = await firstValueFrom(this.api.create({
       fullName: payload.fullName, email: payload.email, registration: payload.registration,
+      ...(payload.internalNote ? { internalNote: payload.internalNote } : {}),
     }));
     clearDraft(); // NFR-f02-ho-so-hoc-vien-004: lưu thành công → xóa bản nháp
-    if (!payload.internalNote) return created;
-    try {
-      // API tạo hồ sơ không nhận ghi chú → lưu ghi chú bằng endpoint riêng, dùng version vừa nhận
-      return await firstValueFrom(this.api.updateNote(created.id, payload.internalNote, created.version));
-    } catch {
-      return created; // hồ sơ đã lưu; coach nhập lại ghi chú ở trang hồ sơ
-    }
+    return created;
   }
 
   private async saveEdit(payload: FormPayload): Promise<StudentDetail> {
@@ -6413,12 +6617,17 @@ aside { flex: 1 1 280px; max-width: 380px; position: sticky; top: 20px; display:
       },
 ```
 
-`frontend/projects/admin/src/app/shell/admin-shell.component.ts` — thay toàn bộ:
+`frontend/projects/admin/src/app/shell/admin-shell.component.ts` — thay toàn bộ (thêm mục rail "Tạo hồ sơ học viên"; giữ tên coach lấy từ `/api/admin/profile` của Task 7):
 ```ts
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
+import { catchError, map, of } from 'rxjs';
+
+interface CoachProfile { id: string; displayName: string; email: string; }
 
 @Component({
   selector: 'app-admin-shell',
@@ -6439,7 +6648,7 @@ import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="userPlusIcon"></svg>Tạo hồ sơ học viên</a>
         </nav>
         <div class="user-block">
-          <dbx-user-menu [name]="auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
+          <dbx-user-menu [name]="coachName() ?? auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
         </div>
       </aside>
       <main><router-outlet /></main>
@@ -6464,13 +6673,21 @@ export class AdminShellComponent {
   protected readonly auth = inject(AuthService);
   protected readonly homeIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.home);
   protected readonly userPlusIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.userPlus);
+  /** Tên coach lấy từ hệ thống (hồ sơ coach). */
+  protected readonly coachName = toSignal(
+    inject(HttpClient).get<CoachProfile>(this.auth.apiUrl('/api/admin/profile')).pipe(
+      map((p) => p.displayName),
+      catchError(() => of(null)),
+    ),
+    { initialValue: null },
+  );
 }
 ```
 
 - [ ] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
-Expected: PASS (`StudentFormComponent` 8 test, `registration fields` 4 test).
+Expected: PASS (`StudentFormComponent` 9 test, `registration fields` 4 test).
 Run: `cd frontend && npx ng build admin`
 Expected: build thành công.
 Kiểm tay (`npx ng serve admin` + API local): tạo hồ sơ chỉ có họ tên + email → chuyển `/hoc-vien/<id>`; gõ dở → tải lại trang vẫn còn bản nháp; "Xoá trắng hồ sơ" xóa nháp. So với page `AdTaoHoSo` ở 390px và 1280px (card nhóm radius 12 padding 20px 22px, ô 46px radius 14, nhãn 14px 600, badge "x/y bắt buộc", aside "Hồ sơ đã điền" + "Trạng thái tài khoản").
