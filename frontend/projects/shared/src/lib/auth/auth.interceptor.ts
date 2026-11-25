@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/comm
 import { inject } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { APP_CONFIG } from '../config/app-config';
-import { AuthService } from './auth.service';
+import { AuthService, isSessionRejected } from './auth.service';
 import { SKIP_AUTH } from './skip-auth';
 
 function withBearer(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
@@ -21,9 +21,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (!(error instanceof HttpErrorResponse) || error.status !== 401) {
         return throwError(() => error);
       }
+      if (!auth.hasSession()) return throwError(() => error); // ẩn danh: không gia hạn, không điều hướng
       return from(auth.refresh()).pipe(
         catchError((refreshError: unknown) => {
-          auth.handleSessionExpired();
+          // @BR-f00-codebase-010: chỉ kết thúc phiên khi server từ chối; lỗi tạm thời thì giữ phiên
+          if (isSessionRejected(refreshError)) auth.handleSessionExpired();
           return throwError(() => refreshError);
         }),
         switchMap((token) => next(withBearer(req, token))),

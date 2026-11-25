@@ -1,4 +1,4 @@
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +8,18 @@ import { SKIP_AUTH } from './skip-auth';
 import { AuthTokens, AuthUser } from './models';
 import { RefreshCoordinator } from './refresh-coordinator';
 import { TokenStore } from './token-store';
+
+export class NoSessionError extends Error {
+  constructor() {
+    super('Không có phiên để gia hạn');
+  }
+}
+
+/** @BR-f00-codebase-010: chỉ khi server từ chối refresh token (hoặc không có token) mới coi phiên đã chết; lỗi mạng/5xx thì giữ phiên. */
+export function isSessionRejected(error: unknown): boolean {
+  if (error instanceof NoSessionError) return true;
+  return error instanceof HttpErrorResponse && [400, 401, 403].includes(error.status);
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -48,16 +60,21 @@ export class AuthService {
     if (!this.store.refreshToken()) return;
     try {
       await this.refresh();
-    } catch {
-      this.endSession(false);
+    } catch (error) {
+      // @BR-f00-codebase-010: lỗi tạm thời (mạng, 5xx) → giữ refresh token, chỉ chưa đăng nhập trong bộ nhớ
+      if (isSessionRejected(error)) this.endSession(false);
     }
+  }
+
+  hasSession(): boolean {
+    return this.store.refreshToken() !== null;
   }
 
   /** @BR-f00-codebase-010: gia hạn, chỉ 1 lần dù nhiều request/tab cùng cần. */
   refresh(): Promise<string> {
     return this.coordinator.run(async () => {
       const refreshToken = this.store.refreshToken(); // đọc lại sau khi có khóa: tab khác có thể đã đổi
-      if (!refreshToken) throw new Error('Không có phiên để gia hạn');
+      if (!refreshToken) throw new NoSessionError();
       const tokens = await firstValueFrom(
         this.http.post<AuthTokens>(this.apiUrl('/api/auth/refresh'), { refreshToken }, this.noAuth),
       );

@@ -24,7 +24,7 @@ describe('authInterceptor', () => {
       providers: [
         { provide: APP_CONFIG, useValue: { apiBaseUrl: '' } },
         { provide: CLIENT_APP, useValue: 'admin' },
-        provideRouter([]),
+        provideRouter([{ path: 'login', children: [] }]),
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
       ],
@@ -55,6 +55,37 @@ describe('authInterceptor', () => {
     await expect(result).resolves.toEqual({ ok: true });
     expect(localStorage.getItem('dbx.admin.rt')).toBe('refresh-2');
     backend.verify();
+  });
+
+  // @BR-f00-codebase-010
+  it('refresh bị từ chối 401 thì kết thúc phiên', async () => {
+    const result = firstValueFrom(http.get('/api/admin/profile')).catch((e) => e);
+    backend.expectOne('/api/admin/profile').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await Promise.resolve();
+    backend.expectOne('/api/auth/refresh').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await result;
+    expect(localStorage.getItem('dbx.admin.rt')).toBeNull();
+  });
+
+  // @BR-f00-codebase-010
+  it('refresh lỗi mạng thì lỗi lan ra nhưng giữ refresh token', async () => {
+    const result = firstValueFrom(http.get('/api/admin/profile')).catch((e) => e);
+    backend.expectOne('/api/admin/profile').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await Promise.resolve();
+    backend.expectOne('/api/auth/refresh').error(new ProgressEvent('error'), { status: 0 });
+    const err = await result;
+    expect(err.status).toBe(0);
+    expect(localStorage.getItem('dbx.admin.rt')).toBe('refresh-1');
+  });
+
+  // @BR-f00-codebase-010
+  it('ẩn danh (không có refresh token) gặp 401 thì không gọi refresh', async () => {
+    TestBed.inject(TokenStore).clear();
+    const result = firstValueFrom(http.get('/api/admin/profile')).catch((e) => e);
+    backend.expectOne('/api/admin/profile').flush(null, { status: 401, statusText: 'Unauthorized' });
+    const err = await result;
+    expect(err.status).toBe(401);
+    backend.expectNone('/api/auth/refresh');
   });
 
   it('không gắn Bearer cho request ngoài API', async () => {

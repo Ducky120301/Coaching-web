@@ -6,7 +6,11 @@ describe('safeReturnUrl', () => {
   it('giữ đường dẫn trong cùng web', () => {
     expect(safeReturnUrl('/trang-chu?tu=e2e')).toBe('/trang-chu?tu=e2e');
   });
+  it('cho phép URL tuyệt đối nằm trong query', () => {
+    expect(safeReturnUrl('/trang-chu?next=https://y')).toBe('/trang-chu?next=https://y');
+  });
   it.each([
+    ['/	/evil.com'],
     ['https://evil.example.com'],
     ['//evil.example.com'],
     ['/\\evil.example.com'],
