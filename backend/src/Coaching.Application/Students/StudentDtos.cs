@@ -11,7 +11,9 @@ public sealed record StudentDetailDto(
     string Email,
     string AccountStatus,
     string CoachingStatus,
-    DateTimeOffset CreatedAt)
+    DateTimeOffset CreatedAt,
+    RegistrationInput Registration,
+    IReadOnlyList<string> MissingRequired)
 {
     /// <param name="coach">Coach sở hữu hồ sơ — dùng để hiển thị tên người sửa (Task 3, 5).</param>
     public static StudentDetailDto From(Student student, Coach coach) => new(
@@ -21,5 +23,7 @@ public sealed record StudentDetailDto(
         student.Email.Value,
         student.AccountStatus.ToString(),
         student.CoachingStatus.ToString(),
-        student.CreatedAt);
+        student.CreatedAt,
+        student.Registration.ToInput(),
+        student.MissingRequiredFields); // @BR-f02-ho-so-hoc-vien-004
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Coaching.Application.Students;
+using Coaching.Domain.Students;
 
 namespace Coaching.Acceptance.Support;
 
@@ -40,16 +41,17 @@ public sealed class StudentApi(AcceptanceContext ctx)
             await LoginCoachAsync();
     }
 
-    public async Task<HttpResponseMessage> TryCreateAsync(string? fullName, string? email)
+    public async Task<HttpResponseMessage> TryCreateAsync(string? fullName, string? email, RegistrationInput? registration = null)
     {
-        var response = await ctx.SendJsonAsync(HttpMethod.Post, "/api/admin/students", new { fullName, email }, AdminToken);
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, "/api/admin/students",
+            new { fullName, email, registration }, AdminToken);
         await RememberCreatedAsync(response, fullName);
         return response;
     }
 
-    public async Task<StudentDetailDto> CreateOkAsync(string fullName, string? email = null)
+    public async Task<StudentDetailDto> CreateOkAsync(string fullName, string? email = null, RegistrationInput? registration = null)
     {
-        var response = await TryCreateAsync(fullName, email ?? NewEmail());
+        var response = await TryCreateAsync(fullName, email ?? NewEmail(), registration);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return LastDetail!;
     }

@@ -31,6 +31,11 @@ internal sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         builder.HasOne<Coach>().WithMany().HasForeignKey(s => s.CoachId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<AppUser>().WithOne().HasForeignKey<Student>(s => s.UserId).OnDelete(DeleteBehavior.Restrict);
 
+        // @ADR-f02-ho-so-hoc-vien-002: toàn bộ mục form trong 1 cột JSON
+        builder.OwnsOne(s => s.Registration, r => r.ToJson("Registration"));
+        builder.Navigation(s => s.Registration).IsRequired();
+        builder.Ignore(s => s.MissingRequiredFields);
+
         builder.Ignore(s => s.DomainEvents);
     }
 }

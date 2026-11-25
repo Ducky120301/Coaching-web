@@ -7,7 +7,7 @@ using Coaching.Domain.Students;
 namespace Coaching.Application.Students.Commands;
 
 /// <summary>Không có trường trạng thái: field lạ trong body bị bỏ qua (@BR-f02-ho-so-hoc-vien-005, @BR-f02-ho-so-hoc-vien-006).</summary>
-public sealed record CreateStudentCommand(string? FullName, string? Email);
+public sealed record CreateStudentCommand(string? FullName, string? Email, RegistrationInput? Registration);
 
 public sealed class CreateStudentHandler(
     CurrentCoach currentCoach,
@@ -22,8 +22,10 @@ public sealed class CreateStudentHandler(
             return StudentErrors.CoachNotFound;
 
         var email = Email.Create(command.Email); // @BR-f02-ho-so-hoc-vien-002 → 400 email.required / email.invalid
+        // @ADR-f02-ho-so-hoc-vien-006: luật form ở Domain; @BR-f02-ho-so-hoc-vien-010: "hôm nay" theo giờ VN
+        var registration = RegistrationForm.Create(command.Registration ?? new RegistrationInput(), clock.Today);
         // Kiểm hồ sơ TRƯỚC khi tạo tài khoản; Id tài khoản sinh sẵn để Student giữ UserId.
-        var student = Student.Create(coach.Id, Guid.CreateVersion7(), command.FullName, email, clock.UtcNow);
+        var student = Student.Create(coach.Id, Guid.CreateVersion7(), command.FullName, email, clock.UtcNow, registration);
 
         // @ADR-f02-ho-so-hoc-vien-001: tài khoản + hồ sơ cùng một transaction
         return await unitOfWork.ExecuteInTransactionAsync<StudentDetailDto>(async ct =>

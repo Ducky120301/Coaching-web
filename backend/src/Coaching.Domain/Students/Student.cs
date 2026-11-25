@@ -26,11 +26,18 @@ public sealed class Student : AggregateRoot<Guid>
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    // @ADR-f02-ho-so-hoc-vien-002
+    public RegistrationForm Registration { get; private set; } = default!;
+
+    /// <summary>@BR-f02-ho-so-hoc-vien-004: hồ sơ luôn cho biết mục bắt buộc còn thiếu.</summary>
+    public IReadOnlyList<string> MissingRequiredFields => Registration.MissingRequired();
+
     private Student() { }
 
     private Student(Guid id) : base(id) { }
 
-    public static Student Create(Guid coachId, Guid userId, string? fullName, Email email, DateTimeOffset at)
+    public static Student Create(Guid coachId, Guid userId, string? fullName, Email email, DateTimeOffset at,
+        RegistrationForm? registration = null)
     {
         ArgumentNullException.ThrowIfNull(email);
         if (coachId == Guid.Empty)
@@ -47,6 +54,7 @@ public sealed class Student : AggregateRoot<Guid>
             AccountStatus = AccountStatus.PendingActivation, // @BR-f02-ho-so-hoc-vien-005
             CoachingStatus = CoachingStatus.Active, // @BR-f02-ho-so-hoc-vien-006
             CreatedAt = at,
+            Registration = registration ?? RegistrationForm.CreateEmpty(),
         };
     }
 
