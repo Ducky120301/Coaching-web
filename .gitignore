@@ -52,3 +52,4 @@ database/liquibase.properties
 
 # Local compose env
 deploy/.env
+frontend/e2e/reports/
