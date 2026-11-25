@@ -37,4 +37,11 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> UpdateInternalNote(Guid id, [FromBody] UpdateInternalNoteCommand command,
         [FromServices] UpdateInternalNoteHandler handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
+
+    // @BR-f02-ho-so-hoc-vien-021: route này chỉ có POST — PUT/DELETE → 405, không sửa/xóa được lịch sử
+    [HttpPost("{id:guid}/coaching-status")]
+    [ProducesResponseType<StudentDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ChangeCoachingStatus(Guid id, [FromBody] ChangeCoachingStatusCommand command,
+        [FromServices] ChangeCoachingStatusHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 }

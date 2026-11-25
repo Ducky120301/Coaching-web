@@ -11,6 +11,9 @@ public sealed class Student : AggregateRoot<Guid>
     // @ADR-f02-ho-so-hoc-vien-009
     public const int FullNameMaxLength = 100;
     public const int InternalNoteMaxLength = 5000; // @ADR-f02-ho-so-hoc-vien-009
+    public const int ReasonMaxLength = 500; // @ADR-f02-ho-so-hoc-vien-009
+
+    private readonly List<CoachingStatusChange> _statusHistory = [];
 
     public Guid CoachId { get; private set; }
 
@@ -46,6 +49,9 @@ public sealed class Student : AggregateRoot<Guid>
 
     /// <summary>@BR-f02-ho-so-hoc-vien-014: thời điểm sửa ghi chú, tách khỏi UpdatedAt của hồ sơ.</summary>
     public DateTimeOffset? InternalNoteUpdatedAt { get; private set; }
+
+    /// <summary>@BR-f02-ho-so-hoc-vien-021: chỉ đọc; chỉ ChangeCoachingStatus thêm dòng.</summary>
+    public IReadOnlyList<CoachingStatusChange> StatusHistory => _statusHistory.AsReadOnly();
 
     private Student() { }
 
@@ -98,6 +104,30 @@ public sealed class Student : AggregateRoot<Guid>
             return;
         InternalNote = value;
         InternalNoteUpdatedAt = at;
+    }
+
+    /// <summary>
+    /// @BR-f02-ho-so-hoc-vien-017: chỉ sang trạng thái khác trạng thái hiện tại.
+    /// @BR-f02-ho-so-hoc-vien-018: cần lý do 1–500 ký tự (sau trim).
+    /// @BR-f02-ho-so-hoc-vien-019: Active / Paused / Ended đổi qua lại theo mọi chiều; dữ liệu khác giữ nguyên.
+    /// @BR-f02-ho-so-hoc-vien-020 @ADR-f02-ho-so-hoc-vien-005: thành công ⇒ thêm đúng một dòng lịch sử; thất bại ⇒ không thêm.
+    /// @BR-f02-ho-so-hoc-vien-022: không phụ thuộc trạng thái tài khoản.
+    /// </summary>
+    public void ChangeCoachingStatus(CoachingStatus newStatus, string? reason, Guid actorUserId, DateTimeOffset at)
+    {
+        if (!Enum.IsDefined(newStatus))
+            throw new DomainException("student.status_invalid", "Trạng thái coaching không hợp lệ.");
+        if (newStatus == CoachingStatus)
+            throw new DomainException("student.status_unchanged", "Trạng thái coaching không thay đổi.");
+
+        var text = reason?.Trim();
+        if (string.IsNullOrEmpty(text))
+            throw new DomainException("student.reason_required", "Cần nhập lý do đổi trạng thái coaching.");
+        if (text.Length > ReasonMaxLength)
+            throw new DomainException("student.reason_too_long", $"Lý do tối đa {ReasonMaxLength} ký tự.");
+
+        _statusHistory.Add(new CoachingStatusChange(CoachingStatus, newStatus, actorUserId, at, text));
+        CoachingStatus = newStatus;
     }
 
     // @BR-f02-ho-so-hoc-vien-003

@@ -39,6 +39,20 @@ internal sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         // @ADR-f02-ho-so-hoc-vien-004: rowversion là concurrency token của mọi lệnh sửa
         builder.Property(s => s.Version).IsRowVersion();
 
+        // @ADR-f02-ho-so-hoc-vien-005: lịch sử là entity con, bảng riêng, chỉ thêm
+        builder.OwnsMany(s => s.StatusHistory, h =>
+        {
+            h.ToTable("StudentCoachingStatusChanges");
+            h.WithOwner().HasForeignKey("StudentId");
+            h.HasKey(c => c.Id);
+            h.Property(c => c.Id).ValueGeneratedNever();
+            h.Property(c => c.FromStatus).HasConversion<string>().HasMaxLength(20);
+            h.Property(c => c.ToStatus).HasConversion<string>().HasMaxLength(20);
+            h.Property(c => c.Reason).HasMaxLength(Student.ReasonMaxLength).IsRequired();
+            h.HasIndex("StudentId", nameof(CoachingStatusChange.At));
+        });
+        builder.Navigation(s => s.StatusHistory).UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.Ignore(s => s.DomainEvents);
     }
 }

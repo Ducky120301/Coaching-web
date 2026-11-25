@@ -96,6 +96,16 @@ public sealed class StudentApi(AcceptanceContext ctx)
         return LastDetail;
     }
 
+    public async Task<HttpResponseMessage> TryChangeStatusAsync(string fullName, string status, string reason, string? version = null)
+    {
+        var current = await GetAsync(fullName);
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, $"/api/admin/students/{Ids[fullName]}/coaching-status",
+            new { status, reason, version = version ?? current.Version }, AdminToken);
+        if (response.IsSuccessStatusCode)
+            LastDetail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+        return response;
+    }
+
     public async Task AssertErrorAsync(HttpStatusCode status, string code)
     {
         Assert.Equal(status, ctx.LastResponse!.StatusCode);

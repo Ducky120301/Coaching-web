@@ -23,4 +23,7 @@ public static class StudentErrors
     // @BR-f02-ho-so-hoc-vien-015 @ADR-f02-ho-so-hoc-vien-004
     public static readonly Error VersionConflict =
         new("student.version_conflict", "Hồ sơ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.", ErrorKind.Conflict);
+
+    public static readonly Error StatusInvalid =
+        new("student.status_invalid", "Trạng thái coaching không hợp lệ.");
 }
