@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-25-f02-ho-so-hoc-vien
-status: draft
+status: ready
 ---
 
 # Spec: F02 — Hồ sơ học viên & trạng thái coaching
@@ -133,7 +133,8 @@ Mọi rule là `Thêm mới` (chưa có living doc nào về hồ sơ học viê
 - `BR-f02-ho-so-hoc-vien-023` — Danh sách học viên của coach gồm mọi hồ sơ ở mọi trạng thái, hồ sơ tạo sau đứng trước.
   - ✅ Có 3 hồ sơ, 1 hồ sơ Đã kết thúc → danh sách có đủ 3, hồ sơ tạo gần nhất đứng đầu
   - ✅ Mỗi dòng cho biết tên, email, trạng thái coaching, trạng thái tài khoản
-- `BR-f02-ho-so-hoc-vien-024` — Tìm học viên khớp khi từ khóa nằm trong họ tên hoặc email, không phân biệt hoa/thường.
+- `BR-f02-ho-so-hoc-vien-024` — Tìm học viên khớp khi từ khóa nằm trong họ tên hoặc email, không phân biệt hoa/thường và không phân biệt dấu tiếng Việt.
+  - ✅ Tìm "quan" → có hồ sơ "Phạm Hoàng Quân"
   - ✅ Tìm "Quân" → có hồ sơ "Phạm Hoàng Quân"
   - ✅ Tìm "hquan" → có hồ sơ email "hquanbilly@gmail.com"
   - ❌ Tìm "zzz" → danh sách rỗng
