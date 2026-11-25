@@ -5000,7 +5000,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Dashboard (danh 
 
 **Owns:** `@ADR-f02-ho-so-hoc-vien-008`
 
-- [ ] **Step 1: Viết spec cho `StatusBadge` và `initialsOf`**
+- [x] **Step 1: Viết spec cho `StatusBadge` và `initialsOf`**
 
 `frontend/projects/shared/src/lib/ui/status-badge.component.spec.ts`:
 ```ts
@@ -5043,12 +5043,12 @@ describe('initialsOf', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: FAIL — `Cannot find module './status-badge.component'` và `'./initials'`.
 
-- [ ] **Step 3: shared — badge, initials, icon**
+- [x] **Step 3: shared — badge, initials, icon**
 
 `frontend/projects/shared/src/lib/ui/status-badge.component.ts`:
 ```ts
@@ -5105,12 +5105,12 @@ export * from './lib/format/initials';
 export * from './lib/ui/status-badge.component';
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: PASS, không test nào Failed.
 
-- [ ] **Step 5: Viết spec cho màn Dashboard**
+- [x] **Step 5: Viết spec cho màn Dashboard**
 
 `frontend/projects/admin/src/app/students/student-list.component.spec.ts`:
 ```ts
@@ -5207,12 +5207,12 @@ describe('StudentListComponent', () => {
 });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './student-list.component'`.
 
-- [ ] **Step 7: Model, nhãn trạng thái, API, màn Dashboard**
+- [x] **Step 7: Model, nhãn trạng thái, API, màn Dashboard**
 
 `frontend/projects/admin/src/app/students/student.models.ts`:
 ```ts
@@ -5422,7 +5422,7 @@ export class StudentListComponent {
 }
 ```
 
-- [ ] **Step 8: Route `dashboard` làm trang đích + mục rail "Dashboard"**
+- [x] **Step 8: Route `dashboard` làm trang đích + mục rail "Dashboard"**
 
 `frontend/projects/admin/src/app/app.routes.ts` — thay toàn bộ:
 ```ts
@@ -5561,7 +5561,7 @@ export class AdminShellComponent {
 
 Xóa `frontend/projects/admin/src/app/home/admin-home.component.ts` và `frontend/projects/admin/src/app/home/admin-home.component.spec.ts` (trang chủ cũ được thay bằng dashboard; rail chỉ hiện mục đã có trang). Tên coach lấy từ hệ thống giờ nằm ở user menu của rail (spec ở trên).
 
-- [ ] **Step 9: Cập nhật e2e F00 theo trang đích mới**
+- [x] **Step 9: Cập nhật e2e F00 theo trang đích mới**
 
 `frontend/e2e/steps/login.steps.ts` — thay step `admin vào được khu vực coach` bằng:
 ```ts
@@ -5627,7 +5627,7 @@ Then('admin được đưa về trang chủ của web quản trị', async funct
 });
 ```
 
-- [ ] **Step 10: Chạy — kỳ vọng PASS**
+- [x] **Step 10: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS cả `shared`, `admin`, `client` (không còn spec `admin-home`).
@@ -5635,7 +5635,7 @@ Run: `cd frontend && npx ng build admin`
 Expected: build thành công, có lazy chunk `student-list-component`.
 Kiểm tay (`npx ng serve admin` + API local): đăng nhập → vào `/dashboard`; so với page `Admin-Dashboard` của prototype ở 390px và 1280px (rail, nút "Tạo hồ sơ học viên", ô tìm 48px radius 14, bảng: header 13px muted, cell 14px 12px, dòng `--rowLine`, hover `--rowHover`).
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 ```bash
 git add frontend/projects/shared frontend/projects/admin frontend/e2e/steps/login.steps.ts frontend/e2e/steps/session.steps.ts
 git commit -F - <<'EOF'
