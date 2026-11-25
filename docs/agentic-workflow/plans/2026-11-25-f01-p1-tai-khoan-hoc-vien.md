@@ -670,7 +670,7 @@ EOF
 
 **Owns:** — | `@ADR-f01-p1-tai-khoan-hoc-vien-007`, `@ADR-f01-p1-tai-khoan-hoc-vien-008`
 
-- [ ] **Step 1: Viết integration test — provider Capture, hai chốt, endpoint test**
+- [x] **Step 1: Viết integration test — provider Capture, hai chốt, endpoint test**
 
 `backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs` — thêm `using Coaching.Infrastructure.Emailing;` vào đầu file; thêm sau dòng `public const string AdminPassword = "Admin@12345";`:
 ```csharp
@@ -971,12 +971,12 @@ public sealed class LoggingEmailSenderTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Emailing"`
 Expected: FAIL — build error `The type or namespace name 'EmailOutbox' could not be found`, `The type or namespace name 'IEmailQueue' could not be found`, `The type or namespace name 'Accounts' does not exist in the namespace 'Coaching.Application'`.
 
-- [ ] **Step 3: Application — port hàng đợi, port nội dung email, lỗi tài khoản**
+- [x] **Step 3: Application — port hàng đợi, port nội dung email, lỗi tài khoản**
 
 `backend/src/Coaching.Application/Abstractions/IEmailQueue.cs`:
 ```csharp
@@ -1026,7 +1026,7 @@ public static class AccountErrors
 }
 ```
 
-- [ ] **Step 4: Infrastructure — provider Capture, hộp thư, hàng đợi, nội dung email, Log an toàn**
+- [x] **Step 4: Infrastructure — provider Capture, hộp thư, hàng đợi, nội dung email, Log an toàn**
 
 `backend/src/Coaching.Infrastructure/Emailing/EmailProviders.cs`:
 ```csharp
@@ -1432,7 +1432,7 @@ internal sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger, IHo
     }
 ```
 
-- [ ] **Step 5: API — `TestEmailsController` chỉ map khi Capture, truyền môi trường vào Infrastructure, cấu hình `App`**
+- [x] **Step 5: API — `TestEmailsController` chỉ map khi Capture, truyền môi trường vào Infrastructure, cấu hình `App`**
 
 `backend/src/Coaching.Api/Common/ExcludeControllersFeatureProvider.cs`:
 ```csharp
@@ -1516,14 +1516,14 @@ builder.Services.AddControllers()
   },
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng PASS**
+- [x] **Step 6: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Emailing"`
 Expected: `Passed: 16`, `Failed: 0` (CaptureProvider 5, EmailQueue 2, AccountEmails 7, LoggingEmailSender 2).
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (integration test cũ chạy với provider Capture; acceptance vẫn `Email:Provider=Log`).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 ```bash
 git add backend/src backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs backend/tests/Coaching.Api.IntegrationTests/Emailing
 git commit -F - <<'EOF'
