@@ -1552,7 +1552,7 @@ EOF
 
 **Owns:** — | `@ADR-f01-p1-tai-khoan-hoc-vien-003`
 
-- [ ] **Step 1: Viết integration test cho kho token**
+- [x] **Step 1: Viết integration test cho kho token**
 
 `backend/tests/Coaching.Api.IntegrationTests/Accounts/AccountTokenStoreTests.cs`:
 ```csharp
@@ -1744,12 +1744,12 @@ public sealed class AccountTokenStoreTests : IDisposable
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~AccountTokenStoreTests"`
 Expected: FAIL — build error `The type or namespace name 'IAccountTokens' could not be found`, `The type or namespace name 'AccountTokenPurpose' could not be found`, `'AppDbContext' does not contain a definition for 'AccountTokens'`.
 
-- [ ] **Step 3: Application — port `IAccountTokens`**
+- [x] **Step 3: Application — port `IAccountTokens`**
 
 `backend/src/Coaching.Application/Accounts/AccountTokens.cs`:
 ```csharp
@@ -1794,7 +1794,7 @@ public interface IAccountTokens
 }
 ```
 
-- [ ] **Step 4: Infrastructure — entity, cấu hình EF, store, đăng ký DI**
+- [x] **Step 4: Infrastructure — entity, cấu hình EF, store, đăng ký DI**
 
 `backend/src/Coaching.Infrastructure/Identity/TokenHasher.cs` — thay dòng `public static string NewToken() => Base64UrlEncode(RandomNumberGenerator.GetBytes(64));` bằng:
 ```csharp
@@ -1947,14 +1947,14 @@ internal sealed class AccountTokenStore(AppDbContext db, IClock clock) : IAccoun
         services.AddScoped<IAccountTokens, AccountTokenStore>(); // @ADR-f01-p1-tai-khoan-hoc-vien-003
 ```
 
-- [ ] **Step 5: Chạy — kỳ vọng PASS**
+- [x] **Step 5: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~AccountTokenStoreTests"`
 Expected: `Passed: 7`, `Failed: 0`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (refresh token F00 vẫn dùng `TokenHasher.NewToken()` 64 byte).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 ```bash
 git add backend/src backend/tests/Coaching.Api.IntegrationTests/Accounts
 git commit -F - <<'EOF'
