@@ -1,0 +1,192 @@
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Coaching.Application.Abstractions;
+using Coaching.Application.Auth;
+using Coaching.Application.Students;
+using Coaching.Domain.Students;
+using Coaching.Infrastructure.Emailing;
+using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
+using Coaching.TestSupport;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Coaching.Acceptance.Support;
+
+/// <summary>
+/// Tài khoản học viên trong scenario F01-P1: hồ sơ "học viên đó", gửi thông tin đăng nhập, đọc thư capture
+/// (Email:Provider=Capture → EmailOutbox singleton trong DI), đăng nhập bằng mật khẩu tạm.
+/// </summary>
+public sealed partial class AccountApi(AcceptanceContext ctx, StudentApi api)
+{
+    /// <summary>Họ tên của "học viên đó" trong mọi scenario tài khoản.</summary>
+    public const string StudentName = "Học viên tài khoản";
+
+    public const string DefaultOwnPassword = "Coach2025";
+
+    public const string CredentialsSubject = "Thông tin đăng nhập Duobexiuuu Coaching";
+
+    /// <summary>Email hiện tại theo họ tên hồ sơ (cập nhật khi gửi / sửa email thành công).</summary>
+    public Dictionary<string, string> Emails { get; } = new();
+
+    /// <summary>Mật khẩu tạm của các lần gửi THÀNH CÔNG, theo thứ tự (đọc từ thư capture).</summary>
+    public List<string> TempPasswords { get; } = [];
+
+    /// <summary>"mật khẩu tạm đó" của scenario.</summary>
+    public string? FocusTemp { get; set; }
+
+    /// <summary>Mã kích hoạt của lần đăng nhập bằng mật khẩu tạm gần nhất.</summary>
+    public string? ActivationToken { get; private set; }
+
+    /// <summary>Mật khẩu riêng hiện tại của học viên.</summary>
+    public string? OwnPassword { get; set; }
+
+    /// <summary>Số thư cùng loại tới học viên ngay trước thao tác gửi gần nhất.</summary>
+    public int MailCountBefore { get; private set; }
+
+    /// <summary>Số dòng lịch sử tài khoản trước thao tác đang kiểm.</summary>
+    public int HistoryBefore { get; set; }
+
+    public string SentBody { get; set; } = string.Empty;
+
+    public string LastBody { get; private set; } = string.Empty;
+
+    public StudentDetailDto? LastDetail { get; private set; }
+
+    public EmailOutbox Outbox => ctx.Host.Services.GetRequiredService<EmailOutbox>();
+
+    public string Email(string name = StudentName) => Emails[name];
+
+    public Guid Id(string name = StudentName) => api.Ids[name];
+
+    public IReadOnlyList<CapturedEmail> Mails(string to, string subject) =>
+        Outbox.All.Where(m => string.Equals(m.To, to.Trim(), StringComparison.OrdinalIgnoreCase) && m.Subject == subject).ToList();
+
+    public IReadOnlyList<CapturedEmail> CredentialMails(string? to = null) => Mails(to ?? Email(), CredentialsSubject);
+
+    /// <summary>Hồ sơ đủ mục bắt buộc (mặc định), tài khoản Chờ kích hoạt, chưa gửi lần nào.</summary>
+    public async Task<StudentDetailDto> CreateAsync(string name = StudentName, string? email = null,
+        RegistrationInput? registration = null)
+    {
+        await api.LoginCoachAsync();
+        var detail = await api.CreateOkAsync(name, email ?? StudentApi.NewEmail(), registration ?? RegistrationSamples.Complete());
+        Emails[name] = detail.Email;
+        return detail;
+    }
+
+    public async Task<HttpResponseMessage> TrySendCredentialsAsync(string name = StudentName)
+    {
+        await api.LoginCoachAsync(); // đồng hồ có thể đã tua quá hạn access token
+        MailCountBefore = CredentialMails(Emails[name]).Count;
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, $"/api/admin/students/{api.Ids[name]}/credentials", new { },
+            api.AdminToken);
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var detail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+            Emails[name] = detail.Email;
+            TempPasswords.Add(TempPassword(CredentialMails(detail.Email)[^1]));
+        }
+
+        return response;
+    }
+
+    public async Task SendOkAsync(string name = StudentName)
+    {
+        Assert.Equal(HttpStatusCode.OK, (await TrySendCredentialsAsync(name)).StatusCode);
+        FocusTemp = TempPasswords[^1];
+    }
+
+    /// <summary>Tạo hồ sơ, gửi thông tin đăng nhập rồi tua đồng hồ <paramref name="elapsed"/>.</summary>
+    public async Task SendThenWaitAsync(TimeSpan elapsed)
+    {
+        await CreateAsync();
+        await SendOkAsync();
+        ctx.Clock.Advance(elapsed);
+    }
+
+    /// <summary>Coach xem hồ sơ: nhớ cả body thô (để kiểm không có mật khẩu) và DTO.</summary>
+    public async Task<StudentDetailDto> ViewAsync(string name = StudentName)
+    {
+        await api.LoginCoachAsync();
+        var response = await ctx.GetAsync($"/api/admin/students/{api.Ids[name]}", api.AdminToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        LastBody = await response.Content.ReadAsStringAsync();
+        LastDetail = JsonSerializer.Deserialize<StudentDetailDto>(LastBody, JsonSerializerOptions.Web)!;
+        return LastDetail;
+    }
+
+    /// <summary>Đăng nhập bằng email của "học viên đó" (hoặc <paramref name="email"/>); nhớ mã kích hoạt hoặc phiên.</summary>
+    public async Task<HttpResponseMessage> StudentLoginAsync(string password, string app = "client", string? email = null)
+    {
+        var response = await ctx.LoginAsync(email ?? Email(), password, app);
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            if (json.RootElement.TryGetProperty("activationRequired", out var required) && required.GetBoolean())
+                ActivationToken = json.RootElement.GetProperty("activationToken").GetString();
+            else
+                ctx.Tokens = json.RootElement.Deserialize<AuthTokens>(JsonSerializerOptions.Web);
+        }
+
+        return response;
+    }
+
+    /// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-002: 200 có mã kích hoạt, KHÔNG có phiên.</summary>
+    public async Task AssertActivationChallengeAsync()
+    {
+        Assert.Equal(HttpStatusCode.OK, ctx.LastResponse!.StatusCode);
+        using var json = JsonDocument.Parse(await ctx.LastResponse.Content.ReadAsStringAsync());
+        Assert.True(json.RootElement.GetProperty("activationRequired").GetBoolean());
+        Assert.False(string.IsNullOrEmpty(json.RootElement.GetProperty("activationToken").GetString()));
+        Assert.False(json.RootElement.TryGetProperty("accessToken", out _));
+        Assert.False(json.RootElement.TryGetProperty("refreshToken", out _));
+    }
+
+    public async Task AssertProblemTitleAsync(string title)
+    {
+        var problem = await ctx.LastResponse!.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(title, problem!.Title);
+    }
+
+    /// <summary>
+    /// Học viên Đã kích hoạt với mật khẩu riêng <paramref name="password"/>. Task 4 kích hoạt thẳng trong DB
+    /// (API kích hoạt có ở Task 5 — Task 5 thay thân hàm bằng luồng thật).
+    /// </summary>
+    public async Task<StudentDetailDto> CreateActivatedAsync(string name = StudentName, string? email = null,
+        string password = DefaultOwnPassword)
+    {
+        var detail = await CreateAsync(name, email);
+        await using var scope = ctx.Host.Services.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+        var db = sp.GetRequiredService<AppDbContext>();
+        var users = sp.GetRequiredService<UserManager<AppUser>>();
+        var student = await db.Students.SingleAsync(s => s.Id == detail.Id);
+        var user = (await users.FindByIdAsync(student.UserId.ToString()))!;
+        Assert.True((await users.AddPasswordAsync(user, password)).Succeeded);
+        student.Activate(sp.GetRequiredService<IClock>().UtcNow);
+        await db.SaveChangesAsync();
+        OwnPassword = password;
+        return detail;
+    }
+
+    /// <summary>Mật khẩu tạm trong thư (dòng "Mật khẩu tạm: …" của AccountEmails).</summary>
+    public static string TempPassword(CapturedEmail mail) =>
+        TempPasswordPattern().Match(mail.TextBody) is { Success: true } match
+            ? match.Groups[1].Value
+            : throw new InvalidOperationException($"Thư '{mail.Subject}' tới {mail.To} không có dòng mật khẩu tạm.");
+
+    /// <summary>Mọi địa chỉ http(s) trong thân thư (bỏ dấu câu dính cuối).</summary>
+    public static IReadOnlyList<string> Urls(string body) =>
+        UrlPattern().Matches(body).Select(m => m.Value.TrimEnd('.', ',', ')')).ToList();
+
+    [GeneratedRegex(@"Mật khẩu tạm:\s*(\S+)")]
+    private static partial Regex TempPasswordPattern();
+
+    [GeneratedRegex(@"https?://[^\s""'<>]+")]
+    private static partial Regex UrlPattern();
+}

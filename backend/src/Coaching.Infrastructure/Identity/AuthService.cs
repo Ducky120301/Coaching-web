@@ -1,6 +1,8 @@
 using Coaching.Application.Abstractions;
+using Coaching.Application.Accounts;
 using Coaching.Application.Auth;
 using Coaching.Application.Common;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,7 @@ internal sealed class AuthService(
     AppDbContext db,
     JwtTokenGenerator tokenGenerator,
     IOptions<JwtOptions> jwtOptions,
+    IAccountTokens accountTokens,
     IClock clock) : IAuthService
 {
     // @BR-f00-codebase-007
@@ -22,7 +25,7 @@ internal sealed class AuthService(
     // @BR-f00-codebase-011 @BR-f00-codebase-012
     public static readonly TimeSpan ReuseGracePeriod = TimeSpan.FromSeconds(30);
 
-    public async Task<Result<AuthTokens>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<LoginOutcome>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password))
             return AuthErrors.InvalidCredentials;
@@ -45,25 +48,61 @@ internal sealed class AuthService(
             return AuthErrors.InvalidCredentials;
         }
 
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002 @ADR-f01-p1-tai-khoan-hoc-vien-001: học viên Chờ kích hoạt chỉ có mật khẩu tạm.
+        // Kiểm TRƯỚC vai trò: mật khẩu tạm trên web quản trị nhận thông báo chung, không phải WrongApp.
+        if (await FindPendingStudentAsync(user.Id, cancellationToken) is { } pending)
+            return await ChallengeAsync(user, pending, app, now, cancellationToken);
+
         // @ADR-f00-codebase-001 @BR-f00-codebase-004 @BR-f00-codebase-005: sai web → không cấp phiên.
         // Kiểm SAU khi mật khẩu đúng: người chưa biết mật khẩu chỉ nhận thông báo chung (@BR-f00-codebase-006).
         var requiredRole = app == ClientApp.Admin ? Roles.Admin : Roles.Student;
         if (!await userManager.IsInRoleAsync(user, requiredRole))
             return AuthErrors.WrongApp(app);
 
-        // @BR-f00-codebase-007: chỉ xóa bộ đếm khi đăng nhập thành công (đúng mật khẩu VÀ đúng web).
+        await ResetFailedAttemptsAsync(user);
+        return new LoginOutcome(await IssueTokensAsync(user, cancellationToken), null);
+    }
+
+    private Task<Student?> FindPendingStudentAsync(Guid userId, CancellationToken ct) =>
+        db.Students.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.UserId == userId && s.AccountStatus == AccountStatus.PendingActivation, ct);
+
+    private async Task<Result<LoginOutcome>> ChallengeAsync(AppUser user, Student pending, ClientApp app, DateTimeOffset now,
+        CancellationToken ct)
+    {
+        // @BR-f01-p1-tai-khoan-hoc-vien-004 @BR-f01-p1-tai-khoan-hoc-vien-012: mật khẩu tạm hết hạn → thông báo chung, tính là một lần sai
+        if (!pending.IsTempPasswordValid(now))
+        {
+            await RegisterFailedAttemptAsync(user, now, ct);
+            return AuthErrors.InvalidCredentials;
+        }
+
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002: mật khẩu tạm không mở web quản trị
+        if (app == ClientApp.Admin)
+            return AuthErrors.InvalidCredentials;
+
+        await ResetFailedAttemptsAsync(user);
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002: không cấp JWT; mã kích hoạt 30 phút, không quá hạn mật khẩu tạm
+        var cap = now + AccountTokenLifetimes.Activation;
+        var tempExpiry = pending.TempPasswordExpiresAt!.Value;
+        var expiresAt = tempExpiry < cap ? tempExpiry : cap;
+        var token = await accountTokens.IssueAsync(user.Id, AccountTokenPurpose.Activation, AccountTokenSource.Login, expiresAt, ct);
+        return new LoginOutcome(null, new ActivationChallenge(true, token, expiresAt));
+    }
+
+    private static bool IsLockedOut(AppUser user, DateTimeOffset now) =>
+        user.LockoutEnd is { } end && end > now;
+
+    // @BR-f00-codebase-007: chỉ xóa bộ đếm khi mật khẩu đúng VÀ đúng web
+    private async Task ResetFailedAttemptsAsync(AppUser user)
+    {
         if (user.AccessFailedCount != 0 || user.LockoutEnd is not null)
         {
             user.AccessFailedCount = 0;
             user.LockoutEnd = null;
             await userManager.UpdateAsync(user);
         }
-
-        return await IssueTokensAsync(user, cancellationToken);
     }
-
-    private static bool IsLockedOut(AppUser user, DateTimeOffset now) =>
-        user.LockoutEnd is { } end && end > now;
 
     // @BR-f00-codebase-007: sai 5 lần liên tiếp → khóa 5 phút.
     // Một câu UPDATE nguyên tử: cả hai vế SET tính từ giá trị cũ của dòng → không mất lần đếm khi đăng nhập song song.

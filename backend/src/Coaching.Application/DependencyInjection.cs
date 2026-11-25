@@ -1,3 +1,4 @@
+using Coaching.Application.Accounts;
 using Coaching.Application.Coaches;
 using Coaching.Application.Students.Commands;
 using Coaching.Application.Students.Queries;
@@ -22,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<GetStudentSelfHandler>();
         services.AddScoped<ChangeCoachingStatusHandler>();
         services.AddScoped<ListStudentsHandler>();
+        services.AddScoped<CredentialsMailer>();
+        services.AddScoped<SendCredentialsHandler>();
         return services;
     }
 }

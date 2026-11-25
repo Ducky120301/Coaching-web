@@ -21,6 +21,9 @@ public sealed class AcceptanceContext : IDisposable
     public const string AdminPassword = "Admin@12345";
     public const string AdminName = "Coach Duobexiuuu";
 
+    /// <summary>App:ClientBaseUrl của scenario — địa chỉ trong email (NFR-f01-p1-tai-khoan-hoc-vien-003).</summary>
+    public const string ClientBaseUrl = "http://client.acceptance.local";
+
     /// <summary>
     /// Mọi scenario bắt đầu lúc 01/11/2026 00:00 UTC. FakeTimeProvider chỉ tua tiến, nên step "hôm nay là …"
     /// (≥ 01/11/2026) luôn tua được. JwtBearer và mọi nghiệp vụ đã đọc giờ qua TimeProvider (F00 Task 2).
@@ -35,7 +38,9 @@ public sealed class AcceptanceContext : IDisposable
         ["AdminSeed:Email"] = AdminEmail,
         ["AdminSeed:Password"] = AdminPassword,
         ["AdminSeed:FullName"] = AdminName,
-        ["Email:Provider"] = "Log",
+        // Thư F01-P1 đọc qua EmailOutbox (singleton trong DI); EmailOutbox.FailNext mô phỏng dịch vụ email lỗi
+        ["Email:Provider"] = "Capture",
+        ["App:ClientBaseUrl"] = ClientBaseUrl,
         ["RateLimiting:AuthPermitPerMinute"] = "1000",
     };
 
@@ -139,7 +144,11 @@ public sealed class AcceptanceContext : IDisposable
         var db = sp.GetRequiredService<AppDbContext>();
         var adminEmail = Email.Create(AdminEmail);
         var coach = await db.Coaches.SingleAsync(c => c.Email == adminEmail);
-        db.Students.Add(Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), sp.GetRequiredService<IClock>().UtcNow));
+        var now = sp.GetRequiredService<IClock>().UtcNow;
+        var student = Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), now);
+        // F01-P1: học viên có mật khẩu riêng là học viên Đã kích hoạt — Chờ kích hoạt chỉ đăng nhập được bằng mật khẩu tạm
+        student.Activate(now);
+        db.Students.Add(student);
         await db.SaveChangesAsync();
         return (email, password);
     }

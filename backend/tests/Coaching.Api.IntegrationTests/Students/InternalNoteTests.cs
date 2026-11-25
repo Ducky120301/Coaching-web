@@ -1,9 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using Coaching.Application.Abstractions;
 using Coaching.Application.Students;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Api.IntegrationTests.Students;
@@ -59,7 +62,7 @@ public sealed class InternalNoteTests(ApiFactory factory)
         Assert.Equal(email, me.Email);
         Assert.Equal("Học viên Test", me.FullName);
         Assert.Equal("Active", me.CoachingStatus);
-        Assert.Equal("PendingActivation", me.AccountStatus);
+        Assert.Equal("Activated", me.AccountStatus); // F01-P1: CreateStudentAsync tạo học viên có mật khẩu riêng → Đã kích hoạt
     }
 
     // @BR-f02-ho-so-hoc-vien-014 @BR-f02-ho-so-hoc-vien-016: tạo hồ sơ kèm ghi chú trong cùng request
@@ -81,9 +84,15 @@ public sealed class InternalNoteTests(ApiFactory factory)
         const string password = "Student@123";
         await using (var scope = factory.Services.CreateAsyncScope())
         {
-            // Kích hoạt là việc của F01; đặt mật khẩu trực tiếp để học viên đăng nhập được.
+            // Đặt mật khẩu riêng + kích hoạt trực tiếp để học viên đăng nhập được
+            // (F01-P1: tài khoản Chờ kích hoạt chỉ đăng nhập bằng mật khẩu tạm — ADR-f01-p1-tai-khoan-hoc-vien-002).
             var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-            Assert.True((await users.AddPasswordAsync((await users.FindByEmailAsync(email))!, password)).Succeeded);
+            var user = (await users.FindByEmailAsync(email))!;
+            Assert.True((await users.AddPasswordAsync(user, password)).Succeeded);
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var profile = await db.Students.SingleAsync(s => s.UserId == user.Id);
+            profile.Activate(scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
+            await db.SaveChangesAsync();
         }
         var tokens = await factory.LoginAsync(email, password);
         var client = factory.CreateClient();

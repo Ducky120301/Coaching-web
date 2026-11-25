@@ -50,4 +50,11 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> ChangeCoachingStatus(Guid id, [FromBody] ChangeCoachingStatusCommand command,
         [FromServices] ChangeCoachingStatusHandler handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-025: trả StudentDetailDto — mật khẩu tạm chỉ có trong email
+    [HttpPost("{id:guid}/credentials")]
+    [ProducesResponseType<StudentDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendCredentials(Guid id, [FromServices] SendCredentialsHandler handler,
+        CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
 }

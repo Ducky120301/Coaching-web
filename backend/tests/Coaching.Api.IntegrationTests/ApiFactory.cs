@@ -74,6 +74,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         return client;
     }
 
+    /// <summary>Host test đã chạy Email:Provider=Capture (Task 2) — alias để test F01-P1 ghi rõ ý đọc thư.</summary>
+    public WebApplicationFactory<Program> Capture => this;
+
+    /// <summary>HttpClient admin seed trên host Capture.</summary>
+    public Task<HttpClient> CaptureAdminClientAsync() => AdminClientAsync();
+
     /// <summary>Tạo học viên đăng nhập được (luồng mời/kích hoạt làm ở F01): tài khoản có mật khẩu + hồ sơ Student.</summary>
     public async Task<(string Email, string Password)> CreateStudentAsync()
     {
@@ -92,7 +98,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         var db = sp.GetRequiredService<AppDbContext>();
         var adminEmail = Email.Create(AdminEmail);
         var coach = await db.Coaches.SingleAsync(c => c.Email == adminEmail);
-        db.Students.Add(Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), sp.GetRequiredService<IClock>().UtcNow));
+        var now = sp.GetRequiredService<IClock>().UtcNow;
+        var student = Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), now);
+        // F01-P1: học viên có mật khẩu riêng là học viên Đã kích hoạt — Chờ kích hoạt chỉ đăng nhập được bằng mật khẩu tạm
+        student.Activate(now);
+        db.Students.Add(student);
         await db.SaveChangesAsync();
         return (email, password);
     }

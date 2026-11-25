@@ -63,12 +63,19 @@ public static class DatabaseInitializer
             var demo = await EnsureUserAsync(userManager, clock, demoEmail.Value, demoSeed.Password!, demoSeed.FullName, Roles.Student, logger);
 
             // @ADR-f02-ho-so-hoc-vien-001: học viên demo (seed từ F00) cần hồ sơ Student — bổ sung nếu thiếu, idempotent
-            if (!await db.Students.AnyAsync(s => s.UserId == demo.Id, cancellationToken))
+            var demoStudent = await db.Students.SingleOrDefaultAsync(s => s.UserId == demo.Id, cancellationToken);
+            if (demoStudent is null)
             {
                 var coach = await db.Coaches.SingleAsync(c => c.UserId == admin.Id, cancellationToken);
-                db.Students.Add(Student.Create(coach.Id, demo.Id, demoSeed.FullName, demoEmail, clock.UtcNow));
-                await db.SaveChangesAsync(cancellationToken);
+                demoStudent = Student.Create(coach.Id, demo.Id, demoSeed.FullName, demoEmail, clock.UtcNow);
+                db.Students.Add(demoStudent);
             }
+
+            // @BR-f00-codebase-020: demo đã có mật khẩu riêng từ seed → phải Đã kích hoạt mới đăng nhập được
+            // (Chờ kích hoạt chỉ vào bằng mật khẩu tạm — ADR-f01-p1-tai-khoan-hoc-vien-002). Chỉ kích hoạt khi còn Chờ → idempotent.
+            if (demoStudent.AccountStatus == AccountStatus.PendingActivation)
+                demoStudent.Activate(clock.UtcNow);
+            await db.SaveChangesAsync(cancellationToken);
         }
 
         // @ADR-f02-ho-so-hoc-vien-003: hồ sơ tạo trước khi có SearchKey (cột mặc định '') được tính lại một lần

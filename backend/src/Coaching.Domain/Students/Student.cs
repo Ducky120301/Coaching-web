@@ -166,6 +166,51 @@ public sealed class Student : AggregateRoot<Guid>
         CoachingStatus = newStatus;
     }
 
+    /// <summary>
+    /// @BR-f01-p1-tai-khoan-hoc-vien-004: mật khẩu tạm còn hiệu lực khi tài khoản Chờ kích hoạt và now &lt; hạn
+    /// (hết hạn khi now >= hạn — đúng 72 giờ là hết).
+    /// @BR-f01-p1-tai-khoan-hoc-vien-012: tài khoản đã kích hoạt không còn mật khẩu tạm nào dùng được.
+    /// </summary>
+    public bool IsTempPasswordValid(DateTimeOffset now) =>
+        AccountStatus == AccountStatus.PendingActivation && TempPasswordExpiresAt is { } expiresAt && now < expiresAt;
+
+    /// <summary>
+    /// Coach gửi (lần đầu) hoặc gửi lại thông tin đăng nhập. Mật khẩu tạm do IAccountCredentials đặt trong cùng transaction
+    /// (@ADR-f01-p1-tai-khoan-hoc-vien-001: mật khẩu tạm là mật khẩu Identity, hạn dùng nằm ở đây).
+    /// </summary>
+    public void RecordCredentialsSent(Guid actorUserId, DateTimeOffset at)
+    {
+        // @BR-f01-p1-tai-khoan-hoc-vien-001: chỉ tài khoản Chờ kích hoạt, ở mọi trạng thái coaching
+        if (AccountStatus == AccountStatus.Activated)
+            throw new DomainException("account.already_activated", "Tài khoản đã kích hoạt. Chỉ gửi được link đặt lại mật khẩu.");
+
+        var first = CredentialsSentAt is null;
+        // @BR-f01-p1-tai-khoan-hoc-vien-002: chỉ lần gửi đầu mới cần đủ mục bắt buộc
+        var missing = MissingRequiredFields.Count;
+        if (first && missing > 0)
+            throw new DomainException("account.required_fields_missing", $"Còn {missing} mục bắt buộc chưa điền.");
+
+        CredentialsSentAt = at;
+        TempPasswordExpiresAt = at + TempPasswordLifetime; // @BR-f01-p1-tai-khoan-hoc-vien-004
+        // @BR-f01-p1-tai-khoan-hoc-vien-005: gửi lại = mật khẩu tạm mới, mật khẩu tạm cũ bị huỷ
+        _accountEvents.Add(new StudentAccountEvent(
+            first ? AccountEventType.CredentialsSent : AccountEventType.CredentialsResent, at, actorUserId));
+    }
+
+    /// <summary>
+    /// Chờ kích hoạt → Đã kích hoạt, ghi thời điểm kích hoạt; mật khẩu tạm hết hiệu lực ngay.
+    /// Không kiểm mật khẩu tạm ở đây: use case kích hoạt kiểm (Task 5); seed học viên demo kích hoạt trực tiếp vì demo đã có mật khẩu riêng.
+    /// </summary>
+    public void Activate(DateTimeOffset at)
+    {
+        if (AccountStatus == AccountStatus.Activated)
+            throw new DomainException("account.already_activated", "Tài khoản đã kích hoạt.");
+        AccountStatus = AccountStatus.Activated;
+        ActivatedAt = at;
+        TempPasswordExpiresAt = null;
+        _accountEvents.Add(new StudentAccountEvent(AccountEventType.Activated, at, UserId));
+    }
+
     /// <summary>@ADR-f02-ho-so-hoc-vien-003: tính lại SearchKey (gọi khi tạo, khi đổi tên, và khi backfill lúc khởi động).</summary>
     public void RefreshSearchKey() => SearchKey = SearchText.Normalize($"{FullName} {Email.Value}");
 

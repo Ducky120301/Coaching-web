@@ -16,8 +16,14 @@ public sealed class AuthController(IAuthService auth) : ControllerBase
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType<AuthTokens>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken) =>
-        (await auth.LoginAsync(request, cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
+    {
+        var result = await auth.LoginAsync(request, cancellationToken);
+        if (!result.IsSuccess)
+            return result.Error!.ToProblem(this);
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002: dạng cũ AuthTokens giữ nguyên; dạng mới { activationRequired, activationToken, activationTokenExpiresAt }
+        return result.Value.Tokens is { } tokens ? Ok(tokens) : Ok(result.Value.Challenge);
+    }
 
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]

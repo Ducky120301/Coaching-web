@@ -1,8 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using Coaching.Acceptance.Support;
+using Coaching.Application.Abstractions;
 using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Reqnroll;
 
@@ -57,10 +60,15 @@ public sealed class StudentNoteSteps(AcceptanceContext ctx, StudentApi api)
         const string password = "Student@123";
         await using (var scope = ctx.Host.Services.CreateAsyncScope())
         {
-            // Kích hoạt tài khoản là việc của F01; ở đây đặt mật khẩu trực tiếp để học viên đăng nhập được.
+            // Đặt mật khẩu riêng + kích hoạt trực tiếp để học viên đăng nhập được
+            // (F01-P1: tài khoản Chờ kích hoạt chỉ đăng nhập bằng mật khẩu tạm — ADR-f01-p1-tai-khoan-hoc-vien-002).
             var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
             var user = (await users.FindByEmailAsync(detail.Email))!;
             Assert.True((await users.AddPasswordAsync(user, password)).Succeeded);
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var profile = await db.Students.SingleAsync(s => s.UserId == user.Id);
+            profile.Activate(scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
+            await db.SaveChangesAsync();
         }
 
         var tokens = await ctx.LoginOkAsync(detail.Email, password, "client");
