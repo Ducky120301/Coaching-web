@@ -1,6 +1,7 @@
 using Coaching.Application.Abstractions;
 using Coaching.Application.Common;
 using Coaching.Domain.Coaches;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Identity;
 using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -59,7 +60,15 @@ public static class DatabaseInitializer
         {
             ValidateSeedCredentials("DemoSeed", demoSeed.Email, demoSeed.Password);
             var demoEmail = DomainEmail.Create(demoSeed.Email);
-            await EnsureUserAsync(userManager, clock, demoEmail.Value, demoSeed.Password!, demoSeed.FullName, Roles.Student, logger);
+            var demo = await EnsureUserAsync(userManager, clock, demoEmail.Value, demoSeed.Password!, demoSeed.FullName, Roles.Student, logger);
+
+            // @ADR-f02-ho-so-hoc-vien-001: học viên demo (seed từ F00) cần hồ sơ Student — bổ sung nếu thiếu, idempotent
+            if (!await db.Students.AnyAsync(s => s.UserId == demo.Id, cancellationToken))
+            {
+                var coach = await db.Coaches.SingleAsync(c => c.UserId == admin.Id, cancellationToken);
+                db.Students.Add(Student.Create(coach.Id, demo.Id, demoSeed.FullName, demoEmail, clock.UtcNow));
+                await db.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 

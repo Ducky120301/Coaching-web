@@ -1,4 +1,6 @@
 using Coaching.Application.Coaches;
+using Coaching.Application.Students.Commands;
+using Coaching.Application.Students.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Application;
@@ -12,6 +14,9 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<GetMyCoachProfileHandler>();
+        services.AddScoped<CurrentCoach>();
+        services.AddScoped<CreateStudentHandler>();
+        services.AddScoped<GetStudentHandler>();
         return services;
     }
 }

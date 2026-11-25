@@ -1,9 +1,14 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Coaching.Application.Abstractions;
 using Coaching.Application.Auth;
 using Coaching.Application.Common;
+using Coaching.Domain.Common;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
 
@@ -16,10 +21,13 @@ public sealed class AcceptanceContext : IDisposable
     public const string AdminPassword = "Admin@12345";
     public const string AdminName = "Coach Duobexiuuu";
 
-    private ApiHost? _host;
+    /// <summary>
+    /// Mọi scenario bắt đầu lúc 01/11/2026 00:00 UTC. FakeTimeProvider chỉ tua tiến, nên step "hôm nay là …"
+    /// (≥ 01/11/2026) luôn tua được. JwtBearer và mọi nghiệp vụ đã đọc giờ qua TimeProvider (F00 Task 2).
+    /// </summary>
+    public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero));
 
-    // Bắt đầu từ giờ thật: trước Task 2 JwtBearer còn so hạn token với đồng hồ hệ thống.
-    public FakeTimeProvider Clock { get; } = new(DateTimeOffset.UtcNow);
+    private ApiHost? _host;
 
     public Dictionary<string, string?> Settings { get; } = new()
     {
@@ -58,7 +66,7 @@ public sealed class AcceptanceContext : IDisposable
         var host = new ApiHost(ConnectionString, Settings, Clock);
         try
         {
-            _ = host.Services; // buộc host khởi động → migrate + seed
+            _ = host.Services; // buộc host khởi động → seed
             _host = host;
         }
         catch (Exception ex)
@@ -75,6 +83,18 @@ public sealed class AcceptanceContext : IDisposable
         using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(body) };
         if (ip is not null)
             request.Headers.Add("X-Forwarded-For", ip);
+        LastResponse = await Client().SendAsync(request);
+        return LastResponse;
+    }
+
+    /// <summary>Gửi request có body JSON (tùy chọn) và Bearer token (tùy chọn).</summary>
+    public async Task<HttpResponseMessage> SendJsonAsync(HttpMethod method, string url, object? body, string? accessToken)
+    {
+        using var request = new HttpRequestMessage(method, url);
+        if (body is not null)
+            request.Content = JsonContent.Create(body);
+        if (accessToken is not null)
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         LastResponse = await Client().SendAsync(request);
         return LastResponse;
     }
@@ -99,18 +119,28 @@ public sealed class AcceptanceContext : IDisposable
         return LastResponse;
     }
 
-    /// <summary>Tạo tài khoản học viên trực tiếp qua Identity (luồng mời làm ở F01).</summary>
+    /// <summary>
+    /// Tạo học viên đăng nhập được (luồng mời làm ở F01): tài khoản Identity có mật khẩu + hồ sơ Student của coach admin.
+    /// </summary>
     public async Task<(string Email, string Password)> CreateStudentAsync()
     {
         var email = $"hocvien-{Guid.NewGuid():N}@acceptance.local";
         const string password = "Student@123";
         await using var scope = Host.Services.CreateAsyncScope();
-        var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var sp = scope.ServiceProvider;
+        var users = sp.GetRequiredService<UserManager<AppUser>>();
         var user = new AppUser { UserName = email, Email = email, FullName = "Học viên Acceptance", EmailConfirmed = true };
         var created = await users.CreateAsync(user, password);
         if (!created.Succeeded)
             throw new InvalidOperationException(string.Join("; ", created.Errors.Select(e => e.Description)));
         await users.AddToRoleAsync(user, Roles.Student);
+
+        // @ADR-f02-ho-so-hoc-vien-001: học viên luôn có hồ sơ Student (/api/client/me đọc từ Student)
+        var db = sp.GetRequiredService<AppDbContext>();
+        var adminEmail = Email.Create(AdminEmail);
+        var coach = await db.Coaches.SingleAsync(c => c.Email == adminEmail);
+        db.Students.Add(Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), sp.GetRequiredService<IClock>().UtcNow));
+        await db.SaveChangesAsync();
         return (email, password);
     }
 

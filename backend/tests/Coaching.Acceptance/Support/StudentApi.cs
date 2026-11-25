@@ -1,0 +1,91 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Coaching.Application.Students;
+
+namespace Coaching.Acceptance.Support;
+
+/// <summary>Gọi /api/admin/students bằng phiên coach; nhớ Id hồ sơ theo họ tên trong scenario.</summary>
+public sealed class StudentApi(AcceptanceContext ctx)
+{
+    public static readonly IReadOnlyDictionary<string, string> CoachingStatuses = new Dictionary<string, string>
+    {
+        ["Đang coaching"] = "Active",
+        ["Tạm dừng"] = "Paused",
+        ["Đã kết thúc"] = "Ended",
+    };
+
+    public static readonly IReadOnlyDictionary<string, string> AccountStatuses = new Dictionary<string, string>
+    {
+        ["Chờ kích hoạt"] = "PendingActivation",
+        ["Đã kích hoạt"] = "Activated",
+    };
+
+    public string? AdminToken { get; private set; }
+
+    public Dictionary<string, Guid> Ids { get; } = new();
+
+    public StudentDetailDto? LastDetail { get; private set; }
+
+    public async Task LoginCoachAsync() =>
+        AdminToken = (await ctx.LoginOkAsync(AcceptanceContext.AdminEmail, AcceptanceContext.AdminPassword, "admin")).AccessToken;
+
+    /// <summary>Tua đồng hồ tới <paramref name="instant"/> (chỉ tiến) rồi đăng nhập lại để phiên coach còn hạn.</summary>
+    public async Task MoveClockToAsync(DateTimeOffset instant)
+    {
+        if (instant < ctx.Clock.GetUtcNow())
+            throw new InvalidOperationException($"Không lùi được đồng hồ từ {ctx.Clock.GetUtcNow():O} về {instant:O}.");
+        ctx.Clock.SetUtcNow(instant);
+        if (AdminToken is not null)
+            await LoginCoachAsync();
+    }
+
+    public async Task<HttpResponseMessage> TryCreateAsync(string? fullName, string? email)
+    {
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, "/api/admin/students", new { fullName, email }, AdminToken);
+        await RememberCreatedAsync(response, fullName);
+        return response;
+    }
+
+    public async Task<StudentDetailDto> CreateOkAsync(string fullName, string? email = null)
+    {
+        var response = await TryCreateAsync(fullName, email ?? NewEmail());
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return LastDetail!;
+    }
+
+    public async Task<Guid> EnsureAsync(string fullName) =>
+        Ids.TryGetValue(fullName, out var id) ? id : (await CreateOkAsync(fullName)).Id;
+
+    public async Task<StudentDetailDto> GetAsync(string fullName)
+    {
+        var response = await ctx.GetAsync($"/api/admin/students/{Ids[fullName]}", AdminToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        LastDetail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+        return LastDetail;
+    }
+
+    public async Task AssertErrorAsync(HttpStatusCode status, string code)
+    {
+        Assert.Equal(status, ctx.LastResponse!.StatusCode);
+        Assert.Equal(code, await ErrorCodeAsync(ctx.LastResponse));
+    }
+
+    /// <summary>Email ngẫu nhiên chỉ gồm chữ số hex → không khớp từ khóa tìm kiếm trong living doc.</summary>
+    public static string NewEmail() => $"s{Guid.NewGuid():N}@acceptance.local";
+
+    public static async Task<string?> ErrorCodeAsync(HttpResponseMessage response)
+    {
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return json.RootElement.TryGetProperty("code", out var code) ? code.GetString() : null;
+    }
+
+    private async Task RememberCreatedAsync(HttpResponseMessage response, string? fullName)
+    {
+        if (response.StatusCode != HttpStatusCode.Created)
+            return;
+        LastDetail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+        if (!string.IsNullOrWhiteSpace(fullName))
+            Ids[fullName.Trim()] = LastDetail.Id;
+    }
+}

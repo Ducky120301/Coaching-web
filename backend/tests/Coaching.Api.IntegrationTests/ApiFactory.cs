@@ -1,10 +1,16 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Coaching.Application.Abstractions;
 using Coaching.Application.Auth;
 using Coaching.Application.Common;
+using Coaching.Domain.Common;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Coaching.TestSupport;
 
@@ -51,18 +57,35 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         return (await response.Content.ReadFromJsonAsync<AuthTokens>())!;
     }
 
-    /// <summary>Tạo tài khoản học viên trực tiếp qua Identity (luồng mời/kích hoạt làm ở F01).</summary>
+    /// <summary>HttpClient đã gắn token của admin seed.</summary>
+    public async Task<HttpClient> AdminClientAsync()
+    {
+        var tokens = await LoginAsync(AdminEmail, AdminPassword);
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        return client;
+    }
+
+    /// <summary>Tạo học viên đăng nhập được (luồng mời/kích hoạt làm ở F01): tài khoản có mật khẩu + hồ sơ Student.</summary>
     public async Task<(string Email, string Password)> CreateStudentAsync()
     {
         var email = $"student-{Guid.NewGuid():N}@test.local";
         const string password = "Student@123";
 
         await using var scope = Services.CreateAsyncScope();
-        var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var sp = scope.ServiceProvider;
+        var users = sp.GetRequiredService<UserManager<AppUser>>();
         var user = new AppUser { UserName = email, Email = email, FullName = "Học viên Test", EmailConfirmed = true };
         var created = await users.CreateAsync(user, password);
         Assert.True(created.Succeeded, string.Join("; ", created.Errors.Select(e => e.Description)));
         Assert.True((await users.AddToRoleAsync(user, Roles.Student)).Succeeded);
+
+        // @ADR-f02-ho-so-hoc-vien-001: học viên luôn có hồ sơ Student (/api/client/me đọc từ Student)
+        var db = sp.GetRequiredService<AppDbContext>();
+        var adminEmail = Email.Create(AdminEmail);
+        var coach = await db.Coaches.SingleAsync(c => c.Email == adminEmail);
+        db.Students.Add(Student.Create(coach.Id, user.Id, user.FullName, Email.Create(email), sp.GetRequiredService<IClock>().UtcNow));
+        await db.SaveChangesAsync();
         return (email, password);
     }
 }

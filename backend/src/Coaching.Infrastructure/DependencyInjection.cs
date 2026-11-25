@@ -1,6 +1,8 @@
 using Coaching.Application.Abstractions;
 using Coaching.Application.Auth;
+using Coaching.Application.Students;
 using Coaching.Domain.Coaches;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Persistence.Repositories;
 using Coaching.Infrastructure.Audit;
 using Coaching.Infrastructure.Emailing;
@@ -55,6 +57,8 @@ public static class DependencyInjection
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICoachRepository, CoachRepository>();
+        services.AddScoped<IStudentRepository, StudentRepository>();
+        services.AddScoped<IStudentAccounts, StudentAccounts>();
 
         AddEmail(services, configuration);
 
