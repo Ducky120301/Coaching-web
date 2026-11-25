@@ -49,3 +49,6 @@ features/**/*.feature.cs
 
 # Liquibase local connection settings
 database/liquibase.properties
+
+# Local compose env
+deploy/.env

@@ -1,0 +1,60 @@
+name: coaching
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports: ["1433:1433"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  db-create:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["/opt/mssql-tools18/bin/sqlcmd -C -S db -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"IF DB_ID('Coaching') IS NULL CREATE DATABASE Coaching\""]
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    depends_on:
+      db: { condition: service_healthy }
+
+  # @ADR-f00-codebase-011: schema do Liquibase tạo, chạy xong rồi thoát
+  liquibase:
+    image: liquibase/liquibase:4.33.0
+    volumes: ["../database/changelog:/liquibase/changelog:ro"]
+    command:
+      - --search-path=/liquibase/changelog
+      - --changelog-file=db.changelog-master.xml
+      - --url=jdbc:sqlserver://db:1433;databaseName=Coaching;encrypt=false;trustServerCertificate=true
+      - --username=sa
+      - --password=${MSSQL_SA_PASSWORD}
+      - update
+    depends_on:
+      db-create: { condition: service_completed_successfully }
+
+  api:
+    build: { context: ../backend }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Local
+      ConnectionStrings__Default: "Server=db,1433;Database=Coaching;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      AdminSeed__Email: ${ADMIN_EMAIL}
+      AdminSeed__Password: ${ADMIN_PASSWORD}
+      DemoSeed__Enabled: "true"
+      DemoSeed__Email: ${DEMO_EMAIL}
+      DemoSeed__Password: ${DEMO_PASSWORD}
+      Email__Provider: Log
+      RateLimiting__AuthPermitPerMinute: ${AUTH_PERMIT_PER_MINUTE:-10}
+    ports: ["8080:8080"]
+    depends_on:
+      liquibase: { condition: service_completed_successfully }
+    restart: on-failure
+
+  web:
+    build: { context: ../frontend }
+    ports: ["4200:4200", "4300:4300"]
+    depends_on: [api]
