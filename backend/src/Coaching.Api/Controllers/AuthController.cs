@@ -36,6 +36,27 @@ public sealed class AuthController(IAuthService auth) : ControllerBase
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(command, cancellationToken)).ToActionResult(this);
 
+    // @BR-f01-p1-tai-khoan-hoc-vien-023 @ADR-f01-p1-tai-khoan-hoc-vien-005: luôn 202 cùng một body; thư gửi nền.
+    // Giới hạn theo IP là policy `auth`; giới hạn 60 giây theo tài khoản nằm trong use case (@BR-f01-p1-tai-khoan-hoc-vien-024).
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType<ForgotPasswordResponse>(StatusCodes.Status202Accepted)]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordCommand command, [FromServices] RequestPasswordResetHandler handler,
+        CancellationToken cancellationToken) =>
+        StatusCode(StatusCodes.Status202Accepted, await handler.HandleAsync(command, cancellationToken));
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-018 @BR-f01-p1-tai-khoan-hoc-vien-019 @BR-f01-p1-tai-khoan-hoc-vien-021: không cần JWT, quyền đến từ token đã băm
+    [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword(ResetPasswordCommand command, [FromServices] ResetPasswordHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(command, cancellationToken);
+        return result.IsSuccess ? NoContent() : result.Error!.ToProblem(this);
+    }
+
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [ProducesResponseType<AuthTokens>(StatusCodes.Status200OK)]

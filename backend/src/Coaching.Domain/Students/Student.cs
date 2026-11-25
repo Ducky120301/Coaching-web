@@ -242,6 +242,15 @@ public sealed class Student : AggregateRoot<Guid>
         return wasSent; // @BR-f01-p1-tai-khoan-hoc-vien-010: chưa gửi lần nào → false, không gửi thư
     }
 
+    /// <summary>Coach gửi link đặt lại mật khẩu. Link (token) do IAccountTokens tạo trong cùng transaction.</summary>
+    public void RecordResetLinkSent(Guid actorUserId, DateTimeOffset at)
+    {
+        // @BR-f01-p1-tai-khoan-hoc-vien-017: chỉ tài khoản Đã kích hoạt, ở mọi trạng thái coaching
+        if (AccountStatus != AccountStatus.Activated)
+            throw new DomainException("account.not_activated", "Tài khoản chưa kích hoạt. Hãy gửi thông tin đăng nhập.");
+        _accountEvents.Add(new StudentAccountEvent(AccountEventType.ResetLinkSent, at, actorUserId));
+    }
+
     /// <summary>@ADR-f02-ho-so-hoc-vien-003: tính lại SearchKey (gọi khi tạo, khi đổi tên, và khi backfill lúc khởi động).</summary>
     public void RefreshSearchKey() => SearchKey = SearchText.Normalize($"{FullName} {Email.Value}");
 

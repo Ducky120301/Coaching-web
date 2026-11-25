@@ -54,6 +54,10 @@ internal sealed class AccountCredentials(UserManager<AppUser> users) : IAccountC
             $"Không đổi được email đăng nhập: {string.Join("; ", updated.Errors.Select(e => e.Description))}");
     }
 
+    // @BR-f01-p1-tai-khoan-hoc-vien-022: FindByEmailAsync so NormalizedEmail → "QUAN@gmail.com " (đã trim) khớp quan@gmail.com
+    public async Task<Guid?> FindUserIdByEmailAsync(string email, CancellationToken ct = default) =>
+        string.IsNullOrWhiteSpace(email) ? null : (await users.FindByEmailAsync(email.Trim()))?.Id;
+
     private async Task<AppUser> FindAsync(Guid userId) =>
         await users.FindByIdAsync(userId.ToString())
         ?? throw new InvalidOperationException($"Không tìm thấy tài khoản {userId}.");

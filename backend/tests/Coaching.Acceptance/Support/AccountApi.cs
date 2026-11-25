@@ -4,11 +4,17 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Coaching.Application.Accounts.Commands;
 using Coaching.Application.Auth;
+using Coaching.Application.Common;
 using Coaching.Application.Students;
+using Coaching.Domain.Coaches;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Emailing;
+using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Persistence;
 using Coaching.TestSupport;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -202,6 +208,94 @@ public sealed partial class AccountApi(AcceptanceContext ctx, StudentApi api)
 
         return response;
     }
+
+    public const string ResetSubject = "Đặt lại mật khẩu Duobexiuuu Coaching";
+
+    /// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-005: thư Quên mật khẩu gửi nền — chờ hàng đợi chạy hết trước khi khẳng định "không có thư".</summary>
+    public static readonly TimeSpan QueueSettle = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>Token trong các link đặt lại học viên đã nhận, theo thứ tự.</summary>
+    public List<string> ResetTokens { get; } = [];
+
+    public IReadOnlyList<CapturedEmail> ResetMails(string? to = null) => Mails(to ?? Email(), ResetSubject);
+
+    public async Task<HttpResponseMessage> TrySendResetLinkAsync(string name = StudentName)
+    {
+        await api.LoginCoachAsync();
+        MailCountBefore = ResetMails(Emails[name]).Count;
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, $"/api/admin/students/{api.Ids[name]}/password-reset-link",
+            new { }, api.AdminToken);
+        if (response.StatusCode == HttpStatusCode.OK)
+            ResetTokens.Add(ResetToken(ResetMails(Emails[name])[^1]));
+        return response;
+    }
+
+    public Task<HttpResponseMessage> ForgotAsync(string email) => ctx.PostJsonAsync("/api/auth/forgot-password", new { email });
+
+    /// <summary>"học viên đó" tự xin link qua Quên mật khẩu và nhận được thư; nhớ token của link.</summary>
+    public async Task ForgotOkAsync()
+    {
+        var before = ResetMails().Count;
+        Assert.Equal(HttpStatusCode.Accepted, (await ForgotAsync(Email())).StatusCode);
+        var mails = await WaitForMailsAsync(Email(), ResetSubject, before + 1);
+        ResetTokens.Add(ResetToken(mails[^1]));
+    }
+
+    public async Task<HttpResponseMessage> TryResetAsync(string token, string password, string confirmPassword)
+    {
+        var response = await ctx.PostJsonAsync("/api/auth/reset-password", new { token, password, confirmPassword });
+        if (response.StatusCode == HttpStatusCode.NoContent)
+            OwnPassword = password;
+        return response;
+    }
+
+    /// <summary>Chờ (đồng hồ thật, tối đa 5 giây) tới khi có ít nhất <paramref name="count"/> thư cùng tiêu đề tới <paramref name="to"/>.</summary>
+    public async Task<IReadOnlyList<CapturedEmail>> WaitForMailsAsync(string to, string subject, int count)
+    {
+        var watch = Stopwatch.StartNew();
+        while (true)
+        {
+            var mails = Mails(to, subject);
+            if (mails.Count >= count)
+                return mails;
+            if (watch.Elapsed > TimeSpan.FromSeconds(5))
+                throw new TimeoutException($"Sau 5 giây mới có {mails.Count}/{count} thư '{subject}' tới {to}.");
+            await Task.Delay(50);
+        }
+    }
+
+    /// <summary>@BR-f01-p1-tai-khoan-hoc-vien-023: 202 và body chỉ có đúng một câu chung.</summary>
+    public async Task AssertForgotGenericAsync()
+    {
+        Assert.Equal(HttpStatusCode.Accepted, ctx.LastResponse!.StatusCode);
+        using var json = JsonDocument.Parse(await ctx.LastResponse.Content.ReadAsStringAsync());
+        var property = Assert.Single(json.RootElement.EnumerateObject());
+        Assert.Equal("message", property.Name);
+        Assert.Equal(ForgotPasswordResponse.GenericMessage, property.Value.GetString());
+    }
+
+    /// <summary>Tài khoản coach (role Admin + hồ sơ Coach) với <paramref name="email"/>.</summary>
+    public async Task CreateCoachAccountAsync(string email)
+    {
+        await using var scope = ctx.Host.Services.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+        var users = sp.GetRequiredService<UserManager<AppUser>>();
+        var user = new AppUser { UserName = email, Email = email, FullName = "Coach khác", EmailConfirmed = true };
+        Assert.True((await users.CreateAsync(user, "Coach@12345")).Succeeded);
+        Assert.True((await users.AddToRoleAsync(user, Roles.Admin)).Succeeded);
+        var db = sp.GetRequiredService<AppDbContext>();
+        db.Coaches.Add(Coach.Create(user.Id, "Coach khác", global::Coaching.Domain.Common.Email.Create(email)));
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>Token sau "#t=" trong link đặt lại (dạng link theo ADR-f01-p1-tai-khoan-hoc-vien-010 của Task 8).</summary>
+    public static string ResetToken(CapturedEmail mail) =>
+        ResetTokenPattern().Match(mail.TextBody) is { Success: true } match
+            ? match.Groups[1].Value
+            : throw new InvalidOperationException($"Thư '{mail.Subject}' tới {mail.To} không có link đặt lại.");
+
+    [GeneratedRegex(@"/dat-lai-mat-khau#t=([A-Za-z0-9_-]+)")]
+    private static partial Regex ResetTokenPattern();
 
     /// <summary>Phản hồi gần nhất là phiên học viên (AuthTokens) gọi được /api/client.</summary>
     public async Task AssertStudentSessionAsync()

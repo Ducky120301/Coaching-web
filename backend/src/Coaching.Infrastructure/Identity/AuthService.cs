@@ -16,6 +16,7 @@ internal sealed class AuthService(
     JwtTokenGenerator tokenGenerator,
     IOptions<JwtOptions> jwtOptions,
     IAccountTokens accountTokens,
+    SessionRevoker sessions,
     IClock clock) : IAuthService
 {
     // @BR-f00-codebase-007
@@ -151,7 +152,7 @@ internal sealed class AuthService(
             }
 
             // @BR-f00-codebase-012: gửi lại sau 30s → coi là lộ mã, thu hồi mọi phiên
-            await RevokeAllAsync(stored.UserId, now, cancellationToken);
+            await sessions.RevokeAllAsync(stored.UserId, RefreshTokenRevokedReason.ReuseDetected, cancellationToken);
             return AuthErrors.InvalidRefreshToken;
         }
 
@@ -233,14 +234,5 @@ internal sealed class AuthService(
             refreshToken,
             refreshEntity.ExpiresAt,
             new AuthUser(user.Id, user.Email ?? string.Empty, user.FullName, roles));
-    }
-
-    private async Task RevokeAllAsync(Guid userId, DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        await db.RefreshTokens
-            .Where(t => t.UserId == userId && t.RevokedAt == null)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(t => t.RevokedAt, now)
-                .SetProperty(t => t.RevokedReason, RefreshTokenRevokedReason.ReuseDetected), cancellationToken);
     }
 }

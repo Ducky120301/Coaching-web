@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -11,6 +12,8 @@ namespace Coaching.Api.IntegrationTests.Accounts;
 internal static partial class AccountRequests
 {
     public const string CredentialsSubject = "Thông tin đăng nhập Duobexiuuu Coaching";
+
+    public const string ResetSubject = "Đặt lại mật khẩu Duobexiuuu Coaching";
 
     /// <summary>Hồ sơ đủ mục bắt buộc, tài khoản Chờ kích hoạt.</summary>
     public static async Task<StudentDetailDto> CreateCompleteAsync(HttpClient admin, string? email = null)
@@ -70,6 +73,38 @@ internal static partial class AccountRequests
 
     public static Task<HttpResponseMessage> ChangeEmailAsync(HttpClient admin, Guid id, string email, string version) =>
         admin.PutAsJsonAsync($"/api/admin/students/{id}/email", new { email, version });
+
+    public static Task<HttpResponseMessage> SendResetLinkAsync(HttpClient admin, Guid id) =>
+        admin.PostAsJsonAsync($"/api/admin/students/{id}/password-reset-link", new { });
+
+    public static Task<HttpResponseMessage> ForgotAsync(HttpClient client, string email) =>
+        client.PostAsJsonAsync("/api/auth/forgot-password", new { email });
+
+    public static Task<HttpResponseMessage> ResetAsync(HttpClient client, string token, string password, string confirmPassword) =>
+        client.PostAsJsonAsync("/api/auth/reset-password", new { token, password, confirmPassword });
+
+    public static string ResetToken(CapturedEmail mail) =>
+        ResetTokenPattern().Match(mail.TextBody) is { Success: true } match
+            ? match.Groups[1].Value
+            : throw new InvalidOperationException($"Thư tới {mail.To} không có link đặt lại.");
+
+    /// <summary>Chờ (tối đa 5 giây) tới khi có ít nhất <paramref name="count"/> thư cùng tiêu đề tới <paramref name="to"/>.</summary>
+    public static async Task<IReadOnlyList<CapturedEmail>> WaitForMailsAsync(EmailOutbox outbox, string to, string subject, int count)
+    {
+        var watch = Stopwatch.StartNew();
+        while (true)
+        {
+            var mails = outbox.All.Where(m => m.To == to && m.Subject == subject).ToList();
+            if (mails.Count >= count)
+                return mails;
+            if (watch.Elapsed > TimeSpan.FromSeconds(5))
+                throw new TimeoutException($"Sau 5 giây mới có {mails.Count}/{count} thư '{subject}' tới {to}.");
+            await Task.Delay(50);
+        }
+    }
+
+    [GeneratedRegex(@"/dat-lai-mat-khau#t=([A-Za-z0-9_-]+)")]
+    private static partial Regex ResetTokenPattern();
 
     [GeneratedRegex(@"Mật khẩu tạm:\s*(\S+)")]
     private static partial Regex TempPasswordPattern();

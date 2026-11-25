@@ -64,4 +64,11 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> ChangeEmail(Guid id, [FromBody] ChangeStudentEmailCommand command,
         [FromServices] ChangeStudentEmailHandler handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-017: chỉ tài khoản Đã kích hoạt, mọi trạng thái coaching; link chỉ có trong email
+    [HttpPost("{id:guid}/password-reset-link")]
+    [ProducesResponseType<StudentDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendPasswordResetLink(Guid id, [FromServices] SendPasswordResetLinkHandler handler,
+        CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
 }

@@ -20,4 +20,7 @@ public interface IAccountCredentials
     /// hoa/thường) → StudentErrors.EmailTaken.
     /// </summary>
     Task<Result> ChangeEmailAsync(Guid userId, Email email, CancellationToken ct = default);
+
+    /// <summary>Id tài khoản có email này (so khớp đã chuẩn hóa, không phân biệt hoa/thường); null nếu không có.</summary>
+    Task<Guid?> FindUserIdByEmailAsync(string email, CancellationToken ct = default);
 }

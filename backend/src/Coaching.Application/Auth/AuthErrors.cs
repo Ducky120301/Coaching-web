@@ -48,4 +48,8 @@ public static class AuthErrors
         PasswordCheck.Mismatch => PasswordMismatch,
         _ => null,
     };
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-018 @BR-f01-p1-tai-khoan-hoc-vien-019 @BR-f01-p1-tai-khoan-hoc-vien-020: hết hạn / đã dùng / đã có link mới → cùng một lỗi
+    public static readonly Error ResetLinkInvalid = new(
+        "auth.reset_link_invalid", "Link đặt lại đã hết hạn hoặc đã được dùng. Hãy xin link mới.");
 }

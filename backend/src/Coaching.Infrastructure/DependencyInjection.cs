@@ -63,6 +63,8 @@ public static class DependencyInjection
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IStudentAccounts, StudentAccounts>();
         services.AddScoped<IAccountCredentials, AccountCredentials>();
+        services.AddScoped<SessionRevoker>();
+        services.AddScoped<ISessionRevoker>(sp => sp.GetRequiredService<SessionRevoker>());
         services.AddScoped<IAccountTokens, AccountTokenStore>(); // @ADR-f01-p1-tai-khoan-hoc-vien-003
 
         AddEmail(services, configuration, environment);
