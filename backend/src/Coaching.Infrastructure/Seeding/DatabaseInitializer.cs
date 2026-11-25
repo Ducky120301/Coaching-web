@@ -25,7 +25,12 @@ public static class DatabaseInitializer
         var db = sp.GetRequiredService<AppDbContext>();
 
         var adminSeed = sp.GetRequiredService<IOptions<AdminSeedOptions>>().Value;
+        var demoSeed = sp.GetRequiredService<IOptions<DemoSeedOptions>>().Value;
         ValidateSeedCredentials("AdminSeed", adminSeed.Email, adminSeed.Password);
+        // Trùng email sẽ gán thêm role Student cho admin → admin vào được web học viên (phá BR-004/005).
+        if (demoSeed.Enabled && string.Equals(demoSeed.Email?.Trim(), adminSeed.Email!.Trim(), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                "DemoSeed:Email không được trùng AdminSeed:Email — hệ thống không khởi động.");
 
         // @ADR-f00-codebase-011: schema do Liquibase quản lý; API không migrate, chỉ kiểm schema đã có rồi seed
         await EnsureSchemaExistsAsync(db, cancellationToken);
@@ -50,7 +55,6 @@ public static class DatabaseInitializer
         }
 
         // @BR-f00-codebase-020
-        var demoSeed = sp.GetRequiredService<IOptions<DemoSeedOptions>>().Value;
         if (demoSeed.Enabled)
         {
             ValidateSeedCredentials("DemoSeed", demoSeed.Email, demoSeed.Password);

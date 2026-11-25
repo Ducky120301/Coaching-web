@@ -57,7 +57,22 @@ public sealed class SeedingSteps(AcceptanceContext ctx)
     public void SeedWithoutPassword() => ctx.Settings["AdminSeed:Password"] = "";
 
     [Then("hệ thống không khởi động")]
-    public void SystemDoesNotStart() => Assert.NotNull(ctx.StartupError);
+    public void SystemDoesNotStart()
+    {
+        // Phải là chính guard cấu hình khởi tạo (không phải lỗi Identity/DB khác).
+        Assert.NotNull(ctx.StartupError);
+        var guard = ctx.StartupError is { } e ? Unwrap(e) : null;
+        Assert.IsType<InvalidOperationException>(guard);
+        Assert.Contains("AdminSeed:Password", guard!.Message);
+        Assert.Contains("hệ thống không khởi động", guard.Message);
+    }
+
+    private static Exception Unwrap(Exception e)
+    {
+        while (e is System.Reflection.TargetInvocationException or AggregateException && e.InnerException is { } inner)
+            e = inner;
+        return e;
+    }
 
     // @BR-f00-codebase-018
     [Given(@"cấu hình khởi tạo admin có mật khẩu dài ""(\d+)"" ký tự")]

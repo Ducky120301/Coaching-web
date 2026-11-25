@@ -26,12 +26,24 @@ Feature: Khởi tạo dữ liệu ban đầu của hệ thống
       When hệ thống khởi động
       Then hệ thống không khởi động
 
+    Scenario: Admin đã tồn tại nhưng khởi động lại với mật khẩu khởi tạo rỗng thì hệ thống không khởi động
+      Given admin khởi tạo đã tồn tại với mật khẩu ban đầu
+      And cấu hình khởi tạo admin không có mật khẩu
+      When hệ thống khởi động lại
+      Then hệ thống không khởi động
+
   @BR-f00-codebase-018
   Rule: Hệ thống không khởi động khi mật khẩu admin khởi tạo ngắn hơn 8 ký tự
 
     Scenario: Mật khẩu admin khởi tạo 6 ký tự thì hệ thống không khởi động
       Given cấu hình khởi tạo admin có mật khẩu dài "6" ký tự
       When hệ thống khởi động
+      Then hệ thống không khởi động
+
+    Scenario: Admin đã tồn tại nhưng khởi động lại với mật khẩu khởi tạo 6 ký tự thì hệ thống không khởi động
+      Given admin khởi tạo đã tồn tại với mật khẩu ban đầu
+      And cấu hình khởi tạo admin có mật khẩu dài "6" ký tự
+      When hệ thống khởi động lại
       Then hệ thống không khởi động
 
   @BR-f00-codebase-019
