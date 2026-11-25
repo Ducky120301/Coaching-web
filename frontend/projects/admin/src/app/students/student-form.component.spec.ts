@@ -230,6 +230,23 @@ describe('StudentFormComponent', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('keeps the green message and writes no draft when editing after "Lưu và gửi" succeeded', async () => {
+    const { fixture, http, el } = setup('create');
+    fillAllRequired(el);
+    submit(el);
+    http.expectOne('/api/admin/students').flush(detail());
+    await settle();
+    http.expectOne('/api/admin/students/s1/credentials').flush(detail({ account: sent }));
+    await settle();
+    fixture.detectChanges();
+
+    fill(el, 'fullName', 'Lan Anh');
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg.ok')?.textContent?.trim()).toBe(SENT_MESSAGE);
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+  });
+
   // @BR-f01-p1-tai-khoan-hoc-vien-006: hồ sơ đã lưu nhưng gửi lỗi → sang trang hồ sơ kèm câu báo
   it('opens the profile with a notice when saving worked but sending failed', async () => {
     const { http, el, navigate } = setup('create');

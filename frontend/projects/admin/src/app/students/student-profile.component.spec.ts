@@ -323,4 +323,31 @@ describe('StudentProfileComponent', () => {
       history.replaceState(null, '');
     }
   });
+
+  it('clears the notice from the history entry after showing it', async () => {
+    history.replaceState({ notice: 'Câu báo cũ.' }, '');
+    try {
+      await setup();
+      expect((history.state as { notice?: unknown } | null)?.notice).toBeUndefined();
+    } finally {
+      history.replaceState(null, '');
+    }
+  });
+
+  // 409 account.already_activated: trạng thái đổi ở nơi khác → tải lại, nút chuyển sang "Gửi link đặt lại mật khẩu"
+  it('reloads the profile on 409 already_activated and switches the button to reset link', async () => {
+    const { fixture, http, el, buttons, click } = await setup();
+
+    click('Gửi thông tin đăng nhập');
+    http.expectOne('/api/admin/students/s1/credentials').flush(
+      { title: 'Tài khoản đã kích hoạt.', code: 'account.already_activated' }, { status: 409, statusText: 'Conflict' });
+    await settle();
+    http.expectOne('/api/admin/students/s1').flush(detail({ accountStatus: 'Activated', account: activated }));
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg[role="status"]')?.textContent?.trim()).toBe('Tài khoản đã kích hoạt.');
+    expect(buttons()).toContain('Gửi link đặt lại mật khẩu');
+    expect(buttons()).not.toContain('Gửi thông tin đăng nhập');
+  });
 });

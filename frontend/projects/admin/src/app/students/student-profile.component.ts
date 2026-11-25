@@ -88,7 +88,10 @@ export class StudentProfileComponent implements OnInit {
   ngOnInit(): void {
     // Câu báo do form Tạo hồ sơ chuyển sang (lưu được nhưng chưa gửi được thông tin đăng nhập)
     const notice = (history.state as { notice?: unknown } | null)?.notice;
-    if (typeof notice === 'string') this.accountMessage.set({ ok: false, text: notice });
+    if (typeof notice === 'string') {
+      this.accountMessage.set({ ok: false, text: notice });
+      history.replaceState({ ...history.state, notice: undefined }, ''); // F5/Back không hiện lại câu báo cũ
+    }
     void this.load();
   }
 

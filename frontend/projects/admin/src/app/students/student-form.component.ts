@@ -7,6 +7,7 @@ import { FORM_SECTIONS, FieldDef, FormPayload, FormValues, toFormValues, toPaylo
 import { ACCOUNT_STATUS_LABEL } from './student-status';
 import { StudentDetail } from './student.models';
 import { StudentsApi } from './students.api';
+import { ReceiveCardComponent } from './receive-card.component';
 
 /** @ADR-f02-ho-so-hoc-vien-008 / NFR-f02-ho-so-hoc-vien-004: bản nháp chỉ ở chế độ tạo, chỉ trên trình duyệt này. */
 export const DRAFT_KEY = 'dbx.admin.student-draft';
@@ -24,7 +25,7 @@ type Tone = 'ok' | 'warn';
  */
 @Component({
   selector: 'app-student-form',
-  imports: [RouterLink],
+  imports: [RouterLink, ReceiveCardComponent],
   templateUrl: './student-form.component.html',
   styleUrl: './student-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -109,6 +110,8 @@ export class StudentFormComponent implements OnInit {
       delete rest[key];
       this.errors.set(rest);
     }
+    // Đã tạo + gửi (created): giữ câu báo xanh, không ghi lại bản nháp cho học viên đã có hồ sơ
+    if (this.created()) return;
     this.message.set(null);
     if (!this.isEdit()) writeDraft(next);
   }
