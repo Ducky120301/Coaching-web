@@ -24,6 +24,11 @@ export const routes: Routes = [
         title: 'Tạo hồ sơ học viên — Khu vực coach',
       },
       {
+        path: 'hoc-vien/:id',
+        loadComponent: () => import('./students/student-profile.component').then((m) => m.StudentProfileComponent),
+        title: 'Hồ sơ học viên — Khu vực coach',
+      },
+      {
         path: 'hoc-vien/:id/sua',
         loadComponent: () => import('./students/student-form.component').then((m) => m.StudentFormComponent),
         data: { mode: 'edit' },

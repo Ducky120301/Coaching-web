@@ -1,0 +1,120 @@
+@if (detail(); as d) {
+  <nav aria-label="Đường dẫn" class="crumbs">
+    <a routerLink="/dashboard">Học viên</a><span aria-hidden="true">/</span><span class="here">{{ d.fullName }}</span>
+  </nav>
+
+  <header class="head">
+    <div class="who">
+      <div class="avatar" aria-hidden="true">{{ initials(d.fullName) }}</div>
+      <div>
+        <h1>{{ d.fullName }}</h1>
+        <p class="meta">
+          <span>{{ d.email }}</span>
+          <dbx-status-badge [tone]="coachingTone[d.coachingStatus]" [dense]="true">{{ coachingLabel[d.coachingStatus] }}</dbx-status-badge>
+          <dbx-status-badge [tone]="accountTone[d.accountStatus]" [dense]="true">{{ accountLabel[d.accountStatus] }}</dbx-status-badge>
+        </p>
+      </div>
+    </div>
+    <div class="head-actions">
+      @for (a of actions(); track a.to) {
+        <button type="button" class="secondary" [attr.aria-expanded]="pending()?.to === a.to" (click)="openPanel(a)">{{ a.label }}</button>
+      }
+    </div>
+  </header>
+
+  @if (pending(); as p) {
+    <app-coaching-status-panel [action]="p.label" [error]="statusError()" [busy]="busy()"
+                               (confirmed)="changeStatus(p.to, $event)" (cancelled)="closePanel()" />
+  }
+  @if (conflict()) {
+    <p class="msg" role="status">Hồ sơ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.
+      <button type="button" class="reload" (click)="load()">Tải lại</button></p>
+  }
+
+  <div class="layout">
+    <div class="main-col">
+      <section class="card">
+        <h2>Thông tin học viên</h2>
+        <dl>
+          <div><dt>Mục tiêu</dt><dd>{{ text(d, 'trainingGoal') }}</dd></div>
+          <div><dt>Lịch rảnh</dt><dd>{{ text(d, 'availability') }}</dd></div>
+          <div><dt>Dụng cụ</dt><dd>{{ text(d, 'equipment') }}</dd></div>
+        </dl>
+        <details>
+          <summary>Xem đủ form đăng ký</summary>
+          @for (sec of sections; track sec.id) {
+            <h3>{{ sec.title }}</h3>
+            <dl>
+              @for (f of sec.fields; track f.key) {
+                <div>
+                  <dt>{{ f.label }}</dt>
+                  <dd>
+                    @if (isPhoto(f) && d.registration[f.key]) {
+                      <a [href]="d.registration[f.key]" target="_blank" rel="noopener noreferrer">Mở ảnh</a>
+                    } @else {
+                      {{ display(d, f) }}
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
+          }
+        </details>
+        <a class="edit" [routerLink]="['/hoc-vien', d.id, 'sua']">Sửa thông tin</a>
+        @if (d.updatedAt) {
+          <span class="small">Sửa lần cuối {{ formatDayTime(d.updatedAt) }}@if (d.updatedBy) { bởi {{ d.updatedBy }}}.</span>
+        }
+      </section>
+
+      <section class="card">
+        <h2>Mục bắt buộc còn thiếu</h2>
+        @if (d.missingRequired.length > 0) {
+          <ul class="missing">
+            @for (code of d.missingRequired; track code) {
+              <li>{{ label(code) }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="small">Hồ sơ đã đủ mục bắt buộc.</p>
+        }
+      </section>
+    </div>
+
+    <aside>
+      <section class="note">
+        <h2>Ghi chú nội bộ</h2>
+        @if (editingNote()) {
+          <label for="internal-note" class="sr-only">Ghi chú nội bộ</label>
+          <textarea id="internal-note" rows="4" maxlength="5000" [value]="noteDraft()"
+                    (input)="noteDraft.set($any($event.target).value)"></textarea>
+          <div class="actions">
+            <button type="button" class="primary" [disabled]="busy()" (click)="saveNote()">Lưu ghi chú</button>
+            <button type="button" class="secondary" (click)="editingNote.set(false)">Huỷ</button>
+          </div>
+        } @else {
+          <p class="note-text">{{ d.internalNote ?? 'Chưa có ghi chú.' }}</p>
+          <button type="button" class="link-btn" (click)="startNote(d)">Sửa ghi chú</button>
+        }
+        <span class="note-meta">Chỉ coach thấy.@if (d.internalNoteUpdatedAt) { Sửa lần cuối {{ formatDay(d.internalNoteUpdatedAt) }}.}</span>
+        @if (noteError(); as e) {
+          <p class="msg" role="status">{{ e }}</p>
+        }
+      </section>
+
+      <section class="card history">
+        <h2 class="history-title">Lịch sử coaching</h2>
+        @if (d.statusHistory.length > 0) {
+          <ol>
+            @for (h of d.statusHistory; track $index) {
+              <li><strong>{{ formatDayTime(h.at) }}</strong> {{ coachingLabel[h.from] }} → {{ coachingLabel[h.to] }}. {{ h.reason }} <span class="by">({{ h.actor }})</span></li>
+            }
+          </ol>
+        } @else {
+          <p class="small">Chưa đổi trạng thái lần nào.</p>
+        }
+      </section>
+    </aside>
+  </div>
+} @else if (loadFailed()) {
+  <p class="msg" role="status">Không tải được hồ sơ. Vui lòng tải lại trang.</p>
+}

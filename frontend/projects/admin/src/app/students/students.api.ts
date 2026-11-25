@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '@coaching/shared';
 import { Observable } from 'rxjs';
-import { CreateStudentBody, StudentDetail, StudentListItem, UpdateStudentBody } from './student.models';
+import { CoachingStatus, CreateStudentBody, StudentDetail, StudentListItem, UpdateStudentBody } from './student.models';
 
 @Injectable({ providedIn: 'root' })
 export class StudentsApi {
@@ -32,5 +32,9 @@ export class StudentsApi {
 
   updateNote(id: string, note: string, version: string): Observable<StudentDetail> {
     return this.http.put<StudentDetail>(this.url(`/${id}/internal-note`), { note, version });
+  }
+
+  changeStatus(id: string, status: CoachingStatus, reason: string, version: string): Observable<StudentDetail> {
+    return this.http.post<StudentDetail>(this.url(`/${id}/coaching-status`), { status, reason, version });
   }
 }
