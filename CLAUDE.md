@@ -216,7 +216,8 @@ dotnet test backend/Coaching.slnx --filter "Category!=web&Category!=manual"
 cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait
 # admin: http://localhost:4200   client: http://localhost:4300
-# compose dùng Email__Provider=Capture: thư gửi đi (mật khẩu tạm, link đặt lại) đọc ở http://localhost:8080/api/test/emails?to=<email>
+# .env.example đặt EMAIL_PROVIDER=Capture (chỉ dev/e2e): thư gửi đi (mật khẩu tạm, link đặt lại) đọc ở http://localhost:8080/api/test/emails?to=<email>
+# e2e cần Capture. Trên VPS production: EMAIL_PROVIDER=Resend (bỏ trống → Log), KHÔNG dùng Capture — API chỉ cho Capture ở Development/Local/Testing
 
 # Frontend
 cd frontend && npm ci

@@ -19,17 +19,43 @@ public sealed class CaptureProviderTests(ApiFactory factory)
             .SendAsync(new EmailMessage(to, subject, $"<p>{subject}</p>", $"Thân thư {subject}"));
     }
 
-    // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 1 — Capture ở Production thì API không khởi động
-    [Fact]
-    public void Capture_provider_in_production_stops_startup()
+    // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 1 — Capture chỉ được bật ở môi trường dev/e2e (allowlist);
+    // môi trường khác (Production, Staging, tên lạ…) thì API không khởi động
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    [InlineData("Demo")]
+    public void Capture_provider_outside_dev_environments_stops_startup(string environment)
     {
-        var ex = Assert.ThrowsAny<Exception>(() => factory.WithWebHostBuilder(b =>
+        var ex = Assert.ThrowsAny<Exception>(() =>
         {
-            b.UseEnvironment("Production");
-            b.UseSetting("Email:Provider", "Capture");
-        }).CreateClient());
+            using var host = factory.WithWebHostBuilder(b =>
+            {
+                b.UseEnvironment(environment);
+                b.UseSetting("Email:Provider", "Capture");
+            });
+            host.CreateClient();
+        });
 
         Assert.Contains("Email:Provider=Capture", ex.ToString());
+    }
+
+    // @ADR-f01-p1-tai-khoan-hoc-vien-007: Development / Local (compose e2e) / Testing (test host) được bật Capture
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Local")]
+    [InlineData("Testing")]
+    public async Task Capture_provider_is_allowed_in_dev_environments(string environment)
+    {
+        await using var host = factory.WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment(environment);
+            b.UseSetting("Email:Provider", "Capture");
+        });
+
+        var response = await host.CreateClient().GetAsync("/api/test/emails?to=a@test.local");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 2 — provider khác Capture thì không có endpoint đọc thư

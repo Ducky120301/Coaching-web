@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,6 +24,9 @@ describe('ResetPasswordPageComponent', () => {
       ],
     });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const location = TestBed.inject(Location);
+    vi.spyOn(location, 'path').mockReturnValue('/dat-lai-mat-khau');
+    const replaceState = vi.spyOn(location, 'replaceState').mockImplementation(() => undefined);
     const fixture = TestBed.createComponent(ResetPasswordPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -33,7 +37,7 @@ describe('ResetPasswordPageComponent', () => {
       input.dispatchEvent(new Event('input'));
       fixture.detectChanges();
     };
-    return { fixture, el, navigate, type };
+    return { fixture, el, navigate, type, replaceState };
   }
 
   // @ADR-f01-p1-tai-khoan-hoc-vien-010: token đọc từ phần sau '#t=' của link
@@ -62,6 +66,16 @@ describe('ResetPasswordPageComponent', () => {
     expect(el.querySelector('form')).toBeNull();
     ([...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Xin link mới') as HTMLButtonElement).click();
     expect(navigate).toHaveBeenCalledWith('/quen-mat-khau');
+  });
+
+  // @ADR-f01-p1-tai-khoan-hoc-vien-010: đọc token xong thì xóa '#t=…' khỏi thanh địa chỉ/lịch sử, token vẫn giữ trong component
+  it('xóa token khỏi địa chỉ trang nhưng vẫn dùng được token để lưu', async () => {
+    const { fixture, replaceState, type } = await setup('t=tok-2_Cd');
+    expect(replaceState).toHaveBeenCalledWith('/dat-lai-mat-khau');
+    type('rp', 'Coach2026');
+    type('rp2', 'Coach2026');
+    await fixture.componentInstance.submit();
+    expect(calls[0]).toEqual(['tok-2_Cd', 'Coach2026', 'Coach2026']);
   });
 
   it('link không có token thì báo link hỏng ngay', async () => {

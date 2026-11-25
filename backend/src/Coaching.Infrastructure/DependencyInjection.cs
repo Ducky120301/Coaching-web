@@ -72,15 +72,19 @@ public static class DependencyInjection
         return services;
     }
 
+    // @ADR-f01-p1-tai-khoan-hoc-vien-007: Development (dotnet run), Local (docker compose dev/e2e), Testing (host test)
+    private static readonly string[] CaptureEnvironments = [Environments.Development, "Local", "Testing"];
+
     private static void AddEmail(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var provider = EmailProviders.Resolve(configuration);
         if (EmailProviders.IsCapture(configuration))
         {
-            // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 1 — hộp thư đọc được qua API, không bao giờ bật ở Production
-            if (environment.IsProduction())
+            // @ADR-f01-p1-tai-khoan-hoc-vien-007: chốt 1 — hộp thư đọc được qua API, chỉ bật ở môi trường dev/e2e (allowlist)
+            if (!CaptureEnvironments.Contains(environment.EnvironmentName))
                 throw new InvalidOperationException(
-                    "Email:Provider=Capture chỉ dùng cho dev/e2e, không được bật ở môi trường Production.");
+                    $"Email:Provider=Capture chỉ dùng cho dev/e2e ({string.Join(", ", CaptureEnvironments)}), " +
+                    $"không được bật ở môi trường '{environment.EnvironmentName}'.");
             services.AddSingleton<EmailOutbox>();
             services.AddScoped<IEmailSender, CapturingEmailSender>();
         }

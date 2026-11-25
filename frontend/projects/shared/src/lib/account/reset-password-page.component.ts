@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -64,6 +65,12 @@ export class ResetPasswordPageComponent {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly linkError = signal<string | null>(this.token ? null : RESET_LINK_INVALID);
+
+  constructor() {
+    // @ADR-f01-p1-tai-khoan-hoc-vien-010: token đã nằm trong component → xóa '#t=…' khỏi thanh địa chỉ và lịch sử trình duyệt
+    const location = inject(Location);
+    location.replaceState(location.path(false));
+  }
 
   async submit(): Promise<void> {
     if (!this.token || this.submitting()) return;

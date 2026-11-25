@@ -4,8 +4,10 @@ using System.Text.Json;
 using Coaching.Api.IntegrationTests.Students;
 using Coaching.Application.Accounts.Commands;
 using Coaching.Application.Auth;
+using Coaching.Application.Accounts;
 using Coaching.Application.Students;
 using Coaching.Infrastructure.Identity;
+using Coaching.Domain.Students;
 using Coaching.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,5 +114,45 @@ public sealed class PasswordResetTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, withCoachLink.StatusCode);
         Assert.Equal("auth.reset_link_invalid", await StudentRequests.ErrorCodeAsync(withCoachLink));
         Assert.Equal(HttpStatusCode.NoContent, withSelfLink.StatusCode);
+    }
+
+    // @ADR-f01-p1-tai-khoan-hoc-vien-004 @BR-f01-p1-tai-khoan-hoc-vien-017: coach gửi link đặt lại mà dịch vụ email lỗi → 503,
+    // rollback hết: không thêm dòng ResetLinkSent, không có token mới, link cũ (đã bị thu hồi trong giao dịch) vẫn dùng được
+    [Fact]
+    public async Task Reset_link_email_failure_rolls_back_history_token_and_revocation()
+    {
+        var student = await AccountRequests.CreateActivatedAsync(factory);
+        var admin = await factory.CaptureAdminClientAsync();
+        Assert.Equal(HttpStatusCode.OK, (await AccountRequests.SendResetLinkAsync(admin, student.Id)).StatusCode);
+        var linkA = AccountRequests.ResetToken(
+            factory.Outbox.All.Last(m => m.To == student.Email && m.Subject == AccountRequests.ResetSubject));
+        var historyBefore = (await admin.GetFromJsonAsync<StudentDetailDto>($"{StudentRequests.Url}/{student.Id}"))!.Account.History;
+        var resetEventsBefore = historyBefore.Count(e => e.Type == nameof(AccountEventType.ResetLinkSent));
+        var tokensBefore = await ResetTokenIdsAsync(student.Id);
+        var mailsBefore = factory.Outbox.All.Count(m => m.To == student.Email);
+
+        factory.Outbox.FailNext = true;
+        var response = await AccountRequests.SendResetLinkAsync(admin, student.Id);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("account.email_send_failed", await StudentRequests.ErrorCodeAsync(response));
+        var historyAfter = (await admin.GetFromJsonAsync<StudentDetailDto>($"{StudentRequests.Url}/{student.Id}"))!.Account.History;
+        Assert.Equal(resetEventsBefore, historyAfter.Count(e => e.Type == nameof(AccountEventType.ResetLinkSent)));
+        Assert.Equal(historyBefore.Count, historyAfter.Count);
+        Assert.Equal(tokensBefore, await ResetTokenIdsAsync(student.Id));
+        Assert.Equal(mailsBefore, factory.Outbox.All.Count(m => m.To == student.Email));
+
+        var reset = await AccountRequests.ResetAsync(factory.Capture.CreateClient(), linkA, "Coach2026", "Coach2026");
+        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+    }
+
+    private async Task<List<Guid>> ResetTokenIdsAsync(Guid studentId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userId = await db.Students.Where(s => s.Id == studentId).Select(s => s.UserId).SingleAsync();
+        return await db.AccountTokens
+            .Where(t => t.UserId == userId && t.Purpose == AccountTokenPurpose.PasswordReset)
+            .OrderBy(t => t.Id).Select(t => t.Id).ToListAsync();
     }
 }
