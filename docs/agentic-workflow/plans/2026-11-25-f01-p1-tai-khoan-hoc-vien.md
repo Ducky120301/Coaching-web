@@ -3598,7 +3598,7 @@ EOF
 
 **Owns:** `@BR-f01-p1-tai-khoan-hoc-vien-011`, `@BR-f01-p1-tai-khoan-hoc-vien-013`, `@BR-f01-p1-tai-khoan-hoc-vien-014`, `@BR-f01-p1-tai-khoan-hoc-vien-015`, `@BR-f01-p1-tai-khoan-hoc-vien-016`, `@BR-f01-p1-tai-khoan-hoc-vien-026` | —
 
-- [ ] **Step 1: Viết Domain test cho `PasswordPolicy`, kích hoạt và trạng thái tài khoản**
+- [x] **Step 1: Viết Domain test cho `PasswordPolicy`, kích hoạt và trạng thái tài khoản**
 
 `backend/tests/Coaching.Domain.Tests/Students/PasswordPolicyTests.cs`:
 ```csharp
@@ -3726,12 +3726,12 @@ public sealed class ActivationTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.PasswordPolicyTests|FullyQualifiedName~Coaching.Domain.Tests.Students.ActivationTests"`
 Expected: FAIL — build error `The name 'PasswordPolicy' does not exist in the current context` / `The type or namespace name 'PasswordCheck' could not be found`.
 
-- [ ] **Step 3: Domain — `PasswordCheck`, `PasswordPolicy`, annotation trạng thái + kích hoạt, repository**
+- [x] **Step 3: Domain — `PasswordCheck`, `PasswordPolicy`, annotation trạng thái + kích hoạt, repository**
 
 `backend/src/Coaching.Domain/Students/PasswordCheck.cs`:
 ```csharp
@@ -3796,12 +3796,12 @@ public static class PasswordPolicy
         db.Students.SingleOrDefaultAsync(s => s.UserId == userId, cancellationToken);
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.PasswordPolicyTests|FullyQualifiedName~Coaching.Domain.Tests.Students.ActivationTests"`
 Expected: `Passed: 17` (PasswordPolicyTests 14, ActivationTests 3).
 
-- [ ] **Step 5: Viết Application test cho lỗi mật khẩu / mã kích hoạt**
+- [x] **Step 5: Viết Application test cho lỗi mật khẩu / mã kích hoạt**
 
 `backend/tests/Coaching.Application.Tests/Auth/PasswordErrorsTests.cs`:
 ```csharp
@@ -3845,7 +3845,7 @@ public sealed class PasswordErrorsTests
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~PasswordErrorsTests"`
 Expected: FAIL — build error `'AuthErrors' does not contain a definition for 'ForPassword'`.
 
-- [ ] **Step 6: Application — lỗi, port mật khẩu riêng, cấp phiên, use case kích hoạt**
+- [x] **Step 6: Application — lỗi, port mật khẩu riêng, cấp phiên, use case kích hoạt**
 
 `backend/src/Coaching.Application/Auth/AuthErrors.cs` — thêm `using Coaching.Domain.Students;` vào đầu file, rồi thêm cuối class:
 ```csharp
@@ -3945,7 +3945,7 @@ public sealed class ActivateAccountHandler(
         services.AddScoped<ActivateAccountHandler>();
 ```
 
-- [ ] **Step 7: Infrastructure + API — mật khẩu riêng, cấp phiên, route kích hoạt**
+- [x] **Step 7: Infrastructure + API — mật khẩu riêng, cấp phiên, route kích hoạt**
 
 `backend/src/Coaching.Infrastructure/Identity/AccountCredentials.cs` — thêm sau `SetTemporaryPasswordAsync`:
 ```csharp
@@ -3993,7 +3993,7 @@ public sealed class ActivateAccountHandler(
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~PasswordErrorsTests"`
 Expected: `Passed: 5`.
 
-- [ ] **Step 8: Acceptance — `AccountApi` kích hoạt bằng luồng thật + step defs BR-005 sc.3, BR-011, 013–016, 026**
+- [x] **Step 8: Acceptance — `AccountApi` kích hoạt bằng luồng thật + step defs BR-005 sc.3, BR-011, 013–016, 026**
 
 `backend/tests/Coaching.Acceptance/Support/AccountApi.cs`:
 - Thêm `using System.Globalization;` vào đầu file.
@@ -4211,14 +4211,14 @@ public sealed class ActivationSteps(AcceptanceContext ctx, StudentApi api, Accou
 }
 ```
 
-- [ ] **Step 9: Chạy acceptance — kỳ vọng PASS**
+- [x] **Step 9: Chạy acceptance — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-005|Category=BR-f01-p1-tai-khoan-hoc-vien-011|Category=BR-f01-p1-tai-khoan-hoc-vien-013|Category=BR-f01-p1-tai-khoan-hoc-vien-014|Category=BR-f01-p1-tai-khoan-hoc-vien-015|Category=BR-f01-p1-tai-khoan-hoc-vien-016|Category=BR-f01-p1-tai-khoan-hoc-vien-026)&Category!=web"`
 Expected: `Passed: 18`, `Failed: 0` (BR-005: 3; BR-011: 2; BR-013: 3; BR-014: 2; BR-015: 2 ví dụ + 1; BR-016: 1; BR-026: 4 ví dụ).
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-001|Category=BR-f01-p1-tai-khoan-hoc-vien-012)&Category!=web"`
 Expected: `Passed: 6` (BR-001 sc.2 và BR-012 vẫn xanh khi `CreateActivatedAsync` chạy luồng thật).
 
-- [ ] **Step 10: Integration test kích hoạt**
+- [x] **Step 10: Integration test kích hoạt**
 
 `backend/tests/Coaching.Api.IntegrationTests/Accounts/AccountRequests.cs`:
 - Thêm `using System.Text.Json;` vào đầu file.
@@ -4331,12 +4331,12 @@ public sealed class ActivationTests(ApiFactory factory)
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Accounts"`
 Expected: `Passed: 10` (SendCredentialsTests 3, TempPasswordLoginTests 4, ActivationTests 3).
 
-- [ ] **Step 11: Verify toàn bộ**
+- [x] **Step 11: Verify toàn bộ**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed ngoài các scenario `@api` của Task 6–7 báo `MissingStepDefinition` (thong-tin-dang-nhap BR-007→010, BR-027; toàn bộ dat-lai-mat-khau). Toàn bộ kich-hoat, thong-tin-dang-nhap BR-001→006, 012, 025, 026 và F00/F02 xanh.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
