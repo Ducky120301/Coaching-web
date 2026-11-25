@@ -4371,7 +4371,7 @@ EOF
 
 **Owns:** `@BR-f01-p1-tai-khoan-hoc-vien-007`, `@BR-f01-p1-tai-khoan-hoc-vien-008`, `@BR-f01-p1-tai-khoan-hoc-vien-009`, `@BR-f01-p1-tai-khoan-hoc-vien-010`, `@BR-f01-p1-tai-khoan-hoc-vien-027` | —
 
-- [ ] **Step 1: Viết Domain test cho sửa email và lịch sử tài khoản**
+- [x] **Step 1: Viết Domain test cho sửa email và lịch sử tài khoản**
 
 `backend/tests/Coaching.Domain.Tests/Students/ChangeEmailTests.cs`:
 ```csharp
@@ -4478,12 +4478,12 @@ public sealed class ChangeEmailTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.ChangeEmailTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'ChangeEmail'`.
 
-- [ ] **Step 3: Domain — `ChangeEmail` + annotation lịch sử chỉ thêm**
+- [x] **Step 3: Domain — `ChangeEmail` + annotation lịch sử chỉ thêm**
 
 `backend/src/Coaching.Domain/Students/Student.cs`:
 - Thêm dòng sau ngay trên khai báo property `AccountEvents` (Task 1):
@@ -4522,12 +4522,12 @@ Expected: FAIL — build error `'Student' does not contain a definition for 'Cha
     }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.ChangeEmailTests"`
 Expected: `Passed: 5`.
 
-- [ ] **Step 5: Acceptance — `AccountApi.TryChangeEmailAsync` + step defs BR-007→010, BR-027**
+- [x] **Step 5: Acceptance — `AccountApi.TryChangeEmailAsync` + step defs BR-007→010, BR-027**
 
 `backend/tests/Coaching.Acceptance/Support/AccountApi.cs` — thêm vào class (sau `TryActivateAsync`):
 ```csharp
@@ -4698,12 +4698,12 @@ public sealed class EmailChangeSteps(AcceptanceContext ctx, StudentApi api, Acco
 }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-007|Category=BR-f01-p1-tai-khoan-hoc-vien-008|Category=BR-f01-p1-tai-khoan-hoc-vien-009|Category=BR-f01-p1-tai-khoan-hoc-vien-010|Category=BR-f01-p1-tai-khoan-hoc-vien-027)&Category!=web"`
 Expected: FAIL — các scenario sửa email nhận `404 NotFound` thay vì `200/409/400` ở `PUT /api/admin/students/{id}/email` (route chưa có); riêng BR-027 sc.1 (chỉ gửi + kích hoạt) đã PASS.
 
-- [ ] **Step 7: Application + Infrastructure + API — đổi email ở cả Identity và hồ sơ trong một transaction**
+- [x] **Step 7: Application + Infrastructure + API — đổi email ở cả Identity và hồ sơ trong một transaction**
 
 `backend/src/Coaching.Application/Accounts/AccountErrors.cs` — thêm member:
 ```csharp
@@ -4847,12 +4847,12 @@ using Microsoft.EntityFrameworkCore;
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 ```
 
-- [ ] **Step 8: Chạy acceptance — kỳ vọng PASS**
+- [x] **Step 8: Chạy acceptance — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-007|Category=BR-f01-p1-tai-khoan-hoc-vien-008|Category=BR-f01-p1-tai-khoan-hoc-vien-009|Category=BR-f01-p1-tai-khoan-hoc-vien-010|Category=BR-f01-p1-tai-khoan-hoc-vien-027)&Category!=web"`
 Expected: `Passed: 12`, `Failed: 0` (BR-007: 1; BR-008: 2 ví dụ + 1; BR-009: 1 + 2 ví dụ + 1; BR-010: 2; BR-027: 2).
 
-- [ ] **Step 9: Integration test sửa email**
+- [x] **Step 9: Integration test sửa email**
 
 `backend/tests/Coaching.Api.IntegrationTests/Accounts/AccountRequests.cs` — thêm cuối class (trước `[GeneratedRegex…]`):
 ```csharp
@@ -4969,12 +4969,12 @@ public sealed class ChangeEmailTests(ApiFactory factory)
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Accounts"`
 Expected: `Passed: 14` (SendCredentialsTests 3, TempPasswordLoginTests 4, ActivationTests 3, ChangeEmailTests 4).
 
-- [ ] **Step 10: Verify toàn bộ**
+- [x] **Step 10: Verify toàn bộ**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed ngoài các scenario `@api` của Task 7 báo `MissingStepDefinition` (toàn bộ dat-lai-mat-khau.feature). thong-tin-dang-nhap.feature và kich-hoat.feature xanh hết; F00/F02 xanh (ho-so-hoc-vien BR-f02-ho-so-hoc-vien-012 vẫn không sửa email qua `PUT` hồ sơ).
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
