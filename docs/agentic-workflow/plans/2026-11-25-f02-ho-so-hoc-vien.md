@@ -3168,7 +3168,7 @@ EOF
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-014`, `@BR-f02-ho-so-hoc-vien-016` | `@ADR-f02-ho-so-hoc-vien-007`
 
-- [ ] **Step 1: Viết Domain test cho ghi chú nội bộ**
+- [x] **Step 1: Viết Domain test cho ghi chú nội bộ**
 
 `backend/tests/Coaching.Domain.Tests/Students/InternalNoteTests.cs`:
 ```csharp
@@ -3252,12 +3252,12 @@ public sealed class InternalNoteTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~InternalNoteTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'UpdateInternalNote'`.
 
-- [ ] **Step 3: Domain — ghi chú nội bộ, tra hồ sơ theo tài khoản**
+- [x] **Step 3: Domain — ghi chú nội bộ, tra hồ sơ theo tài khoản**
 
 `backend/src/Coaching.Domain/Students/Student.cs` — thêm sau `public const int FullNameMaxLength = 100;`:
 ```csharp
@@ -3293,12 +3293,12 @@ và thêm method sau `UpdateRegistration`:
     Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~InternalNoteTests"`
 Expected: `Passed: 5`.
 
-- [ ] **Step 5: Viết step defs `@api` cho BR-014, BR-016**
+- [x] **Step 5: Viết step defs `@api` cho BR-014, BR-016**
 
 `backend/tests/Coaching.Acceptance/Support/StudentApi.cs` — thêm method sau `UpdateOkAsync`:
 ```csharp
@@ -3422,7 +3422,7 @@ public sealed class StudentNoteSteps(AcceptanceContext ctx, StudentApi api)
 }
 ```
 
-- [ ] **Step 6: Viết test kiến trúc DTO phía học viên + integration test ghi chú**
+- [x] **Step 6: Viết test kiến trúc DTO phía học viên + integration test ghi chú**
 
 `backend/tests/Coaching.Api.IntegrationTests/Architecture/ClientDtoTests.cs`:
 ```csharp
@@ -3593,12 +3593,12 @@ public sealed class InternalNoteTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `'StudentDetailDto' does not contain a definition for 'InternalNote'` / `StudentRepository does not implement interface member GetByUserIdAsync`.
 
-- [ ] **Step 8: Repository, DTO, use case, endpoint**
+- [x] **Step 8: Repository, DTO, use case, endpoint**
 
 `backend/src/Coaching.Infrastructure/Persistence/Repositories/StudentRepository.cs` — thêm method sau `GetForUpdateAsync`:
 ```csharp
@@ -3820,7 +3820,7 @@ public sealed class MeController(GetStudentSelfHandler getSelf) : ClientControll
 }
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng PASS**
+- [x] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-014|Category=BR-f02-ho-so-hoc-vien-016)&Category!=web"`
 Expected: `Passed: 4`, `Failed: 0`.
@@ -3829,7 +3829,7 @@ Expected: `Passed: 19`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (F00 `AccessSteps` "học viên thấy đúng email và họ tên của mình" đọc `/api/client/me` mới — helper đã tạo `Student` cùng họ tên).
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
