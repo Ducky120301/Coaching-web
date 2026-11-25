@@ -6,7 +6,7 @@ import { E2EWorld } from '../support/world';
 async function loginAdmin(world: E2EWorld, page = world.page) {
   await page.goto(`${ADMIN_URL}/login`);
   await world.login(page, ADMIN.email, ADMIN.password);
-  await expect(page.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Học viên', exact: true })).toBeVisible();
 }
 
 async function logoutVia(page: import('playwright').Page) {
@@ -19,7 +19,7 @@ Given('admin đang làm việc và lượt truy cập vừa hết hạn', async 
   await loginAdmin(this);
   this.rejectedOnce = false;
   this.refreshStatus = null;
-  await this.page.route('**/api/admin/profile', async (route, request) => {
+  await this.page.route('**/api/admin/students', async (route, request) => {
     if (!this.rejectedOnce) {
       this.rejectedOnce = true;
       await route.continue({ headers: { ...request.headers(), authorization: 'Bearer het-han' } });
@@ -30,16 +30,16 @@ Given('admin đang làm việc và lượt truy cập vừa hết hạn', async 
 });
 
 When('admin xem hồ sơ coach của mình', async function (this: E2EWorld) {
-  const rejected = this.page.waitForResponse((r) => r.url().includes('/api/admin/profile') && r.status() === 401);
+  const rejected = this.page.waitForResponse((r) => r.url().includes('/api/admin/students') && r.status() === 401);
   const refreshed = this.page.waitForResponse((r) => r.url().includes('/api/auth/refresh'));
-  await Promise.all([rejected, refreshed, this.page.goto(`${ADMIN_URL}/trang-chu`)]);
+  await Promise.all([rejected, refreshed, this.page.goto(`${ADMIN_URL}/dashboard`)]);
   this.refreshStatus = (await refreshed).status();
 });
 
 Then('admin thấy hồ sơ coach mà không phải đăng nhập lại', async function (this: E2EWorld) {
   expect(this.rejectedOnce, 'request đầu bị trả 401').toBe(true);
   expect(this.refreshStatus, '/api/auth/refresh trả 200').toBe(200);
-  await expect(this.page.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
+  await expect(this.page.getByRole('heading', { name: 'Học viên', exact: true })).toBeVisible();
   await expect(this.page).not.toHaveURL(/\/login/);
 });
 
@@ -54,8 +54,8 @@ Then('admin ở trạng thái chưa đăng nhập web quản trị', async funct
 // @BR-f00-codebase-014
 Given('admin đang mở web quản trị ở hai tab của cùng trình duyệt', async function (this: E2EWorld) {
   await loginAdmin(this);
-  const second = await this.openPage(`${ADMIN_URL}/trang-chu`);
-  await expect(second.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
+  const second = await this.openPage(`${ADMIN_URL}/dashboard`);
+  await expect(second.getByRole('heading', { name: 'Học viên', exact: true })).toBeVisible();
 });
 When('admin đăng xuất ở tab thứ nhất', async function (this: E2EWorld) { await logoutVia(this.pages[0]); });
 Then('tab thứ hai cũng ở trạng thái chưa đăng nhập', async function (this: E2EWorld) {
@@ -77,7 +77,7 @@ Then('phiên ở web học viên vẫn còn đăng nhập', async function (this
 
 // @BR-f00-codebase-015
 Given('admin chưa đăng nhập và mở một trang con của khu vực coach', async function (this: E2EWorld) {
-  this.expectedUrl = `${ADMIN_URL}/trang-chu?tu=e2e`;
+  this.expectedUrl = `${ADMIN_URL}/dashboard?tu=e2e`;
   await this.page.goto(this.expectedUrl);
   await expect(this.page).toHaveURL(/\/login\?returnUrl=/);
 });
@@ -86,11 +86,11 @@ Given('admin mở một đường dẫn đăng nhập web quản trị yêu cầ
 });
 When('admin đăng nhập web quản trị thành công', async function (this: E2EWorld) {
   await this.login(this.page, ADMIN.email, ADMIN.password);
-  await expect(this.page.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
+  await expect(this.page.getByRole('heading', { name: 'Học viên', exact: true })).toBeVisible();
 });
 Then('admin được đưa về đúng trang con đó', async function (this: E2EWorld) {
   await expect(this.page).toHaveURL(this.expectedUrl);
 });
 Then('admin được đưa về trang chủ của web quản trị', async function (this: E2EWorld) {
-  await expect(this.page).toHaveURL(`${ADMIN_URL}/trang-chu`);
+  await expect(this.page).toHaveURL(`${ADMIN_URL}/dashboard`);
 });

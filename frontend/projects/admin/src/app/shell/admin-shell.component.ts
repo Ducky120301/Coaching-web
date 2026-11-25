@@ -1,7 +1,12 @@
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
+import { catchError, map, of } from 'rxjs';
+
+interface CoachProfile { id: string; displayName: string; email: string; }
 
 @Component({
   selector: 'app-admin-shell',
@@ -14,12 +19,12 @@ import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
           <p class="area muted">Khu vực coach</p>
         </div>
         <nav aria-label="Admin">
-          <a routerLink="/trang-chu" routerLinkActive #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
+          <a routerLink="/dashboard" routerLinkActive #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Trang chủ</a>
+                 stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Dashboard</a>
         </nav>
         <div class="user-block">
-          <dbx-user-menu [name]="auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
+          <dbx-user-menu [name]="coachName() ?? auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
         </div>
       </aside>
       <main><router-outlet /></main>
@@ -42,4 +47,12 @@ import { AuthService, ICONS, UserMenuComponent } from '@coaching/shared';
 export class AdminShellComponent {
   protected readonly auth = inject(AuthService);
   protected readonly homeIcon = inject(DomSanitizer).bypassSecurityTrustHtml(ICONS.home);
+  /** Tên coach lấy từ hệ thống (hồ sơ coach) — thay lời chào ở trang chủ cũ. */
+  protected readonly coachName = toSignal(
+    inject(HttpClient).get<CoachProfile>(this.auth.apiUrl('/api/admin/profile')).pipe(
+      map((p) => p.displayName),
+      catchError(() => of(null)),
+    ),
+    { initialValue: null },
+  );
 }

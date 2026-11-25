@@ -15,3 +15,5 @@ export * from './lib/login/login-page.component';
 export * from './lib/format/vn-date';
 export * from './lib/ui/icons';
 export * from './lib/ui/user-menu.component';
+export * from './lib/format/initials';
+export * from './lib/ui/status-badge.component';

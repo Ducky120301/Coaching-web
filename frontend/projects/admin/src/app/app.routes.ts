@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { LoginPageComponent, authGuard, guestGuard } from '@coaching/shared';
-import { AdminHomeComponent } from './home/admin-home.component';
 import { AdminShellComponent } from './shell/admin-shell.component';
 
+// @ADR-f02-ho-so-hoc-vien-008: route tiếng Việt; dashboard (danh sách tạm) là trang đích thay trang-chu
 export const routes: Routes = [
   { path: 'login', component: LoginPageComponent, canActivate: [guestGuard], title: 'Đăng nhập — Khu vực coach' },
   {
@@ -10,8 +10,13 @@ export const routes: Routes = [
     component: AdminShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'trang-chu' },
-      { path: 'trang-chu', component: AdminHomeComponent, title: 'Trang chủ — Khu vực coach' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'trang-chu', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./students/student-list.component').then((m) => m.StudentListComponent),
+        title: 'Học viên — Khu vực coach',
+      },
     ],
   },
   { path: '**', redirectTo: '' },

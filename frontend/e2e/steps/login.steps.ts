@@ -15,7 +15,7 @@ When(/^(admin|học viên) đăng nhập web (quản trị|học viên) bằng e
 
 Then('admin vào được khu vực coach', async function (this: E2EWorld) {
   await expect(this.page.getByText('Khu vực coach', { exact: true })).toBeVisible();
-  await expect(this.page.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
+  await expect(this.page.getByRole('heading', { name: 'Học viên', exact: true })).toBeVisible();
 });
 
 Then('học viên vào được khu vực học viên', async function (this: E2EWorld) {
