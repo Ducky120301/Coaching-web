@@ -5,9 +5,23 @@ import { provideRouter } from '@angular/router';
 import { APP_CONFIG, CLIENT_APP } from '@coaching/shared';
 import { describe, expect, it } from 'vitest';
 import { StudentProfileComponent } from './student-profile.component';
-import { StudentDetail } from './student.models';
+import { AccountInfo, StudentDetail } from './student.models';
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const notSent: AccountInfo = { state: 'NotSent', credentialsSentAt: null, tempPasswordExpiresAt: null, activatedAt: null, history: [] };
+const sent: AccountInfo = {
+  state: 'Sent', credentialsSentAt: '2026-11-25T02:00:00+00:00', tempPasswordExpiresAt: '2026-11-28T02:00:00+00:00', activatedAt: null,
+  history: [{ type: 'CredentialsSent', at: '2026-11-25T02:00:00+00:00', fromEmail: null, toEmail: null }],
+};
+const activated: AccountInfo = {
+  state: 'Activated', credentialsSentAt: '2026-10-12T02:05:00+00:00', tempPasswordExpiresAt: null, activatedAt: '2026-10-13T01:12:00+00:00',
+  history: [
+    { type: 'Activated', at: '2026-10-13T01:12:00+00:00', fromEmail: null, toEmail: null },
+    { type: 'EmailChanged', at: '2026-10-12T14:30:00+00:00', fromEmail: 'lan@gmial.com', toEmail: 'lan@gmail.com' },
+    { type: 'CredentialsSent', at: '2026-10-12T02:05:00+00:00', fromEmail: null, toEmail: null },
+  ],
+};
 
 function detail(overrides: Partial<StudentDetail> = {}): StudentDetail {
   return {
@@ -15,7 +29,7 @@ function detail(overrides: Partial<StudentDetail> = {}): StudentDetail {
     createdAt: '2026-11-20T02:00:00+00:00',
     registration: { trainingGoal: 'Giảm mỡ, giữ cơ', availability: 'T3–T7 buổi tối', equipment: null, weightKg: 72.5 },
     missingRequired: ['pack', 'photoBackUrl'], updatedAt: null, updatedBy: null, version: 'AAAAAAAAB9E=',
-    internalNote: null, internalNoteUpdatedAt: null, statusHistory: [],
+    internalNote: null, internalNoteUpdatedAt: null, statusHistory: [], account: notSent,
     ...overrides,
   };
 }
@@ -237,5 +251,76 @@ describe('StudentProfileComponent', () => {
     await settle();
     fixture.detectChanges();
     expect((el.querySelector('#status-reason') as HTMLTextAreaElement).value).toBe('Đi công tác');
+  });
+  // @BR-f01-p1-tai-khoan-hoc-vien-001 @BR-f01-p1-tai-khoan-hoc-vien-026: chưa gửi → nút "Gửi thông tin đăng nhập"; gửi xong card cập nhật
+  it('sends the login details and shows the new account state and history', async () => {
+    const { fixture, http, el, buttons, click } = await setup();
+    expect(el.querySelector('app-account-card .state')?.textContent?.trim()).toBe('Chưa gửi thông tin đăng nhập');
+
+    click('Gửi thông tin đăng nhập');
+    const post = http.expectOne('/api/admin/students/s1/credentials');
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({});
+    post.flush(detail({ account: sent, version: 'AAAAAAAAB9I=' }));
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('app-account-card .state')?.textContent?.trim())
+      .toBe('Đã gửi lúc 25/11 09:00, mật khẩu tạm còn hạn đến 28/11 09:00');
+    expect(el.querySelector('app-account-card ol')?.textContent).toContain('Gửi thông tin đăng nhập lần đầu.');
+    expect(el.querySelector('p.msg.ok[role="status"]')?.textContent?.trim()).toBe('Đã gửi thông tin đăng nhập.');
+    expect(buttons()).toContain('Gửi lại thông tin đăng nhập');
+    expect(buttons()).not.toContain('Gửi thông tin đăng nhập');
+  });
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-006: gửi lỗi → câu báo của server, trạng thái giữ nguyên
+  it('shows the server message when the email could not be sent', async () => {
+    const { fixture, http, el, click } = await setup(detail({ account: sent }));
+
+    click('Gửi lại thông tin đăng nhập');
+    http.expectOne('/api/admin/students/s1/credentials').flush(
+      { title: 'Chưa gửi được email. Vui lòng thử lại sau.', code: 'account.email_send_failed' },
+      { status: 503, statusText: 'Service Unavailable' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg[role="status"]')?.textContent?.trim()).toBe('Chưa gửi được email. Vui lòng thử lại sau.');
+    expect(el.querySelector('p.msg.ok')).toBeNull();
+    expect(el.querySelector('app-account-card .state')?.textContent?.trim())
+      .toBe('Đã gửi lúc 25/11 09:00, mật khẩu tạm còn hạn đến 28/11 09:00');
+  });
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-017 @BR-f01-p1-tai-khoan-hoc-vien-026: đã kích hoạt → header "Kích hoạt dd/MM/yyyy", nút gửi link đặt lại
+  it('shows the activation date and sends a reset link for an activated account', async () => {
+    const { fixture, http, el, buttons, click } = await setup(detail({ accountStatus: 'Activated', account: activated }));
+
+    expect(el.querySelector('.meta .activated')?.textContent?.trim()).toBe('Kích hoạt 13/10/2026');
+    expect(el.querySelector('.meta')?.textContent).not.toContain('Chờ kích hoạt');
+    expect(buttons()).not.toContain('Gửi lại thông tin đăng nhập');
+    expect(el.querySelector('app-account-card ol')?.textContent).toContain('Sửa email từ lan@gmial.com sang lan@gmail.com.');
+
+    click('Gửi link đặt lại mật khẩu');
+    const post = http.expectOne('/api/admin/students/s1/password-reset-link');
+    expect(post.request.method).toBe('POST');
+    post.flush(detail({
+      accountStatus: 'Activated',
+      account: { ...activated, history: [{ type: 'ResetLinkSent', at: '2026-11-25T02:00:00+00:00', fromEmail: null, toEmail: null }, ...activated.history] },
+    }));
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg.ok')?.textContent?.trim()).toBe('Đã gửi link đặt lại mật khẩu.');
+    expect(el.querySelector('app-account-card ol li')?.textContent).toContain('Gửi link đặt lại mật khẩu.');
+  });
+
+  it('shows the notice handed over by the create form', async () => {
+    history.replaceState({ notice: 'Đã lưu hồ sơ nhưng chưa gửi được thông tin đăng nhập. Vui lòng thử lại.' }, '');
+    try {
+      const { el } = await setup();
+      expect(el.querySelector('p.msg[role="status"]')?.textContent?.trim())
+        .toBe('Đã lưu hồ sơ nhưng chưa gửi được thông tin đăng nhập. Vui lòng thử lại.');
+    } finally {
+      history.replaceState(null, '');
+    }
   });
 });

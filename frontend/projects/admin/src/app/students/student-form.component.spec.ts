@@ -4,16 +4,24 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { APP_CONFIG, CLIENT_APP } from '@coaching/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DRAFT_KEY, StudentFormComponent } from './student-form.component';
-import { StudentDetail } from './student.models';
+import { FORM_FIELDS } from './registration-fields';
+import { DRAFT_KEY, EMAIL_CHANGE_NOTE, SAVED_NOT_SENT_MESSAGE, SENT_MESSAGE, StudentFormComponent } from './student-form.component';
+import { AccountInfo, StudentDetail } from './student.models';
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const notSent: AccountInfo = { state: 'NotSent', credentialsSentAt: null, tempPasswordExpiresAt: null, activatedAt: null, history: [] };
+const sent: AccountInfo = {
+  state: 'Sent', credentialsSentAt: '2026-11-25T02:00:00+00:00', tempPasswordExpiresAt: '2026-11-28T02:00:00+00:00', activatedAt: null,
+  history: [{ type: 'CredentialsSent', at: '2026-11-25T02:00:00+00:00', fromEmail: null, toEmail: null }],
+};
 
 function detail(overrides: Partial<StudentDetail> = {}): StudentDetail {
   return {
     id: 's1', coachId: 'c1', fullName: 'Lan', email: 'lan@gmail.com', accountStatus: 'PendingActivation', coachingStatus: 'Active',
     createdAt: '2026-11-25T02:00:00+00:00', registration: { weightKg: 72.5, sessionsPerWeek: '4 buổi' }, missingRequired: [],
     updatedAt: null, updatedBy: null, version: 'AAAAAAAAB9E=', internalNote: null, internalNoteUpdatedAt: null, statusHistory: [],
+    account: notSent,
     ...overrides,
   };
 }
@@ -45,16 +53,39 @@ describe('StudentFormComponent', () => {
     control.dispatchEvent(new Event(control instanceof HTMLSelectElement ? 'change' : 'input'));
   }
 
-  const submit = (el: HTMLElement) => el.querySelector('form')!.dispatchEvent(new Event('submit'));
+  /** Điền đủ 30 mục bắt buộc bằng giá trị hợp lệ. */
+  function fillAllRequired(el: HTMLElement) {
+    for (const f of FORM_FIELDS.filter((x) => x.required)) {
+      const value = f.key === 'email' ? 'lan@gmail.com'
+        : f.type === 'select' ? f.options![0]
+        : f.type === 'date' ? '2026-11-01'
+        : f.type === 'integer' ? '28'
+        : f.type === 'decimal' ? '170'
+        : f.key.startsWith('photo') ? 'https://drive.google.com/x' : 'Lan';
+      fill(el, f.key, value);
+    }
+  }
 
-  // @BR-f02-ho-so-hoc-vien-003 + NFR-f02-ho-so-hoc-vien-004: lưu thành công → xóa bản nháp, mở hồ sơ
-  it('saves a profile with only name and email, clears the draft and opens the profile', async () => {
+  const submit = (el: HTMLElement) => el.querySelector('form')!.dispatchEvent(new Event('submit'));
+  const saveOnly = (el: HTMLElement) => (el.querySelector('button.save-only') as HTMLButtonElement).click();
+
+  it('offers the prototype actions on create', () => {
+    const { el } = setup('create');
+    const labels = [...el.querySelectorAll('.actions button')].map((b) => b.textContent?.trim());
+    expect(labels).toEqual(['Lưu và gửi thông tin đăng nhập', 'Chỉ lưu hồ sơ', 'Xoá trắng hồ sơ']);
+    expect(el.querySelector('.account')?.textContent).toContain('Chưa tạo');
+    expect(el.querySelector('.account')?.textContent).toContain('Hồ sơ ở trạng thái Chờ kích hoạt sau khi gửi.');
+    expect(el.querySelector('.receive h2')?.textContent?.trim()).toBe('Học viên sẽ nhận gì');
+  });
+
+  // @BR-f02-ho-so-hoc-vien-003 + NFR-f02-ho-so-hoc-vien-004: "Chỉ lưu hồ sơ" → xóa bản nháp, mở hồ sơ
+  it('"Chỉ lưu hồ sơ" saves a profile with only name and email, clears the draft and opens the profile', async () => {
     const { http, el, navigate } = setup('create');
     fill(el, 'fullName', 'Lan');
     fill(el, 'email', 'lan@gmail.com');
     expect(localStorage.getItem(DRAFT_KEY)).toContain('lan@gmail.com');
 
-    submit(el);
+    saveOnly(el);
     const request = http.expectOne('/api/admin/students');
     expect(request.request.method).toBe('POST');
     expect(request.request.body.fullName).toBe('Lan');
@@ -63,18 +94,19 @@ describe('StudentFormComponent', () => {
     request.flush(detail());
     await settle();
 
+    http.expectNone('/api/admin/students/s1/credentials');
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
     expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1');
   });
 
-  // @BR-f02-ho-so-hoc-vien-014: ghi chú nội bộ gửi trong cùng POST tạo hồ sơ, không gọi endpoint ghi chú
+  // @BR-f02-ho-so-hoc-vien-014: ghi chú nội bộ gửi trong cùng POST tạo hồ sơ
   it('sends the internal note in the same create request', async () => {
     const { http, el, navigate } = setup('create');
     fill(el, 'fullName', 'Lan');
     fill(el, 'email', 'lan@gmail.com');
     fill(el, 'internalNote', ' Tránh lunge sâu vì gối phải ');
 
-    submit(el);
+    saveOnly(el);
     const request = http.expectOne('/api/admin/students');
     expect(request.request.body.internalNote).toBe('Tránh lunge sâu vì gối phải');
     request.flush(detail({ internalNote: 'Tránh lunge sâu vì gối phải' }));
@@ -84,7 +116,7 @@ describe('StudentFormComponent', () => {
     expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1');
   });
 
-  // NFR-f02-ho-so-hoc-vien-004: bản nháp chỉ nằm trên trình duyệt của coach
+  // NFR-f02-ho-so-hoc-vien-004
   it('restores the draft kept on this browser', () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ fullName: 'Quân', weightKg: '72,5' }));
     const { el } = setup('create');
@@ -105,7 +137,7 @@ describe('StudentFormComponent', () => {
     expect((el.querySelector('#hs-fullName') as HTMLInputElement).value).toBe('');
   });
 
-  // @BR-f02-ho-so-hoc-vien-008: "72,5" gửi 72.5; "3.500.000" gửi 3500000
+  // @BR-f02-ho-so-hoc-vien-008
   it('sends decimal-comma numbers as JSON numbers', () => {
     const { http, el } = setup('create');
     fill(el, 'fullName', 'Lan');
@@ -113,21 +145,21 @@ describe('StudentFormComponent', () => {
     fill(el, 'weightKg', '72,5');
     fill(el, 'price', '3.500.000');
 
-    submit(el);
+    saveOnly(el);
 
     const body = http.expectOne('/api/admin/students').request.body;
     expect(body.registration['weightKg']).toBe(72.5);
     expect(body.registration['price']).toBe(3500000);
   });
 
-  // @BR-f02-ho-so-hoc-vien-008 (seed "abc"): ô số không hợp lệ → không gửi, đánh dấu ô
+  // @BR-f02-ho-so-hoc-vien-008 (seed "abc")
   it('does not send a non-numeric weight and marks the field', () => {
     const { fixture, http, el } = setup('create');
     fill(el, 'fullName', 'Lan');
     fill(el, 'email', 'lan@gmail.com');
     fill(el, 'weightKg', 'abc');
 
-    submit(el);
+    saveOnly(el);
     fixture.detectChanges();
 
     http.expectNone('/api/admin/students');
@@ -135,20 +167,20 @@ describe('StudentFormComponent', () => {
     expect(el.textContent).toContain('Nhập số hợp lệ');
   });
 
-  // @BR-f02-ho-so-hoc-vien-009 (seed giá trị ngoài danh sách): select chỉ có lựa chọn cho trước
+  // @BR-f02-ho-so-hoc-vien-009
   it('offers only the allowed options for sessions per week', () => {
     const { el } = setup('create');
     const options = [...el.querySelectorAll('#hs-sessionsPerWeek option')].map((o) => o.textContent?.trim());
     expect(options).toEqual(['Chọn…', '2 buổi', '3 buổi', '4 buổi', '5 buổi', '6 buổi', '7 buổi']);
   });
 
-  // @BR-f02-ho-so-hoc-vien-001: server báo email đã dùng → hiện thông báo, giữ bản nháp
+  // @BR-f02-ho-so-hoc-vien-001
   it('shows the server message when the email is already used', async () => {
     const { fixture, http, el, navigate } = setup('create');
     fill(el, 'fullName', 'Lan');
     fill(el, 'email', 'an@mail.com');
 
-    submit(el);
+    saveOnly(el);
     http.expectOne('/api/admin/students').flush(
       { title: 'Email này đã được dùng cho một tài khoản khác.', code: 'student.email_taken' },
       { status: 409, statusText: 'Conflict' });
@@ -160,10 +192,64 @@ describe('StudentFormComponent', () => {
     expect(localStorage.getItem(DRAFT_KEY)).toContain('an@mail.com');
   });
 
-  // @BR-f02-ho-so-hoc-vien-012 @BR-f02-ho-so-hoc-vien-015: sửa gửi version, email chỉ xem, 409 → tải lại
-  it('edits with the version, keeps email read-only and offers reload on conflict', async () => {
+  // @BR-f01-p1-tai-khoan-hoc-vien-002: lần gửi đầu cần đủ mục bắt buộc → hồ sơ vẫn được lưu, không gửi, báo số mục thiếu
+  it('"Lưu và gửi" with missing required fields saves the profile but does not send', async () => {
+    const { http, el, navigate } = setup('create');
+    fill(el, 'fullName', 'Lan');
+    fill(el, 'email', 'lan@gmail.com');
+
+    submit(el);
+    http.expectOne('/api/admin/students').flush(detail());
+    await new Promise((r) => setTimeout(r));
+
+    http.expectNone((req) => req.url.endsWith('/credentials'));
+    expect(navigate).toHaveBeenCalledWith(`/hoc-vien/${detail().id}`, {
+      state: { notice: 'Đã lưu hồ sơ. Còn 28 mục bắt buộc chưa điền nên chưa gửi thông tin đăng nhập.' },
+    });
+  });
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-001: tạo rồi gửi thông tin đăng nhập; aside đổi sang "Đã gửi thông tin, chờ kích hoạt"
+  it('"Lưu và gửi" creates the profile, sends the login details and shows the prototype message', async () => {
+    const { fixture, http, el, navigate } = setup('create');
+    fillAllRequired(el);
+
+    submit(el);
+    http.expectOne('/api/admin/students').flush(detail());
+    await settle();
+    const post = http.expectOne('/api/admin/students/s1/credentials');
+    expect(post.request.method).toBe('POST');
+    post.flush(detail({ account: sent }));
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg.ok[role="status"]')?.textContent?.trim()).toBe(SENT_MESSAGE);
+    expect(el.querySelector('.account')?.textContent).toContain('Đã gửi thông tin, chờ kích hoạt');
+    expect(el.querySelector('.account')?.textContent).toContain('Gửi đến lan@gmail.com lúc 09:00. Mật khẩu tạm hết hạn sau 72 giờ.');
+    expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-006: hồ sơ đã lưu nhưng gửi lỗi → sang trang hồ sơ kèm câu báo
+  it('opens the profile with a notice when saving worked but sending failed', async () => {
+    const { http, el, navigate } = setup('create');
+    fillAllRequired(el);
+
+    submit(el);
+    http.expectOne('/api/admin/students').flush(detail());
+    await settle();
+    http.expectOne('/api/admin/students/s1/credentials').flush(
+      { title: 'Chưa gửi được email. Vui lòng thử lại sau.', code: 'account.email_send_failed' },
+      { status: 503, statusText: 'Service Unavailable' });
+    await settle();
+
+    expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1', { state: { notice: SAVED_NOT_SENT_MESSAGE } });
+  });
+
+  // @BR-f02-ho-so-hoc-vien-012 @BR-f02-ho-so-hoc-vien-015 @BR-f01-p1-tai-khoan-hoc-vien-007: đã kích hoạt → email chỉ xem
+  it('edits with the version, keeps email read-only once activated and offers reload on conflict', async () => {
     const { fixture, http, el } = setup('edit', 's1');
-    http.expectOne('/api/admin/students/s1').flush(detail());
+    http.expectOne('/api/admin/students/s1').flush(detail({ accountStatus: 'Activated' }));
     await settle();
     fixture.detectChanges();
 
@@ -172,7 +258,7 @@ describe('StudentFormComponent', () => {
     expect(el.querySelector('h1')?.textContent?.trim()).toBe('Sửa hồ sơ');
 
     fill(el, 'weightKg', '70');
-    expect(localStorage.getItem(DRAFT_KEY)).toBeNull(); // bản nháp chỉ ở chế độ tạo
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
     submit(el);
     const put = http.expectOne('/api/admin/students/s1');
     expect(put.request.method).toBe('PUT');
@@ -186,13 +272,72 @@ describe('StudentFormComponent', () => {
 
     expect(el.textContent).toContain('Hồ sơ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.');
     (el.querySelector('button.reload') as HTMLButtonElement).click();
-    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'AAAAAAAAB9I=' }));
+    http.expectOne('/api/admin/students/s1').flush(detail({ accountStatus: 'Activated', version: 'AAAAAAAAB9I=' }));
     await settle();
     fixture.detectChanges();
     expect(el.querySelector('button.reload')).toBeNull();
   });
 
-  // @BR-f02-ho-so-hoc-vien-012: PUT ghi chú dùng version do PUT hồ sơ trả về
+  // @BR-f01-p1-tai-khoan-hoc-vien-007 @BR-f01-p1-tai-khoan-hoc-vien-009: Chờ kích hoạt → sửa email qua PUT /email trước, rồi PUT hồ sơ
+  it('changes the email of a pending account first, then saves the profile with the new version', async () => {
+    const { fixture, http, el, navigate } = setup('edit', 's1');
+    http.expectOne('/api/admin/students/s1').flush(detail({ email: 'lan@gmial.com', account: sent }));
+    await settle();
+    fixture.detectChanges();
+
+    expect((el.querySelector('#hs-email') as HTMLInputElement).readOnly).toBe(false);
+    expect(el.textContent).toContain(EMAIL_CHANGE_NOTE);
+
+    fill(el, 'email', 'lan@gmail.com');
+    submit(el);
+    const email = http.expectOne('/api/admin/students/s1/email');
+    expect(email.request.method).toBe('PUT');
+    expect(email.request.body).toEqual({ email: 'lan@gmail.com', version: 'AAAAAAAAB9E=' });
+    email.flush(detail({ email: 'lan@gmail.com', version: 'V2', account: sent }));
+    await settle();
+    const put = http.expectOne('/api/admin/students/s1');
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body.version).toBe('V2');
+    put.flush(detail({ email: 'lan@gmail.com', version: 'V3', account: sent }));
+    await settle();
+
+    expect(navigate).toHaveBeenCalledWith('/hoc-vien/s1');
+  });
+
+  it('does not show the email-change note before any login details were sent, and skips PUT /email when unchanged', async () => {
+    const { fixture, http, el } = setup('edit', 's1');
+    http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.textContent).not.toContain(EMAIL_CHANGE_NOTE);
+    submit(el);
+    http.expectNone('/api/admin/students/s1/email');
+    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'V2' }));
+    await settle();
+  });
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-008: email đã dùng → câu của server, không phải banner xung đột phiên bản
+  it('shows the server message, not the reload banner, when the new email is taken', async () => {
+    const { fixture, http, el } = setup('edit', 's1');
+    http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    fixture.detectChanges();
+
+    fill(el, 'email', 'an@mail.com');
+    submit(el);
+    http.expectOne('/api/admin/students/s1/email').flush(
+      { title: 'Email này đã được dùng cho một tài khoản khác.', code: 'student.email_taken' },
+      { status: 409, statusText: 'Conflict' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('p.msg')?.textContent).toContain('Email này đã được dùng cho một tài khoản khác.');
+    expect(el.querySelector('button.reload')).toBeNull();
+    http.expectNone('/api/admin/students/s1');
+  });
+
+  // @BR-f02-ho-so-hoc-vien-012
   it('sends the internal note with the version returned by the profile PUT', async () => {
     const { fixture, http, el } = setup('edit', 's1');
     http.expectOne('/api/admin/students/s1').flush(detail());
@@ -239,7 +384,7 @@ describe('StudentFormComponent', () => {
     const { fixture, http, el } = setup('edit', 's1');
     const button = el.querySelector('button[type="submit"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
-    submit(el); // không ném lỗi, không gửi request
+    submit(el);
     await settle();
     http.expectOne('/api/admin/students/s1').flush(detail());
     await settle();

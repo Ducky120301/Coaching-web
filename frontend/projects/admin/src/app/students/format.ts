@@ -3,7 +3,22 @@ const VIETNAM_OFFSET_MS = 7 * 60 * 60 * 1000; // UTC+7 cố định, không gi�
 
 function vietnamParts(iso: string) {
   const d = new Date(Date.parse(iso) + VIETNAM_OFFSET_MS);
-  return { day: pad(d.getUTCDate()), month: pad(d.getUTCMonth() + 1), hour: pad(d.getUTCHours()), minute: pad(d.getUTCMinutes()) };
+  return {
+    day: pad(d.getUTCDate()), month: pad(d.getUTCMonth() + 1), year: String(d.getUTCFullYear()),
+    hour: pad(d.getUTCHours()), minute: pad(d.getUTCMinutes()),
+  };
+}
+
+/** "dd/MM/yyyy" theo giờ Việt Nam (vd. "Kích hoạt 13/10/2026"). */
+export function formatVnFullDate(iso: string): string {
+  const p = vietnamParts(iso);
+  return `${p.day}/${p.month}/${p.year}`;
+}
+
+/** "HH:mm" theo giờ Việt Nam (vd. stNote "Gửi đến … lúc 09:05."). */
+export function formatVnTime(iso: string): string {
+  const p = vietnamParts(iso);
+  return `${p.hour}:${p.minute}`;
 }
 
 /** "dd/MM" theo giờ Việt Nam (vd. "Sửa lần cuối 23/11."). */

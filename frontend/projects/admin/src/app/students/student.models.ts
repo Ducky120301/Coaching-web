@@ -24,6 +24,26 @@ export interface StatusChange {
   reason: string;
 }
 
+/** F01-P1: trạng thái tài khoản tính ở server theo giờ hiện tại (@BR-f01-p1-tai-khoan-hoc-vien-026). */
+export type AccountState = 'NotSent' | 'Sent' | 'TempPasswordExpired' | 'Activated';
+export type AccountEventType = 'CredentialsSent' | 'CredentialsResent' | 'EmailChanged' | 'ResetLinkSent' | 'Activated';
+
+export interface AccountEvent {
+  type: AccountEventType;
+  at: string;
+  fromEmail: string | null;
+  toEmail: string | null;
+}
+
+/** `account` của StudentDetailDto — không có mật khẩu tạm hay token (@BR-f01-p1-tai-khoan-hoc-vien-025). History mới nhất trước. */
+export interface AccountInfo {
+  state: AccountState;
+  credentialsSentAt: string | null;
+  tempPasswordExpiresAt: string | null;
+  activatedAt: string | null;
+  history: AccountEvent[];
+}
+
 /** GET /api/admin/students/{id}. */
 export interface StudentDetail {
   id: string;
@@ -41,6 +61,7 @@ export interface StudentDetail {
   internalNote: string | null;
   internalNoteUpdatedAt: string | null;
   statusHistory: StatusChange[];
+  account: AccountInfo;
 }
 
 export interface CreateStudentBody {

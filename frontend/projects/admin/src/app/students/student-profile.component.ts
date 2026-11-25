@@ -3,11 +3,12 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, si
 import { RouterLink } from '@angular/router';
 import { StatusBadgeComponent, initialsOf } from '@coaching/shared';
 import { Observable, firstValueFrom } from 'rxjs';
+import { AccountCardComponent } from './account-card.component';
 import { CoachingStatusPanelComponent } from './coaching-status-panel.component';
-import { formatDateOnly, formatNumber, formatVnDay, formatVnDayTime } from './format';
+import { formatDateOnly, formatNumber, formatVnDay, formatVnDayTime, formatVnFullDate } from './format';
 import { FIELD_LABEL, FORM_SECTIONS, FieldDef } from './registration-fields';
 import { ACCOUNT_STATUS_LABEL, ACCOUNT_STATUS_TONE, COACHING_STATUS_LABEL, COACHING_STATUS_TONE } from './student-status';
-import { CoachingStatus, StudentDetail } from './student.models';
+import { AccountState, CoachingStatus, StudentDetail } from './student.models';
 import { StudentsApi } from './students.api';
 
 interface StatusAction {
@@ -22,6 +23,20 @@ const ACTIONS: Record<CoachingStatus, StatusAction[]> = {
   Ended: [{ label: 'Tiếp tục coaching', to: 'Active' }],
 };
 
+interface AccountAction {
+  label: string;
+  kind: 'credentials' | 'reset';
+  done: string;
+}
+
+/** Nút phụ theo trạng thái tài khoản (tech-design F01-P1 UI): chưa gửi / đã gửi, hết hạn / đã kích hoạt. */
+const ACCOUNT_ACTIONS: Record<AccountState, AccountAction> = {
+  NotSent: { label: 'Gửi thông tin đăng nhập', kind: 'credentials', done: 'Đã gửi thông tin đăng nhập.' },
+  Sent: { label: 'Gửi lại thông tin đăng nhập', kind: 'credentials', done: 'Đã gửi lại thông tin đăng nhập.' },
+  TempPasswordExpired: { label: 'Gửi lại thông tin đăng nhập', kind: 'credentials', done: 'Đã gửi lại thông tin đăng nhập.' },
+  Activated: { label: 'Gửi link đặt lại mật khẩu', kind: 'reset', done: 'Đã gửi link đặt lại mật khẩu.' },
+};
+
 /** Mục form hiển thị ở "Xem đủ form đăng ký" (bỏ họ tên, email — đã ở header — và nhóm ghi chú). */
 const REGISTRATION_SECTIONS = FORM_SECTIONS.filter((s) => s.id !== 'nb').map((s) => ({
   ...s,
@@ -30,7 +45,7 @@ const REGISTRATION_SECTIONS = FORM_SECTIONS.filter((s) => s.id !== 'nb').map((s)
 
 @Component({
   selector: 'app-student-profile',
-  imports: [RouterLink, StatusBadgeComponent, CoachingStatusPanelComponent],
+  imports: [RouterLink, StatusBadgeComponent, CoachingStatusPanelComponent, AccountCardComponent],
   templateUrl: './student-profile.component.html',
   styleUrl: './student-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +69,12 @@ export class StudentProfileComponent implements OnInit {
     const d = this.detail();
     return d ? ACTIONS[d.coachingStatus] : [];
   });
+  protected readonly accountAction = computed(() => {
+    const d = this.detail();
+    return d ? ACCOUNT_ACTIONS[d.account.state] : null;
+  });
+  protected readonly accountMessage = signal<{ ok: boolean; text: string } | null>(null);
+  protected readonly fullDate = formatVnFullDate;
 
   protected readonly sections = REGISTRATION_SECTIONS;
   protected readonly coachingLabel = COACHING_STATUS_LABEL;
@@ -65,6 +86,9 @@ export class StudentProfileComponent implements OnInit {
   protected readonly formatDayTime = formatVnDayTime;
 
   ngOnInit(): void {
+    // Câu báo do form Tạo hồ sơ chuyển sang (lưu được nhưng chưa gửi được thông tin đăng nhập)
+    const notice = (history.state as { notice?: unknown } | null)?.notice;
+    if (typeof notice === 'string') this.accountMessage.set({ ok: false, text: notice });
     void this.load();
   }
 
@@ -86,6 +110,29 @@ export class StudentProfileComponent implements OnInit {
   protected closePanel(): void {
     this.pending.set(null);
     this.statusError.set(null);
+  }
+
+  // @BR-f01-p1-tai-khoan-hoc-vien-001 @BR-f01-p1-tai-khoan-hoc-vien-006 @BR-f01-p1-tai-khoan-hoc-vien-017
+  protected async runAccountAction(action: AccountAction): Promise<void> {
+    const d = this.detail()!;
+    this.busy.set(true);
+    this.accountMessage.set(null);
+    try {
+      const request = action.kind === 'reset' ? this.api.sendResetLink(d.id) : this.api.sendCredentials(d.id);
+      this.detail.set(await firstValueFrom(request));
+      this.accountMessage.set({ ok: true, text: action.done });
+    } catch (error) {
+      this.accountMessage.set({
+        ok: false,
+        text: error instanceof HttpErrorResponse && typeof error.error?.title === 'string'
+          ? error.error.title
+          : 'Chưa gửi được email. Vui lòng thử lại sau.',
+      });
+      // 409 (đã kích hoạt / chưa kích hoạt): trạng thái đã đổi ở nơi khác → tải lại để nút đúng trạng thái
+      if (error instanceof HttpErrorResponse && error.status === 409) await this.load();
+    } finally {
+      this.busy.set(false);
+    }
   }
 
   // @BR-f02-ho-so-hoc-vien-017 @BR-f02-ho-so-hoc-vien-018 @BR-f02-ho-so-hoc-vien-020

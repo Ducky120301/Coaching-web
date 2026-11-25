@@ -27,16 +27,18 @@
                 @switch (f.type) {
                   @case ('date') {
                     <input class="ctl" type="date" [id]="'hs-' + f.key" [value]="values()[f.key] ?? ''"
-                           [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                           [class.err]="!!errors()[f.key] || isMissing(f)" [attr.aria-invalid]="!!errors()[f.key] || isMissing(f)"
                            (input)="setValue(f.key, $any($event.target).value)" />
                   }
                   @case ('area') {
                     <textarea class="ctl" [id]="'hs-' + f.key" [rows]="f.rows ?? 3" [placeholder]="f.placeholder ?? ''"
-                              [value]="values()[f.key] ?? ''" [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                              [value]="values()[f.key] ?? ''" [class.err]="!!errors()[f.key] || isMissing(f)"
+                              [attr.aria-invalid]="!!errors()[f.key] || isMissing(f)"
                               (input)="setValue(f.key, $any($event.target).value)"></textarea>
                   }
                   @case ('select') {
-                    <select class="ctl" [id]="'hs-' + f.key" [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                    <select class="ctl" [id]="'hs-' + f.key" [class.err]="!!errors()[f.key] || isMissing(f)"
+                            [attr.aria-invalid]="!!errors()[f.key] || isMissing(f)"
                             (change)="setValue(f.key, $any($event.target).value)">
                       <option value="">Chọn…</option>
                       @for (o of f.options ?? []; track o) {
@@ -48,8 +50,8 @@
                     <div class="with-unit">
                       <input class="ctl" type="text" [id]="'hs-' + f.key" [value]="values()[f.key] ?? ''" [placeholder]="f.placeholder ?? ''"
                              [attr.inputmode]="f.type === 'decimal' || f.type === 'integer' ? 'decimal' : null"
-                             [readOnly]="isEdit() && f.key === 'email'"
-                             [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                             [readOnly]="f.key === 'email' && !emailEditable()"
+                             [class.err]="!!errors()[f.key] || isMissing(f)" [attr.aria-invalid]="!!errors()[f.key] || isMissing(f)"
                              (input)="setValue(f.key, $any($event.target).value)" />
                       @if (f.unit) {
                         <span class="unit">{{ f.unit }}</span>
@@ -60,8 +62,13 @@
                 @if (f.note) {
                   <span class="note">{{ f.note }}</span>
                 }
+                @if (f.key === 'email' && showEmailChangeNote()) {
+                  <span class="note">{{ emailChangeNote }}</span>
+                }
                 @if (errors()[f.key]; as e) {
                   <span class="field-err">{{ e }}</span>
+                } @else if (isMissing(f)) {
+                  <span class="field-err">Chưa điền</span>
                 }
               </div>
             }
@@ -74,11 +81,14 @@
           <button type="button" class="reload" (click)="load()">Tải lại</button></p>
       }
       @if (message(); as m) {
-        <p class="msg" role="status">{{ m }}</p>
+        <p class="msg" [class.ok]="m.tone === 'ok'" role="status">{{ m.text }}</p>
       }
       <div class="actions">
-        <button type="submit" class="primary" [disabled]="saving() || (isEdit() && !loaded())">{{ isEdit() ? 'Lưu thay đổi' : 'Lưu hồ sơ' }}</button>
-        @if (!isEdit()) {
+        @if (isEdit()) {
+          <button type="submit" class="primary" [disabled]="saving() || !loaded()">Lưu thay đổi</button>
+        } @else {
+          <button type="submit" class="primary" [disabled]="saving() || !!created()">Lưu và gửi thông tin đăng nhập</button>
+          <button type="button" class="save-only" [disabled]="saving() || !!created()" (click)="saveOnly()">Chỉ lưu hồ sơ</button>
           <button type="button" class="clear" (click)="clear()">Xoá trắng hồ sơ</button>
         }
       </div>
@@ -99,13 +109,28 @@
       </section>
       <section class="side account">
         <h2>Trạng thái tài khoản</h2>
-        @if (loaded(); as d) {
-          <span class="acct" [class.pending]="d.accountStatus === 'PendingActivation'">{{ accountLabel[d.accountStatus] }}</span>
+        @if (isEdit()) {
+          @if (loaded(); as d) {
+            <span class="acct" [class.pending]="d.accountStatus === 'PendingActivation'">{{ accountLabel[d.accountStatus] }}</span>
+          }
+        } @else if (sentState(); as s) {
+          <span class="acct pending">Đã gửi thông tin, chờ kích hoạt</span>
+          <span class="acct-note">Gửi đến {{ s.email }} lúc {{ s.time }}. Mật khẩu tạm hết hạn sau 72 giờ.</span>
         } @else {
           <span class="acct">Chưa tạo</span>
-          <span class="acct-note">Hồ sơ ở trạng thái Chờ kích hoạt sau khi lưu.</span>
+          <span class="acct-note">Hồ sơ ở trạng thái Chờ kích hoạt sau khi gửi.</span>
         }
       </section>
+      @if (!isEdit()) {
+        <section class="receive">
+          <h2>Học viên sẽ nhận gì</h2>
+          <ol>
+            <li>Email có link đăng nhập, email tài khoản và mật khẩu tạm.</li>
+            <li>Lần đầu đăng nhập, học viên đặt mật khẩu riêng.</li>
+            <li>Tài khoản chuyển sang Đã kích hoạt và mở trang Hôm nay.</li>
+          </ol>
+        </section>
+      }
     </aside>
   </div>
 }

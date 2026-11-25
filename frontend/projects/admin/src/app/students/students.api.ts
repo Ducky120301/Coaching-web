@@ -37,4 +37,19 @@ export class StudentsApi {
   changeStatus(id: string, status: CoachingStatus, reason: string, version: string): Observable<StudentDetail> {
     return this.http.post<StudentDetail>(this.url(`/${id}/coaching-status`), { status, reason, version });
   }
+
+  /** F01-P1: gửi / gửi lại thông tin đăng nhập → hồ sơ mới nhất (có `account`). */
+  sendCredentials(id: string): Observable<StudentDetail> {
+    return this.http.post<StudentDetail>(this.url(`/${id}/credentials`), {});
+  }
+
+  /** F01-P1: sửa email khi tài khoản Chờ kích hoạt (đã gửi thông tin → server gửi thông tin mới tới email mới). */
+  changeEmail(id: string, email: string, version: string): Observable<StudentDetail> {
+    return this.http.put<StudentDetail>(this.url(`/${id}/email`), { email, version });
+  }
+
+  /** F01-P1: gửi link đặt lại mật khẩu cho tài khoản Đã kích hoạt. */
+  sendResetLink(id: string): Observable<StudentDetail> {
+    return this.http.post<StudentDetail>(this.url(`/${id}/password-reset-link`), {});
+  }
 }

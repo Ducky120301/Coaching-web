@@ -11,16 +11,27 @@
         <p class="meta">
           <span>{{ d.email }}</span>
           <dbx-status-badge [tone]="coachingTone[d.coachingStatus]" [dense]="true">{{ coachingLabel[d.coachingStatus] }}</dbx-status-badge>
-          <dbx-status-badge [tone]="accountTone[d.accountStatus]" [dense]="true">{{ accountLabel[d.accountStatus] }}</dbx-status-badge>
+          @if (d.account.activatedAt; as activatedAt) {
+            <span class="activated">Kích hoạt {{ fullDate(activatedAt) }}</span>
+          } @else {
+            <dbx-status-badge [tone]="accountTone[d.accountStatus]" [dense]="true">{{ accountLabel[d.accountStatus] }}</dbx-status-badge>
+          }
         </p>
       </div>
     </div>
     <div class="head-actions">
+      @if (accountAction(); as a) {
+        <button type="button" class="secondary" [disabled]="busy()" (click)="runAccountAction(a)">{{ a.label }}</button>
+      }
       @for (a of actions(); track a.to) {
         <button type="button" class="secondary" [attr.aria-expanded]="pending()?.to === a.to" (click)="openPanel(a)">{{ a.label }}</button>
       }
     </div>
   </header>
+
+  @if (accountMessage(); as m) {
+    <p class="msg" [class.ok]="m.ok" role="status">{{ m.text }}</p>
+  }
 
   @if (pending(); as p) {
     <app-coaching-status-panel [action]="p.label" [error]="statusError()" [busy]="busy()"
@@ -99,6 +110,8 @@
           <p class="msg" role="status">{{ e }}</p>
         }
       </section>
+
+      <app-account-card [account]="d.account" />
 
       <section class="card history">
         <h2 class="history-title">Lịch sử coaching</h2>

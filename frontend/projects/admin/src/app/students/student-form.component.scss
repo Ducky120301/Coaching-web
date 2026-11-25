@@ -29,12 +29,16 @@ textarea.ctl { padding: 12px 14px; line-height: 1.5; resize: vertical; }
 .note { font-size: 12px; color: var(--muted); }
 .field-err { font-size: 12px; color: var(--alert); font-weight: 600; }
 .msg { margin: 0; border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 600; background: var(--warnBg); color: var(--warn); }
+.msg.ok { background: var(--okBg); color: var(--okInk); }
 .reload { margin-left: 8px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--field); background: var(--surface);
   color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .primary { height: 50px; padding: 0 26px; border-radius: 999px; border: 0; background: var(--primary); color: var(--onPrimary);
   font-family: var(--font-head); font-weight: 700; font-size: 20px; cursor: pointer; }
 .primary:disabled { opacity: .6; cursor: default; }
+.save-only { height: 50px; padding: 0 22px; border-radius: 999px; border: 1px solid var(--field); background: var(--surface);
+  color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+.save-only:disabled { opacity: .6; cursor: default; }
 .clear { height: 50px; padding: 0 18px; border-radius: 999px; border: 0; background: transparent; color: var(--muted);
   font: inherit; font-size: 15px; cursor: pointer; text-decoration: underline; }
 aside { flex: 1 1 280px; max-width: 380px; position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -51,4 +55,7 @@ aside { flex: 1 1 280px; max-width: 380px; position: sticky; top: 20px; display:
 .acct { align-self: flex-start; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; background: var(--pausedBg); color: var(--ink2); }
 .acct.pending { background: var(--warnBg); color: var(--warn); }
 .acct-note { font-size: 13px; color: var(--muted); }
+.receive { background: var(--soft); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.receive h2 { margin: 0; font-family: var(--font-head); font-weight: 700; font-size: 20px; color: var(--navInk); }
+.receive ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5; }
 @media (max-width: 879.98px) { h1 { font-size: 38px; } }

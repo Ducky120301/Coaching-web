@@ -21,7 +21,7 @@ When('coach tạo hồ sơ học viên chỉ với họ tên {string} và email 
     await expect(this.page.getByRole('heading', { name: 'Tạo hồ sơ học viên', level: 1 })).toBeVisible();
     await this.page.getByLabel('Họ và tên').fill(fullName);
     await this.page.getByLabel('Email đăng nhập').fill(uniqueEmail(email));
-    await this.page.getByRole('button', { name: 'Lưu hồ sơ' }).click();
+    await this.page.getByRole('button', { name: 'Chỉ lưu hồ sơ', exact: true }).click();
   });
 
 Then('hồ sơ của {string} được lưu', async function (this: E2EWorld, fullName: string) {
