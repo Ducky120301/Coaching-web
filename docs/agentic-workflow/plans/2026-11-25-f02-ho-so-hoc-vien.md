@@ -3866,7 +3866,7 @@ EOF
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-017`, `@BR-f02-ho-so-hoc-vien-018`, `@BR-f02-ho-so-hoc-vien-019`, `@BR-f02-ho-so-hoc-vien-020`, `@BR-f02-ho-so-hoc-vien-021`, `@BR-f02-ho-so-hoc-vien-022` | `@ADR-f02-ho-so-hoc-vien-005`
 
-- [ ] **Step 1: Viết Domain test cho đổi trạng thái**
+- [x] **Step 1: Viết Domain test cho đổi trạng thái**
 
 `backend/tests/Coaching.Domain.Tests/Students/CoachingStatusTests.cs`:
 ```csharp
@@ -4011,12 +4011,12 @@ public sealed class CoachingStatusTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~CoachingStatusTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'ChangeCoachingStatus'`.
 
-- [ ] **Step 3: Domain — lịch sử trạng thái, đổi trạng thái**
+- [x] **Step 3: Domain — lịch sử trạng thái, đổi trạng thái**
 
 `backend/src/Coaching.Domain/Students/CoachingStatusChange.cs`:
 ```csharp
@@ -4092,12 +4092,12 @@ và thêm method sau `UpdateInternalNote`:
     }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~CoachingStatusTests"`
 Expected: `Passed: 16`.
 
-- [ ] **Step 5: Viết step defs `@api` cho BR-017→022**
+- [x] **Step 5: Viết step defs `@api` cho BR-017→022**
 
 `backend/tests/Coaching.Acceptance/Support/StudentApi.cs` — thêm method sau `UpdateNoteOkAsync`:
 ```csharp
@@ -4226,7 +4226,7 @@ public sealed class CoachingStatusSteps(AcceptanceContext ctx, StudentApi api)
 }
 ```
 
-- [ ] **Step 6: Viết integration test (seed bị loại + audit)**
+- [x] **Step 6: Viết integration test (seed bị loại + audit)**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/CoachingStatusTests.cs`:
 ```csharp
@@ -4349,12 +4349,12 @@ public sealed class CoachingStatusTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `'StudentDetailDto' does not contain a definition for 'StatusHistory'`.
 
-- [ ] **Step 8: Mapping lịch sử, DTO, use case, endpoint**
+- [x] **Step 8: Mapping lịch sử, DTO, use case, endpoint**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs` — thêm trước dòng `builder.Ignore(s => s.DomainEvents);`:
 ```csharp
@@ -4505,7 +4505,7 @@ public sealed class ChangeCoachingStatusHandler(
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng PASS**
+- [x] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-017|Category=BR-f02-ho-so-hoc-vien-018|Category=BR-f02-ho-so-hoc-vien-019|Category=BR-f02-ho-so-hoc-vien-020|Category=BR-f02-ho-so-hoc-vien-021|Category=BR-f02-ho-so-hoc-vien-022)&Category!=web"`
 Expected: `Passed: 11`, `Failed: 0`.
@@ -4514,7 +4514,7 @@ Expected: `Passed: 27`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
