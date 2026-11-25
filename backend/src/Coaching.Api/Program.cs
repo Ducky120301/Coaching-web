@@ -3,6 +3,7 @@ using Coaching.Api.Common;
 using Coaching.Application;
 using Coaching.Application.Abstractions;
 using Coaching.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,14 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddJwtAuth(builder.Configuration);
 builder.Services.AddCoachingRateLimiting(builder.Configuration);
+// @ADR-f00-codebase-004: lấy IP client từ hop cuối X-Forwarded-For (Render / nginx nối IP thật vào cuối)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
@@ -28,6 +37,7 @@ var app = builder.Build();
 if (app.Configuration.GetValue("Database:SeedOnStartup", true))
     await app.Services.InitializeDatabaseAsync();
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
