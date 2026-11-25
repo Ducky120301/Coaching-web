@@ -2616,7 +2616,7 @@ EOF
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-012`, `@BR-f02-ho-so-hoc-vien-013`, `@BR-f02-ho-so-hoc-vien-015` | `@ADR-f02-ho-so-hoc-vien-004`
 
-- [ ] **Step 1: Viết Domain test cho sửa hồ sơ**
+- [x] **Step 1: Viết Domain test cho sửa hồ sơ**
 
 `backend/tests/Coaching.Domain.Tests/Students/StudentUpdateTests.cs`:
 ```csharp
@@ -2680,12 +2680,12 @@ public sealed class StudentUpdateTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~StudentUpdateTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'UpdateRegistration'`.
 
-- [ ] **Step 3: Domain — sửa hồ sơ, phiên bản**
+- [x] **Step 3: Domain — sửa hồ sơ, phiên bản**
 
 `backend/src/Coaching.Domain/Students/Student.cs` — thêm sau thuộc tính `MissingRequiredFields`:
 ```csharp
@@ -2723,12 +2723,12 @@ và thêm method sau `Create` (trước `NormalizeFullName`):
     Task<Student?> GetForUpdateAsync(Guid id, Guid coachId, byte[] expectedVersion, CancellationToken cancellationToken = default);
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~StudentUpdateTests"`
 Expected: `Passed: 3` (Domain.Tests chỉ build Domain + TestSupport; `StudentRepository` được bổ sung ở Step 8).
 
-- [ ] **Step 5: Viết step defs `@api` cho BR-012, 013, 015**
+- [x] **Step 5: Viết step defs `@api` cho BR-012, 013, 015**
 
 `backend/tests/Coaching.Acceptance/Support/StudentApi.cs` — thêm 2 method sau `GetAsync`:
 ```csharp
@@ -2843,7 +2843,7 @@ public sealed class StudentEditSteps(AcceptanceContext ctx, StudentApi api)
 }
 ```
 
-- [ ] **Step 6: Viết integration test (seed bị loại + phiên bản)**
+- [x] **Step 6: Viết integration test (seed bị loại + phiên bản)**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/UpdateStudentTests.cs`:
 ```csharp
@@ -2931,12 +2931,12 @@ public sealed class UpdateStudentTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `'StudentDetailDto' does not contain a definition for 'Version'` / `StudentRepository does not implement interface member GetForUpdateAsync`.
 
-- [ ] **Step 8: Hạ tầng phiên bản — mapping, repository, lỗi xung đột**
+- [x] **Step 8: Hạ tầng phiên bản — mapping, repository, lỗi xung đột**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs` — thêm trước dòng `builder.Ignore(s => s.DomainEvents);`:
 ```csharp
@@ -2982,7 +2982,7 @@ public sealed class ConcurrencyConflictException(Exception innerException)
     }
 ```
 
-- [ ] **Step 9: Application — lỗi, phiên bản, DTO, use case sửa**
+- [x] **Step 9: Application — lỗi, phiên bản, DTO, use case sửa**
 
 `backend/src/Coaching.Application/Students/StudentErrors.cs` — thêm sau `EmailTaken`:
 ```csharp
@@ -3123,7 +3123,7 @@ public sealed class UpdateStudentHandler(
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 ```
 
-- [ ] **Step 10: Chạy — kỳ vọng PASS**
+- [x] **Step 10: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-012|Category=BR-f02-ho-so-hoc-vien-013|Category=BR-f02-ho-so-hoc-vien-015)&Category!=web"`
 Expected: `Passed: 4`, `Failed: 0`.
@@ -3132,7 +3132,7 @@ Expected: `Passed: 14`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
