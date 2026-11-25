@@ -70,4 +70,19 @@ public sealed class RefreshGraceTests(ApiFactory factory)
 
         await RefreshOk(b.RefreshToken);
     }
+
+    // @BR-f00-codebase-007 @BR-f00-codebase-010: khóa đăng nhập không làm chết phiên đang có
+    [Fact]
+    public async Task Refresh_still_works_while_account_is_locked_by_failed_logins()
+    {
+        var (email, password) = await factory.CreateStudentAsync();
+        var tokens = await factory.LoginAsync(email, password);
+
+        for (var i = 0; i < 5; i++)
+            await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, "wrong-password", ClientApp.Client));
+        var locked = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password, ClientApp.Client));
+        Assert.Equal(HttpStatusCode.Unauthorized, locked.StatusCode);
+
+        await RefreshOk(tokens.RefreshToken);
+    }
 }

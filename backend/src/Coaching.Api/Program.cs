@@ -14,14 +14,20 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddJwtAuth(builder.Configuration);
 builder.Services.AddCoachingRateLimiting(builder.Configuration);
-// @ADR-f00-codebase-004: lấy IP client từ hop cuối X-Forwarded-For (Render / nginx nối IP thật vào cuối)
-// Giả định triển khai: API CHỈ nhận request qua proxy (Render / nginx compose) — gọi thẳng API thì client tự đặt được XFF.
+// @ADR-f00-codebase-004: mặc định lấy hop cuối X-Forwarded-For (ForwardLimit = 1; nginx compose nối IP thật vào cuối).
+// Giả định triển khai: API CHỈ nhận request qua proxy — gọi thẳng API thì client tự đặt được XFF.
+// Chỉnh được bằng cấu hình (vd. Render có thể thêm proxy): ForwardedHeaders:ForwardLimit, ForwardedHeaders:KnownProxies:N, ForwardedHeaders:KnownNetworks:N (CIDR).
+var forwarded = builder.Configuration.GetSection("ForwardedHeaders");
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.ForwardLimit = 1;
+    options.ForwardLimit = forwarded.GetValue("ForwardLimit", 1);
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
+    foreach (var proxy in forwarded.GetSection("KnownProxies").Get<string[]>() ?? [])
+        options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+    foreach (var network in forwarded.GetSection("KnownNetworks").Get<string[]>() ?? [])
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
 });
 
 builder.Services.AddControllers();

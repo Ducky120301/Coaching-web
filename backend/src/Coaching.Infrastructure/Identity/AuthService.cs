@@ -97,7 +97,7 @@ internal sealed class AuthService(
                 // @ADR-f00-codebase-003 @BR-f00-codebase-011: gửi trùng trong 30s → cấp cặp mới, không thu hồi
                 // Chuỗi chỉ được có MỘT nhánh sống: xoay từ lá mới nhất của chuỗi.
                 var leaf = await FindLiveLeafAsync(stored, now, cancellationToken);
-                var graceUser = leaf is null ? null : await FindActiveUserAsync(stored.UserId, now);
+                var graceUser = leaf is null ? null : await FindActiveUserAsync(stored.UserId);
                 return graceUser is null
                     ? AuthErrors.InvalidRefreshToken
                     : await IssueTokensAsync(graceUser, cancellationToken, rotateFrom: leaf);
@@ -111,7 +111,7 @@ internal sealed class AuthService(
         if (!stored.IsActive(now))
             return AuthErrors.InvalidRefreshToken;
 
-        var user = await FindActiveUserAsync(stored.UserId, now);
+        var user = await FindActiveUserAsync(stored.UserId);
         if (user is null)
             return AuthErrors.InvalidRefreshToken;
 
@@ -135,11 +135,9 @@ internal sealed class AuthService(
         return null;
     }
 
-    private async Task<AppUser?> FindActiveUserAsync(Guid userId, DateTimeOffset now)
-    {
-        var user = await userManager.FindByIdAsync(userId.ToString());
-        return user is null || IsLockedOut(user, now) ? null : user;
-    }
+    // Khóa đăng nhập (BR-007) chỉ áp cho đăng nhập; mã làm mới hợp lệ đã chứng minh quyền sở hữu phiên → vẫn gia hạn được.
+    private async Task<AppUser?> FindActiveUserAsync(Guid userId) =>
+        await userManager.FindByIdAsync(userId.ToString());
 
     public async Task LogoutAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
