@@ -191,4 +191,60 @@ describe('StudentFormComponent', () => {
     fixture.detectChanges();
     expect(el.querySelector('button.reload')).toBeNull();
   });
+
+  // @BR-f02-ho-so-hoc-vien-012: PUT ghi chú dùng version do PUT hồ sơ trả về
+  it('sends the internal note with the version returned by the profile PUT', async () => {
+    const { fixture, http, el } = setup('edit', 's1');
+    http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    fixture.detectChanges();
+
+    fill(el, 'internalNote', 'Tránh lunge sâu');
+    submit(el);
+    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'V2' }));
+    await settle();
+    const note = http.expectOne('/api/admin/students/s1/internal-note');
+    expect(note.request.method).toBe('PUT');
+    expect(note.request.body).toEqual({ note: 'Tránh lunge sâu', version: 'V2' });
+    note.flush(detail({ version: 'V3', internalNote: 'Tránh lunge sâu' }));
+    await settle();
+  });
+
+  it('retries with the fresh version when the note PUT failed after the profile PUT succeeded', async () => {
+    const { fixture, http, el } = setup('edit', 's1');
+    http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    fixture.detectChanges();
+
+    fill(el, 'internalNote', 'Tránh lunge sâu');
+    submit(el);
+    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'V2' }));
+    await settle();
+    http.expectOne('/api/admin/students/s1/internal-note').flush({ title: 'Lỗi' }, { status: 500, statusText: 'Server Error' });
+    await settle();
+    fixture.detectChanges();
+
+    submit(el);
+    const retry = http.expectOne('/api/admin/students/s1');
+    expect(retry.request.body.version).toBe('V2');
+    retry.flush(detail({ version: 'V4' }));
+    await settle();
+    const note = http.expectOne('/api/admin/students/s1/internal-note');
+    expect(note.request.body.version).toBe('V4');
+    note.flush(detail({ version: 'V5', internalNote: 'Tránh lunge sâu' }));
+    await settle();
+  });
+
+  it('disables submit and ignores submit in edit mode until the profile is loaded', async () => {
+    const { fixture, http, el } = setup('edit', 's1');
+    const button = el.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    submit(el); // không ném lỗi, không gửi request
+    await settle();
+    http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    fixture.detectChanges();
+    expect(button.disabled).toBe(false);
+    http.verify();
+  });
 });

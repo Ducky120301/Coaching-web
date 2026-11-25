@@ -88,6 +88,7 @@ export class StudentFormComponent implements OnInit {
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
+    if (this.isEdit() && !this.loaded()) return; // chưa tải xong hồ sơ: chưa có version để gửi
     const { payload, errors } = toPayload(this.values());
     this.errors.set(errors);
     if (Object.keys(errors).length > 0) {
@@ -146,6 +147,7 @@ export class StudentFormComponent implements OnInit {
     const saved = await firstValueFrom(this.api.update(current.id, {
       fullName: payload.fullName, registration: payload.registration, version: current.version,
     }));
+    this.loaded.set(saved); // PUT hồ sơ thành công: giữ version mới để thử lại ghi chú không bị 409 giả
     if ((payload.internalNote || null) === (current.internalNote ?? null)) return saved;
     return firstValueFrom(this.api.updateNote(saved.id, payload.internalNote, saved.version));
   }

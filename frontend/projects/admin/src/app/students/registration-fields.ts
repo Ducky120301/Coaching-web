@@ -149,8 +149,10 @@ export function parseDecimal(text: string): number | null {
 
 /** "3.500.000" → 3500000 (dấu chấm phân nhóm). Không phải số nguyên → null. */
 export function parseInteger(text: string): number | null {
-  const normalized = text.replace(/[\s.]/g, '');
-  return /^-?\d+$/.test(normalized) ? Number(normalized) : null;
+  const trimmed = text.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  // dấu chấm chỉ là phân nhóm nghìn: "3.5", "35.00" không hợp lệ
+  return /^\d{1,3}(\.\d{3})+$/.test(trimmed) ? Number(trimmed.replace(/\./g, '')) : null;
 }
 
 export function toInputText(value: RegistrationValue | undefined, type: FieldType): string {

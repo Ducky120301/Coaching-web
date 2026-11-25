@@ -77,7 +77,7 @@
         <p class="msg" role="status">{{ m }}</p>
       }
       <div class="actions">
-        <button type="submit" class="primary" [disabled]="saving()">{{ isEdit() ? 'Lưu thay đổi' : 'Lưu hồ sơ' }}</button>
+        <button type="submit" class="primary" [disabled]="saving() || (isEdit() && !loaded())">{{ isEdit() ? 'Lưu thay đổi' : 'Lưu hồ sơ' }}</button>
         @if (!isEdit()) {
           <button type="button" class="clear" (click)="clear()">Xoá trắng hồ sơ</button>
         }

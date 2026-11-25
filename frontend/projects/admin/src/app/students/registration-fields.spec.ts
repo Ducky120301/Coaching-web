@@ -26,6 +26,9 @@ describe('registration fields', () => {
     expect(parseInteger('3.500.000')).toBe(3500000);
     expect(parseInteger('28')).toBe(28);
     expect(parseInteger('2,5')).toBeNull();
+    expect(parseInteger('3500000')).toBe(3500000);
+    expect(parseInteger('3.5')).toBeNull();
+    expect(parseInteger('35.00')).toBeNull();
   });
 
   it('builds the API payload and reports invalid numbers', () => {
