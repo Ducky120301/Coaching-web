@@ -7197,7 +7197,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Tạo hồ sơ**
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec cho định dạng ngày và card "Tài khoản đăng nhập"**
+- [x] **Step 1: Viết spec cho định dạng ngày và card "Tài khoản đăng nhập"**
 
 `frontend/projects/admin/src/app/students/format.spec.ts` — sửa import và thêm test:
 ```ts
@@ -7261,12 +7261,12 @@ describe('account card', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './account-card.component'`, `formatVnFullDate is not exported`.
 
-- [ ] **Step 3: Model tài khoản, `format.ts`, `AccountCardComponent`**
+- [x] **Step 3: Model tài khoản, `format.ts`, `AccountCardComponent`**
 
 `frontend/projects/admin/src/app/students/student.models.ts` — thêm trước `/** GET /api/admin/students/{id}. */`:
 ```ts
@@ -7392,12 +7392,12 @@ export class AccountCardComponent {
 }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS (card + format), FAIL biên dịch ở fixture cũ**
+- [x] **Step 4: Chạy — kỳ vọng PASS (card + format), FAIL biên dịch ở fixture cũ**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: `account card` 3 test và `format` 3 test PASS; `student-form.component.spec.ts` / `student-profile.component.spec.ts` báo lỗi kiểu thiếu `account` trong fixture `detail()` — sửa ở Step 5 và Step 9.
 
-- [ ] **Step 5: Viết spec cho Hồ sơ (nút gửi theo trạng thái, card, "Kích hoạt dd/MM/yyyy", câu báo)**
+- [x] **Step 5: Viết spec cho Hồ sơ (nút gửi theo trạng thái, card, "Kích hoạt dd/MM/yyyy", câu báo)**
 
 `frontend/projects/admin/src/app/students/student-profile.component.spec.ts`:
 - sửa import model:
@@ -7499,12 +7499,12 @@ const activated: AccountInfo = {
   });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — 4 test mới đỏ (không có nút "Gửi thông tin đăng nhập", không có `app-account-card`…).
 
-- [ ] **Step 7: API gửi/sửa email/link đặt lại, màn Hồ sơ**
+- [x] **Step 7: API gửi/sửa email/link đặt lại, màn Hồ sơ**
 
 `frontend/projects/admin/src/app/students/students.api.ts` — thêm cuối class:
 ```ts
@@ -7643,12 +7643,12 @@ const ACCOUNT_ACTIONS: Record<AccountState, AccountAction> = {
 .secondary:disabled { opacity: .6; cursor: default; }
 ```
 
-- [ ] **Step 8: Chạy — kỳ vọng PASS (hồ sơ)**
+- [x] **Step 8: Chạy — kỳ vọng PASS (hồ sơ)**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: `StudentProfileComponent` 13 test PASS (9 cũ + 4 mới); `student-form.component.spec.ts` vẫn lỗi kiểu fixture — sửa ở Step 9.
 
-- [ ] **Step 9: Viết spec cho form Tạo / Sửa hồ sơ (Lưu và gửi, Chỉ lưu, email sửa được khi Chờ kích hoạt)**
+- [x] **Step 9: Viết spec cho form Tạo / Sửa hồ sơ (Lưu và gửi, Chỉ lưu, email sửa được khi Chờ kích hoạt)**
 
 `frontend/projects/admin/src/app/students/student-form.component.spec.ts` (thay toàn bộ):
 ```ts
@@ -8049,12 +8049,12 @@ describe('StudentFormComponent', () => {
 });
 ```
 
-- [ ] **Step 10: Chạy — kỳ vọng FAIL**
+- [x] **Step 10: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `EMAIL_CHANGE_NOTE`/`SENT_MESSAGE`/`SAVED_NOT_SENT_MESSAGE` không được export; không có `button.save-only`…
 
-- [ ] **Step 11: Form Tạo / Sửa hồ sơ**
+- [x] **Step 11: Form Tạo / Sửa hồ sơ**
 
 `frontend/projects/admin/src/app/students/student-form.component.ts` (thay toàn bộ):
 ```ts
@@ -8507,7 +8507,7 @@ và thêm trước dòng `@media (max-width: 879.98px) …`:
 .receive ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5; }
 ```
 
-- [ ] **Step 12: Chạy — kỳ vọng PASS**
+- [x] **Step 12: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS (`StudentFormComponent` 19 test, `StudentProfileComponent` 13 test, `account card` 3 test, `format` 3 test; shared/client không đổi).
@@ -8515,7 +8515,7 @@ Run: `cd frontend && npx ng build admin`
 Expected: build thành công.
 Kiểm tay (`npx ng serve admin` + API local Task 1–7, `Email:Provider=Capture`): Tạo hồ sơ chỉ họ tên + email → "Lưu và gửi thông tin đăng nhập" → hồ sơ được lưu, chuyển sang trang hồ sơ với câu "Đã lưu hồ sơ. Còn 28 mục bắt buộc chưa điền nên chưa gửi thông tin đăng nhập."; điền đủ → hộp xanh "Đã lưu hồ sơ và gửi thông tin đăng nhập.", aside "Đã gửi thông tin, chờ kích hoạt" + "Gửi đến … lúc HH:mm. Mật khẩu tạm hết hạn sau 72 giờ."; "Chỉ lưu hồ sơ" → `/hoc-vien/<id>`. Hồ sơ: nút "Gửi thông tin đăng nhập" → card "Tài khoản đăng nhập" đổi dòng trạng thái + lịch sử; học viên kích hoạt → header "Kích hoạt dd/MM/yyyy", nút "Gửi link đặt lại mật khẩu". Sửa hồ sơ khi Chờ kích hoạt: ô email sửa được, ghi chú "Đổi email sẽ huỷ…" khi đã gửi. So với `AdTaoHoSo` và `AdHoSo` (tab "Tài khoản") ở 390px và 1280px: nút "Chỉ lưu hồ sơ" 50px viền `--field` 15px 600, card "Học viên sẽ nhận gì" nền `--soft` radius 14 h2 Barlow 700 20px `--navInk`, card "Tài khoản đăng nhập" radius 12 padding 16px 18px h2 Barlow 700 24px, `<ol>` viền trái 2px `--soft`, ghi chú cuối 13px `--muted`, "Kích hoạt dd/MM/yyyy" 13px `--muted`, nút phụ header 44px.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 ```bash
 git add frontend/projects/admin
 git commit -F - <<'EOF'
