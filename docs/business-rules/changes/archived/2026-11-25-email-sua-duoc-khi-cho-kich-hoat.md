@@ -1,5 +1,5 @@
 ---
-state: Draft
+state: Archived
 type: change
 date: 2026-11-25
 feature: hoc-vien/ho-so/ho-so-hoc-vien.feature
@@ -19,3 +19,7 @@ source: to-spec
 ## Attribution
 - **Commit:** f98c00e — docs(bdd): F02 hồ sơ học viên living doc (25 rules)   **Author:** Hoangduc1203BK · **When:** 2026-11-25
 - **Why:** F01-P1 cần cho coach sửa email gõ sai trước khi học viên kích hoạt (PRD F01, quyết định OQ trong discovery F01-P1).
+
+## Living doc reference
+- `features/hoc-vien/ho-so/ho-so-hoc-vien.feature:150:155` — Rule @BR-f02-ho-so-hoc-vien-012 (câu rule đổi "trừ email" → "ngoài email"; scenario giữ nguyên)
+- `features/hoc-vien/tai-khoan/thong-tin-dang-nhap.feature` — Rule @BR-f01-p1-tai-khoan-hoc-vien-007 (email chỉ sửa được khi Chờ kích hoạt)

@@ -147,7 +147,7 @@ Feature: Hồ sơ học viên và trạng thái coaching
       Then hồ sơ không được lưu vì link ảnh không hợp lệ
 
   @BR-f02-ho-so-hoc-vien-012
-  Rule: Coach sửa được mọi mục của hồ sơ trừ email, kể cả số đo và ảnh ban đầu
+  Rule: Coach sửa được mọi mục của hồ sơ ngoài email, kể cả số đo và ảnh ban đầu
 
     Scenario: Coach sửa số đo ban đầu
       Given hồ sơ của "Lan" có cân nặng 72 kg
