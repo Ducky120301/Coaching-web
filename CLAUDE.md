@@ -23,13 +23,14 @@ Lộ trình: **P0** codebase → **P1** Admin hồ sơ & thư viện → **P2** 
 | Frontend | Angular (1 workspace, 2 app + 1 lib dùng chung) |
 | Email | `IEmailSender` → Resend (free tier), dự phòng Amazon SES |
 | CI/CD | GitHub Actions; môi trường test deploy lên Render (API = Docker web service, 2 app Angular = static site), SQL Server test do PO cung cấp |
+| Acceptance | Reqnroll (.NET) cho @api/@integration; CucumberJS + Playwright cho @web; so ảnh pixelmatch với prototype |
 | Hosting production | Chưa chốt (PO báo sau) — code phải chạy được bằng Docker trên VPS Linux bất kỳ |
 
 ## Cấu trúc repo
 
 ```
 /backend
-  Coaching.sln
+  Coaching.slnx
   src/
     Coaching.Domain/          # Entity, Aggregate, Value Object, Domain Event, Domain Service — KHÔNG phụ thuộc gì
     Coaching.Application/     # Use case (Command/Query + Handler), DTO, interface port (IEmailSender, IClock, IAppDbContext...)
@@ -201,19 +202,21 @@ Không hard-code mã màu trong component. Luôn dùng `var(--…)`.
 
 ---
 
-## Lệnh thường dùng (cập nhật khi P0 xong)
+## Lệnh thường dùng
 ```bash
-# Backend
-dotnet build backend/Coaching.sln
-dotnet test backend/Coaching.sln
-dotnet ef migrations add <Name> -p backend/src/Coaching.Infrastructure -s backend/src/Coaching.Api
+# Backend (unit + integration + acceptance @api/@integration)
+dotnet test backend/Coaching.slnx --filter "Category!=web&Category!=manual"
+# Schema: thêm changeset vào database/changelog/<version>/ (xml + scripts/*.sql + rollback/*.sql), KHÔNG dùng dotnet ef migrations
+
+# Toàn hệ thống local (db + api + 2 web)
+cp deploy/.env.example deploy/.env
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait
+# admin: http://localhost:4200   client: http://localhost:4300
 
 # Frontend
 cd frontend && npm ci
-npx ng serve admin
-npx ng serve client
-npx ng test
-
-# Local stack
-docker compose -f deploy/docker-compose.yml up -d
+npm run start:admin      # dev, proxy /api → localhost:8080
+npm run start:client
+npm run test:ci
+npm run e2e              # @web trên compose (đặt AUTH_PERMIT_PER_MINUTE=1000 trong deploy/.env)
 ```

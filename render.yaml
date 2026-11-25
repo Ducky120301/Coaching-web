@@ -1,0 +1,70 @@
+# @ADR-f00-codebase-010 — môi trường test (Staging). Secret `sync: false` nhập trên dashboard Render.
+services:
+  - type: web
+    name: coaching-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Staging
+      - key: PORT
+        value: "8080"
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: Jwt__SigningKey
+        generateValue: true
+      - key: AdminSeed__Email
+        sync: false
+      - key: AdminSeed__Password
+        sync: false
+      - key: DemoSeed__Enabled
+        value: "true"
+      - key: DemoSeed__Email
+        sync: false
+      - key: DemoSeed__Password
+        sync: false
+      - key: Email__Provider
+        value: Log
+      - key: Cors__AllowedOrigins__0
+        sync: false
+      - key: Cors__AllowedOrigins__1
+        sync: false
+
+  - type: web
+    name: coaching-admin
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npx ng build admin && node scripts/write-config.mjs dist/admin/browser
+    staticPublishPath: dist/admin/browser
+    autoDeployTrigger: checksPass
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: API_BASE_URL
+        sync: false
+      - key: NODE_VERSION
+        value: "26"
+
+  - type: web
+    name: coaching-client
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npx ng build client && node scripts/write-config.mjs dist/client/browser
+    staticPublishPath: dist/client/browser
+    autoDeployTrigger: checksPass
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: API_BASE_URL
+        sync: false
+      - key: NODE_VERSION
+        value: "26"
