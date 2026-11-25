@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { PNG } from 'pngjs';
 import { ADMIN, ADMIN_URL, CLIENT_URL, STUDENT } from '../support/env';
 import { expect } from '../support/expect';
-import { Rect, captureRegion, diffRatio } from '../support/visual';
+import { Rect, captureRegion, diffRatio, measure } from '../support/visual';
 import { E2EWorld } from '../support/world';
 
 const PROTOTYPE = pathToFileURL(resolve(process.cwd(), '../docs/duobexiuuu-coaching-design.html')).href;
@@ -32,6 +32,8 @@ function targetFor(screen: Screen, width: number): Target {
     : { protoPage: 'HvHomNay', protoRegion: 'nav[aria-label="Điều hướng chính"]', protoMasks: ['a'],
         appRegion: 'nav.tabbar', appMasks: ['a', 'dbx-user-menu'] };
 }
+
+const PROTO_TABBAR = 'nav[aria-label="Điều hướng chính"]:not(aside.rail *)';
 
 Given('thiết kế đã duyệt của {string}', function (this: E2EWorld, screen: Screen) {
   this.visual['screen'] = screen;
@@ -66,17 +68,40 @@ When('{string} được hiển thị ở độ rộng {string} px', async functi
   }
   const b = await captureRegion(app, t.appRegion, t.appMasks, t.appCss);
 
+  const geometry: string[] = [];
+  if (screen !== 'màn đăng nhập') {
+    const pr = await measure(proto, 'aside.rail'), ar = await measure(app, 'aside.rail');
+    const pt = await measure(proto, PROTO_TABBAR), at = await measure(app, 'nav.tabbar');
+    const tabbarMode = screen === 'khung web học viên' && width < 880;
+    if (screen === 'khung web học viên') {
+      if (pr.visible === tabbarMode) geometry.push(`prototype: rail ${pr.visible ? 'hiện' : 'ẩn'} sai ở ${width}px`);
+      if (pt.visible !== tabbarMode) geometry.push(`prototype: tab bar ${pt.visible ? 'hiện' : 'ẩn'} sai ở ${width}px`);
+      if (ar.visible === tabbarMode) geometry.push(`app: rail ${ar.visible ? 'hiện' : 'ẩn'} sai ở ${width}px`);
+      if (at.visible !== tabbarMode) geometry.push(`app: tab bar ${at.visible ? 'hiện' : 'ẩn'} sai ở ${width}px`);
+    }
+    if (pr.visible && ar.visible && Math.abs(pr.width - ar.width) > 1) {
+      geometry.push(`rail rộng ${ar.width}px, prototype ${pr.width}px`);
+    } else if (pr.visible !== ar.visible && screen === 'khung web quản trị') {
+      geometry.push(`rail app ${ar.visible ? 'hiện' : 'ẩn'} nhưng prototype ${pr.visible ? 'hiện' : 'ẩn'}`);
+    }
+    if (tabbarMode && pt.visible && at.visible && Math.abs(pt.height - at.height) > 1) {
+      geometry.push(`tab bar cao ${at.height}px, prototype ${pt.height}px`);
+    }
+  }
+
   const masks: Rect[] = [...a.masks, ...b.masks];
-  this.visual = { screen, width, ...diffRatio(a.png, b.png, masks) };
+  this.visual = { screen, width, geometry, ...diffRatio(a.png, b.png, masks) };
 });
 
 Then('phần khác biệt so với thiết kế không quá {string} phần trăm diện tích', function (this: E2EWorld, pct: string) {
-  const { ratio, diff, screen, width } = this.visual as { ratio: number; diff: PNG; screen: string; width: number };
-  if (ratio * 100 > Number(pct)) {
+  const { ratio, diff, screen, width, geometry, sizeNote } = this.visual as { ratio: number; diff: PNG; screen: string; width: number; geometry: string[]; sizeNote: string };
+  const extra = [...geometry, ...(sizeNote ? [sizeNote] : [])];
+  if (ratio * 100 > Number(pct) || extra.length) {
     const dir = resolve(process.cwd(), 'e2e/reports/visual');
     mkdirSync(dir, { recursive: true });
     writeFileSync(resolve(dir, `${screen.replace(/\s+/g, '-')}-${width}.png`), PNG.sync.write(diff));
   }
   this.log(`${screen} @${width}px: ${(ratio * 100).toFixed(2)}%`);
+  expect(extra.length, `${screen} @${width}px hình học lệch: ${extra.join('; ')}`).toBe(0);
   expect(ratio * 100, `${screen} @${width}px lệch ${(ratio * 100).toFixed(2)}%`).toBeLessThanOrEqual(Number(pct));
 });

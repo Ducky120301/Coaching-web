@@ -17,7 +17,8 @@ export async function captureRegion(page: Page, regionSelector: string, maskSele
   await settle(page);
   if (normalizeCss) await page.addStyleTag({ content: normalizeCss });
   const region = page.locator(regionSelector).first();
-  const box = (await region.boundingBox())!;
+  const box = await region.boundingBox();
+  if (!box) throw new Error(`Vùng ${regionSelector} không hiển thị`);
   const masks: Rect[] = [];
   for (const sel of maskSelectors) {
     for (const el of await region.locator(sel).all()) {
@@ -45,11 +46,23 @@ function fill(img: PNG, rect: Rect): void {
   }
 }
 
-export function diffRatio(a: PNG, b: PNG, masks: Rect[]): { ratio: number; diff: PNG } {
+export function diffRatio(a: PNG, b: PNG, masks: Rect[]): { ratio: number; diff: PNG; sizeNote: string } {
   const width = Math.max(a.width, b.width), height = Math.max(a.height, b.height);
   const pa = padTo(a, width, height), pb = padTo(b, width, height);
   for (const m of masks) { fill(pa, m); fill(pb, m); }
   const diff = new PNG({ width, height });
   const changed = pixelmatch(pa.data, pb.data, diff.data, width, height, { threshold: 0.1 });
-  return { ratio: changed / (width * height), diff };
+  const sizeNote = Math.abs(a.width - b.width) > 2 || Math.abs(a.height - b.height) > 2
+    ? `kích thước khác: ${a.width}x${a.height} vs ${b.width}x${b.height}` : '';
+  return { ratio: changed / (width * height), diff, sizeNote };
+}
+
+export interface Measure { visible: boolean; width: number; height: number; }
+
+// Đo hình học thật (không phải ảnh) để so app với prototype trong cùng một lần chạy.
+export async function measure(page: Page, selector: string): Promise<Measure> {
+  const loc = page.locator(selector).first();
+  if ((await loc.count()) === 0 || !(await loc.isVisible())) return { visible: false, width: 0, height: 0 };
+  const b = await loc.boundingBox();
+  return b ? { visible: true, width: b.width, height: b.height } : { visible: false, width: 0, height: 0 };
 }
