@@ -15,6 +15,10 @@ internal sealed class AuthService(
     IOptions<JwtOptions> jwtOptions,
     IClock clock) : IAuthService
 {
+    // @BR-f00-codebase-007
+    public const int MaxFailedAttempts = 5;
+    public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
+
     public async Task<Result<AuthTokens>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -24,17 +28,37 @@ internal sealed class AuthService(
         if (user is null)
             return AuthErrors.InvalidCredentials;
 
-        if (await userManager.IsLockedOutAsync(user))
-            return AuthErrors.LockedOut;
+        // @ADR-f00-codebase-005: tự kiểm khóa theo IClock thay vì IsLockedOutAsync (đồng hồ thật)
+        var now = clock.UtcNow;
+        if (user.LockoutEnd is { } lockoutEnd && lockoutEnd > now)
+            return AuthErrors.InvalidCredentials; // @BR-f00-codebase-006: không lộ trạng thái khóa
 
         if (!await userManager.CheckPasswordAsync(user, request.Password))
         {
-            await userManager.AccessFailedAsync(user);
-            return await userManager.IsLockedOutAsync(user) ? AuthErrors.LockedOut : AuthErrors.InvalidCredentials;
+            await RegisterFailedAttemptAsync(user, now);
+            return AuthErrors.InvalidCredentials;
         }
 
-        await userManager.ResetAccessFailedCountAsync(user);
+        if (user.AccessFailedCount != 0 || user.LockoutEnd is not null)
+        {
+            user.AccessFailedCount = 0;
+            user.LockoutEnd = null;
+            await userManager.UpdateAsync(user);
+        }
+
         return await IssueTokensAsync(user, cancellationToken);
+    }
+
+    // @BR-f00-codebase-007: sai 5 lần liên tiếp → khóa 5 phút
+    private async Task RegisterFailedAttemptAsync(AppUser user, DateTimeOffset now)
+    {
+        user.AccessFailedCount++;
+        if (user.AccessFailedCount >= MaxFailedAttempts)
+        {
+            user.LockoutEnd = now.Add(LockoutDuration);
+            user.AccessFailedCount = 0;
+        }
+        await userManager.UpdateAsync(user);
     }
 
     public async Task<Result<AuthTokens>> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken = default)
@@ -59,7 +83,7 @@ internal sealed class AuthService(
             return AuthErrors.InvalidRefreshToken;
 
         var user = await userManager.FindByIdAsync(stored.UserId.ToString());
-        if (user is null || await userManager.IsLockedOutAsync(user))
+        if (user is null || (user.LockoutEnd is { } end && end > now))
             return AuthErrors.InvalidRefreshToken;
 
         var tokens = await IssueTokensAsync(user, cancellationToken, rotateFrom: stored);
