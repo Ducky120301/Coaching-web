@@ -1,5 +1,5 @@
 import { Given, Then, When } from '@cucumber/cucumber';
-import { expect } from 'playwright/test';
+import { expect } from '../support/expect';
 import { ADMIN, ADMIN_URL, CLIENT_URL, STUDENT } from '../support/env';
 import { E2EWorld } from '../support/world';
 
@@ -17,10 +17,11 @@ async function logoutVia(page: import('playwright').Page) {
 // @BR-f00-codebase-010: server trả 401 thật cho request đầu (token không hợp lệ) → web tự gia hạn
 Given('admin đang làm việc và lượt truy cập vừa hết hạn', async function (this: E2EWorld) {
   await loginAdmin(this);
-  let rejectedOnce = false;
+  this.rejectedOnce = false;
+  this.refreshStatus = null;
   await this.page.route('**/api/admin/profile', async (route, request) => {
-    if (!rejectedOnce) {
-      rejectedOnce = true;
+    if (!this.rejectedOnce) {
+      this.rejectedOnce = true;
       await route.continue({ headers: { ...request.headers(), authorization: 'Bearer het-han' } });
     } else {
       await route.continue();
@@ -29,10 +30,15 @@ Given('admin đang làm việc và lượt truy cập vừa hết hạn', async 
 });
 
 When('admin xem hồ sơ coach của mình', async function (this: E2EWorld) {
-  await this.page.goto(`${ADMIN_URL}/trang-chu`);
+  const rejected = this.page.waitForResponse((r) => r.url().includes('/api/admin/profile') && r.status() === 401);
+  const refreshed = this.page.waitForResponse((r) => r.url().includes('/api/auth/refresh'));
+  await Promise.all([rejected, refreshed, this.page.goto(`${ADMIN_URL}/trang-chu`)]);
+  this.refreshStatus = (await refreshed).status();
 });
 
 Then('admin thấy hồ sơ coach mà không phải đăng nhập lại', async function (this: E2EWorld) {
+  expect(this.rejectedOnce, 'request đầu bị trả 401').toBe(true);
+  expect(this.refreshStatus, '/api/auth/refresh trả 200').toBe(200);
   await expect(this.page.getByRole('heading', { name: /^Xin chào,/ })).toBeVisible();
   await expect(this.page).not.toHaveURL(/\/login/);
 });

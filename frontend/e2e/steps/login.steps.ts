@@ -1,5 +1,5 @@
 import { Given, Then, When } from '@cucumber/cucumber';
-import { expect } from 'playwright/test';
+import { expect } from '../support/expect';
 import { ADMIN, STUDENT } from '../support/env';
 import { E2EWorld, WebApp, urlOf } from '../support/world';
 

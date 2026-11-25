@@ -1,4 +1,6 @@
-import { After, AfterAll, Before, BeforeAll, World, setDefaultTimeout, setWorldConstructor } from '@cucumber/cucumber';
+import { After, AfterAll, Before, BeforeAll, Status, World, setDefaultTimeout, setWorldConstructor } from '@cucumber/cucumber';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Browser, BrowserContext, Page, chromium } from 'playwright';
 import { ADMIN_URL, CLIENT_URL } from './env';
 
@@ -15,6 +17,8 @@ export class E2EWorld extends World {
   account: { email: string; password: string } | null = null;
   expectedUrl = '';
   visual: Record<string, unknown> = {};
+  rejectedOnce = false;
+  refreshStatus: number | null = null;
 
   async openPage(url: string): Promise<Page> {
     const page = await this.context.newPage();
@@ -38,4 +42,18 @@ Before(async function (this: E2EWorld) {
   this.page = await this.context.newPage();
   this.pages = [this.page];
 });
-After(async function (this: E2EWorld) { await this.context?.close(); });
+After(async function (this: E2EWorld, { pickle, result }) {
+  if (result?.status === Status.FAILED) {
+    const dir = join(__dirname, '..', 'reports', 'screenshots');
+    mkdirSync(dir, { recursive: true });
+    const name = pickle.name.replace(/[^\p{L}\p{N}]+/gu, '-').slice(0, 80);
+    for (const [i, page] of this.pages.entries()) {
+      try {
+        const buffer = await page.screenshot({ fullPage: true });
+        this.attach(buffer, 'image/png');
+        writeFileSync(join(dir, `${name}${i ? `-${i + 1}` : ''}.png`), buffer);
+      } catch { /* page already closed */ }
+    }
+  }
+  await this.context?.close();
+});
