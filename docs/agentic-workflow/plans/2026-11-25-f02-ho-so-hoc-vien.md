@@ -5672,7 +5672,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Tạo hồ sơ h
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec cho danh mục mục form và chuyển đổi số**
+- [x] **Step 1: Viết spec cho danh mục mục form và chuyển đổi số**
 
 `frontend/projects/admin/src/app/students/registration-fields.spec.ts`:
 ```ts
@@ -5727,12 +5727,12 @@ describe('registration fields', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './registration-fields'`.
 
-- [ ] **Step 3: Model chi tiết, API, danh mục mục form**
+- [x] **Step 3: Model chi tiết, API, danh mục mục form**
 
 `frontend/projects/admin/src/app/students/student.models.ts` — thêm cuối file:
 ```ts
@@ -6025,12 +6025,12 @@ export function toFormValues(detail: StudentDetail): FormValues {
 }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: PASS (`registration fields` 4 test + spec của Task 7).
 
-- [ ] **Step 5: Viết spec cho form tạo/sửa**
+- [x] **Step 5: Viết spec cho form tạo/sửa**
 
 `frontend/projects/admin/src/app/students/student-form.component.spec.ts`:
 ```ts
@@ -6230,12 +6230,12 @@ describe('StudentFormComponent', () => {
 });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './student-form.component'`.
 
-- [ ] **Step 7: `StudentFormComponent`**
+- [x] **Step 7: `StudentFormComponent`**
 
 `frontend/projects/admin/src/app/students/student-form.component.ts`:
 ```ts
@@ -6596,7 +6596,7 @@ aside { flex: 1 1 280px; max-width: 380px; position: sticky; top: 20px; display:
 @media (max-width: 879.98px) { h1 { font-size: 38px; } }
 ```
 
-- [ ] **Step 8: Route + mục rail "Tạo hồ sơ học viên"**
+- [x] **Step 8: Route + mục rail "Tạo hồ sơ học viên"**
 
 `frontend/projects/shared/src/lib/ui/icons.ts` — thêm vào object `ICONS`, sau `search`:
 ```ts
@@ -6686,7 +6686,7 @@ export class AdminShellComponent {
 }
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng PASS**
+- [x] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS (`StudentFormComponent` 9 test, `registration fields` 4 test).
@@ -6694,7 +6694,7 @@ Run: `cd frontend && npx ng build admin`
 Expected: build thành công.
 Kiểm tay (`npx ng serve admin` + API local): tạo hồ sơ chỉ có họ tên + email → chuyển `/hoc-vien/<id>`; gõ dở → tải lại trang vẫn còn bản nháp; "Xoá trắng hồ sơ" xóa nháp. So với page `AdTaoHoSo` ở 390px và 1280px (card nhóm radius 12 padding 20px 22px, ô 46px radius 14, nhãn 14px 600, badge "x/y bắt buộc", aside "Hồ sơ đã điền" + "Trạng thái tài khoản").
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 ```bash
 git add frontend/projects/shared/src/lib/ui/icons.ts frontend/projects/admin
 git commit -F - <<'EOF'
