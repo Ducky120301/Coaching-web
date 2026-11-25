@@ -1,0 +1,11 @@
+// Brand override toàn cục của prototype (<style id="brand-style">)
+body { background: #F7F1F4; }
+.rail { background: #24121D !important; border-right: 0 !important; color: #FCEFF4; }
+.rail a { color: #D9C2CD !important; }
+.rail a:hover { color: #fff !important; background: rgba(255, 255, 255, .06); }
+.rail a[aria-current="page"] { background: rgba(255, 92, 157, .16) !important; color: #fff !important; box-shadow: inset 3px 0 0 #FF5C9D; }
+.rail p { color: inherit; }
+.rail .muted { color: #B79AA8 !important; }
+.rail :focus-visible { outline-color: #FF5C9D !important; }
+.cover-type { font-feature-settings: "tnum"; }
+.num { font-variant-numeric: tabular-nums; }
