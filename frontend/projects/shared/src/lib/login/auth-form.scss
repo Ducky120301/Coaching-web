@@ -1,0 +1,28 @@
+// Giá trị lấy nguyên văn từ prototype page "Main" (isLogin / isActivate / isForgot)
+.stack-24 { display: flex; flex-direction: column; gap: 24px; }
+.stack-16 { display: flex; flex-direction: column; gap: 16px; }
+.stack-8 { display: flex; flex-direction: column; gap: 8px; }
+h1 { margin: 0; font-family: var(--font-head); font-weight: 800; font-size: 48px; line-height: 1.05; }
+.lead { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.kicker { margin: 0; color: var(--primary); font-size: 14px; font-weight: 600; }
+label { font-size: 14px; font-weight: 600; }
+// min-height giữ hình học của web quản trị (không có nút "Quên mật khẩu?") bằng hàng có nút ở web học viên
+.label-row { display: flex; justify-content: space-between; align-items: center; min-height: 26px; }
+input {
+  height: 52px; border-radius: 14px; border: 1px solid var(--field); background: var(--surface); color: var(--ink);
+  padding: 0 16px; font: inherit; font-size: 16px;
+}
+.submit {
+  height: 54px; border-radius: 999px; border: 0; background: var(--primary); color: var(--onPrimary);
+  font-family: var(--font-head); font-weight: 700; font-size: 22px; cursor: pointer; margin-top: 8px;
+}
+.submit.tight { margin-top: 0; }
+.submit:disabled { opacity: .7; cursor: progress; }
+.link-btn { background: none; border: 0; padding: 4px 0; color: var(--primary); font: inherit; font-size: 14px; cursor: pointer; }
+.back {
+  align-self: flex-start; background: none; border: 0; padding: 8px 0; color: var(--primary); font: inherit; font-size: 15px; cursor: pointer;
+}
+.link-btn:hover, .back:hover { color: var(--linkHover); }
+.error { margin: 0; padding: 16px; border-radius: 12px; background: var(--warnBg); color: var(--warn); font-size: 14px; line-height: 1.6; }
+.ok { margin: 0; padding: 16px; border-radius: 12px; background: var(--okBg); color: var(--okInk); font-size: 14px; line-height: 1.6; }
+.hint { margin: 0; padding: 16px; border-radius: 12px; background: var(--surface); color: var(--ink2); font-size: 14px; line-height: 1.6; }

@@ -5,7 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { APP_CONFIG } from '../config/app-config';
 import { CLIENT_APP } from './client-app';
 import { SKIP_AUTH } from './skip-auth';
-import { AuthTokens, AuthUser } from './models';
+import { ActivationChallenge, AuthTokens, AuthUser, LoginResult } from './models';
+import { ActivationStore } from './activation-store';
 import { RefreshCoordinator } from './refresh-coordinator';
 import { TokenStore } from './token-store';
 
@@ -29,6 +30,7 @@ export class AuthService {
   private readonly store = inject(TokenStore);
   private readonly coordinator = inject(RefreshCoordinator);
   private readonly router = inject(Router);
+  private readonly activation = inject(ActivationStore);
   private readonly noAuth = { context: new HttpContext().set(SKIP_AUTH, true) };
 
   private readonly currentUser = signal<AuthUser | null>(null);
@@ -48,11 +50,46 @@ export class AuthService {
     return this.store.accessToken();
   }
 
-  async login(email: string, password: string): Promise<void> {
-    const tokens = await firstValueFrom(
-      this.http.post<AuthTokens>(this.apiUrl('/api/auth/login'), { email, password, app: this.app }, this.noAuth),
+  async login(email: string, password: string): Promise<LoginResult> {
+    const body = await firstValueFrom(
+      this.http.post<AuthTokens | ActivationChallenge>(this.apiUrl('/api/auth/login'), { email, password, app: this.app }, this.noAuth),
     );
+    // @BR-f01-p1-tai-khoan-hoc-vien-011: mật khẩu tạm → chỉ có mã kích hoạt, chưa có phiên (không JWT, không refresh token)
+    if (isActivationChallenge(body)) {
+      this.activation.set({ token: body.activationToken, expiresAt: body.activationTokenExpiresAt });
+      return { kind: 'activation', token: body.activationToken, expiresAt: body.activationTokenExpiresAt };
+    }
+    this.activation.clear();
+    this.accept(body);
+    return { kind: 'session' };
+  }
+
+  /** @BR-f01-p1-tai-khoan-hoc-vien-015: mật khẩu gửi nguyên văn, không trim. Thành công → API trả AuthTokens, vào thẳng. */
+  async activate(activationToken: string, password: string, confirmPassword: string): Promise<void> {
+    const tokens = await firstValueFrom(
+      this.http.post<AuthTokens>(this.apiUrl('/api/auth/activate'), { activationToken, password, confirmPassword }, this.noAuth),
+    );
+    this.activation.clear();
     this.accept(tokens);
+  }
+
+  /** @BR-f01-p1-tai-khoan-hoc-vien-023: server luôn trả cùng một câu (202). */
+  async forgotPassword(email: string): Promise<string> {
+    const body = await firstValueFrom(
+      this.http.post<{ message: string }>(this.apiUrl('/api/auth/forgot-password'), { email }, this.noAuth),
+    );
+    return body.message;
+  }
+
+  /** @BR-f01-p1-tai-khoan-hoc-vien-021: server thu hồi mọi phiên; phiên cục bộ (nếu có) cũng xoá để vào lại /login. */
+  async resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(this.apiUrl('/api/auth/reset-password'), { token, password, confirmPassword }, this.noAuth),
+    );
+    if (this.hasSession()) {
+      this.endSession(false);
+      this.coordinator.broadcastLogout();
+    }
   }
 
   /** Khôi phục phiên khi mở lại web (@BR-f00-codebase-010). */
@@ -111,4 +148,8 @@ export class AuthService {
     this.currentUser.set(null);
     if (navigate) void this.router.navigateByUrl('/login');
   }
+}
+
+function isActivationChallenge(body: AuthTokens | ActivationChallenge): body is ActivationChallenge {
+  return (body as ActivationChallenge).activationRequired === true;
 }
