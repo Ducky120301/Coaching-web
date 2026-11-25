@@ -41,6 +41,20 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         }, cancellationToken);
     }
 
+    // @ADR-f02-ho-so-hoc-vien-004: use case gọi qua IUnitOfWork nhận lỗi của Application, không phụ thuộc EF.
+    // Identity (UserManager) gọi SaveChangesAsync công khai nên vẫn tự xử lý DbUpdateConcurrencyException như cũ.
+    async Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConcurrencyConflictException(ex);
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

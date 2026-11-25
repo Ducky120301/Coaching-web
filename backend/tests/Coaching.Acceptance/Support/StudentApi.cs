@@ -67,6 +67,25 @@ public sealed class StudentApi(AcceptanceContext ctx)
         return LastDetail;
     }
 
+    /// <summary>PUT hồ sơ: lấy bản hiện tại, áp <paramref name="change"/> lên form, gửi kèm version (mặc định: bản vừa đọc).</summary>
+    public async Task<HttpResponseMessage> TryUpdateAsync(string fullName, Func<RegistrationInput, RegistrationInput> change,
+        string? version = null)
+    {
+        var current = await GetAsync(fullName);
+        var body = new { fullName = current.FullName, registration = change(current.Registration), version = version ?? current.Version };
+        var response = await ctx.SendJsonAsync(HttpMethod.Put, $"/api/admin/students/{Ids[fullName]}", body, AdminToken);
+        if (response.IsSuccessStatusCode)
+            LastDetail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+        return response;
+    }
+
+    public async Task<StudentDetailDto> UpdateOkAsync(string fullName, Func<RegistrationInput, RegistrationInput> change)
+    {
+        var response = await TryUpdateAsync(fullName, change);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return LastDetail!;
+    }
+
     public async Task AssertErrorAsync(HttpStatusCode status, string code)
     {
         Assert.Equal(status, ctx.LastResponse!.StatusCode);

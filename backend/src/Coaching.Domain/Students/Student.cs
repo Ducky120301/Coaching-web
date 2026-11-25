@@ -32,6 +32,14 @@ public sealed class Student : AggregateRoot<Guid>
     /// <summary>@BR-f02-ho-so-hoc-vien-004: hồ sơ luôn cho biết mục bắt buộc còn thiếu.</summary>
     public IReadOnlyList<string> MissingRequiredFields => Registration.MissingRequired();
 
+    // @BR-f02-ho-so-hoc-vien-013: chỉ ghi lần sửa gần nhất, không lưu giá trị cũ
+    public DateTimeOffset? UpdatedAt { get; private set; }
+
+    public Guid? UpdatedByUserId { get; private set; }
+
+    /// <summary>@ADR-f02-ho-so-hoc-vien-004: rowversion do SQL Server sinh, dùng chặn ghi đè.</summary>
+    public byte[] Version { get; private set; } = [];
+
     private Student() { }
 
     private Student(Guid id) : base(id) { }
@@ -56,6 +64,20 @@ public sealed class Student : AggregateRoot<Guid>
             CreatedAt = at,
             Registration = registration ?? RegistrationForm.CreateEmpty(),
         };
+    }
+
+    /// <summary>
+    /// @BR-f02-ho-so-hoc-vien-012: sửa họ tên và mọi mục form (kể cả số đo, ảnh ban đầu); email không sửa ở đây.
+    /// @BR-f02-ho-so-hoc-vien-013: ghi người sửa và thời điểm sửa gần nhất.
+    /// </summary>
+    public void UpdateRegistration(string? fullName, RegistrationForm registration, Guid actorUserId, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(registration);
+        var name = NormalizeFullName(fullName); // kiểm trước khi đổi gì
+        FullName = name;
+        Registration = registration;
+        UpdatedAt = at;
+        UpdatedByUserId = actorUserId;
     }
 
     // @BR-f02-ho-so-hoc-vien-003

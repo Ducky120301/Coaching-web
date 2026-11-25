@@ -13,9 +13,11 @@ public sealed record StudentDetailDto(
     string CoachingStatus,
     DateTimeOffset CreatedAt,
     RegistrationInput Registration,
-    IReadOnlyList<string> MissingRequired)
+    IReadOnlyList<string> MissingRequired,
+    DateTimeOffset? UpdatedAt,
+    string? UpdatedBy,
+    string Version)
 {
-    /// <param name="coach">Coach sở hữu hồ sơ — dùng để hiển thị tên người sửa (Task 3, 5).</param>
     public static StudentDetailDto From(Student student, Coach coach) => new(
         student.Id,
         student.CoachId,
@@ -25,5 +27,12 @@ public sealed record StudentDetailDto(
         student.CoachingStatus.ToString(),
         student.CreatedAt,
         student.Registration.ToInput(),
-        student.MissingRequiredFields); // @BR-f02-ho-so-hoc-vien-004
+        student.MissingRequiredFields, // @BR-f02-ho-so-hoc-vien-004
+        student.UpdatedAt, // @BR-f02-ho-so-hoc-vien-013
+        student.UpdatedByUserId is { } editor ? ActorName(editor, coach) : null,
+        StudentVersion.Format(student.Version)); // @ADR-f02-ho-so-hoc-vien-004
+
+    /// <summary>MVP chỉ có coach sở hữu hồ sơ thao tác trên hồ sơ.</summary>
+    public static string ActorName(Guid userId, Coach coach) =>
+        userId == coach.UserId ? coach.DisplayName : "Người dùng khác";
 }

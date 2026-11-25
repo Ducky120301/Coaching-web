@@ -36,6 +36,9 @@ internal sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         builder.Navigation(s => s.Registration).IsRequired();
         builder.Ignore(s => s.MissingRequiredFields);
 
+        // @ADR-f02-ho-so-hoc-vien-004: rowversion là concurrency token của mọi lệnh sửa
+        builder.Property(s => s.Version).IsRowVersion();
+
         builder.Ignore(s => s.DomainEvents);
     }
 }

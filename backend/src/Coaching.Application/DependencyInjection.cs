@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<CurrentCoach>();
         services.AddScoped<CreateStudentHandler>();
         services.AddScoped<GetStudentHandler>();
+        services.AddScoped<UpdateStudentHandler>();
         return services;
     }
 }

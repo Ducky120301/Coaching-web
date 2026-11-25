@@ -5,5 +5,11 @@ public interface IStudentRepository
     /// <summary>Hồ sơ thuộc coach; hồ sơ của coach khác coi như không tồn tại.</summary>
     Task<Student?> GetAsync(Guid id, Guid coachId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// @ADR-f02-ho-so-hoc-vien-004: hồ sơ để sửa; khi lưu, hệ thống so Version trong DB với
+    /// <paramref name="expectedVersion"/> và báo xung đột nếu khác.
+    /// </summary>
+    Task<Student?> GetForUpdateAsync(Guid id, Guid coachId, byte[] expectedVersion, CancellationToken cancellationToken = default);
+
     void Add(Student student);
 }
