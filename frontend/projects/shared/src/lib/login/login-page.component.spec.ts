@@ -26,7 +26,7 @@ describe('LoginPageComponent', () => {
 
   beforeEach(() => { loginImpl = () => Promise.resolve(); });
 
-  // @BR-f00-codebase-004
+  // @BR-f00-codebase-004 @BR-f00-codebase-005 @ADR-f00-codebase-001
   it('hiển thị đúng thông báo API trả về khi bị từ chối', async () => {
     loginImpl = () => Promise.reject(new HttpErrorResponse({
       status: 403, error: { title: 'Tài khoản này không có quyền vào khu vực coach.' },
@@ -54,5 +54,16 @@ describe('LoginPageComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent)
       .toContain('Không kết nối được hệ thống. Vui lòng thử lại.');
+  });
+
+  // @ADR-f00-codebase-001
+  it.each([500, 400])('lỗi %i thì hiện thông báo chung, không lộ tiêu đề từ API', async (status) => {
+    loginImpl = () => Promise.reject(new HttpErrorResponse({ status, error: { title: 'chi tiết nội bộ' } }));
+    const fixture = setup(null);
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+    const text = fixture.nativeElement.querySelector('[role="alert"]').textContent;
+    expect(text).toContain('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+    expect(text).not.toContain('chi tiết nội bộ');
   });
 });

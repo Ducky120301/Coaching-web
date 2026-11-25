@@ -45,18 +45,19 @@ internal sealed class AuthService(
             return AuthErrors.InvalidCredentials;
         }
 
+        // @ADR-f00-codebase-001 @BR-f00-codebase-004 @BR-f00-codebase-005: sai web → không cấp phiên.
+        // Kiểm SAU khi mật khẩu đúng: người chưa biết mật khẩu chỉ nhận thông báo chung (@BR-f00-codebase-006).
+        var requiredRole = app == ClientApp.Admin ? Roles.Admin : Roles.Student;
+        if (!await userManager.IsInRoleAsync(user, requiredRole))
+            return AuthErrors.WrongApp(app);
+
+        // @BR-f00-codebase-007: chỉ xóa bộ đếm khi đăng nhập thành công (đúng mật khẩu VÀ đúng web).
         if (user.AccessFailedCount != 0 || user.LockoutEnd is not null)
         {
             user.AccessFailedCount = 0;
             user.LockoutEnd = null;
             await userManager.UpdateAsync(user);
         }
-
-        // @ADR-f00-codebase-001 @BR-f00-codebase-004 @BR-f00-codebase-005: sai web → không cấp phiên.
-        // Kiểm SAU khi mật khẩu đúng: người chưa biết mật khẩu chỉ nhận thông báo chung (@BR-f00-codebase-006).
-        var requiredRole = app == ClientApp.Admin ? Roles.Admin : Roles.Student;
-        if (!await userManager.IsInRoleAsync(user, requiredRole))
-            return AuthErrors.WrongApp(app);
 
         return await IssueTokensAsync(user, cancellationToken);
     }

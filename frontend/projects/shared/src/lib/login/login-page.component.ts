@@ -9,7 +9,7 @@ function messageFor(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 0) return 'Không kết nối được hệ thống. Vui lòng thử lại.';
     const title = (error.error as { title?: unknown } | null)?.title;
-    if ([400, 401, 403, 429].includes(error.status) && typeof title === 'string') return title;
+    if ([401, 403, 429].includes(error.status) && typeof title === 'string') return title;
   }
   return 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
 }
