@@ -85,10 +85,12 @@ internal sealed class AuthService(
             if (now - revokedAt <= ReuseGracePeriod)
             {
                 // @ADR-f00-codebase-003 @BR-f00-codebase-011: gửi trùng trong 30s → cấp cặp mới, không thu hồi
-                var graceUser = await FindActiveUserAsync(stored.UserId, now);
+                // Chuỗi chỉ được có MỘT nhánh sống: xoay từ lá mới nhất của chuỗi.
+                var leaf = await FindLiveLeafAsync(stored, now, cancellationToken);
+                var graceUser = leaf is null ? null : await FindActiveUserAsync(stored.UserId, now);
                 return graceUser is null
                     ? AuthErrors.InvalidRefreshToken
-                    : await IssueTokensAsync(graceUser, cancellationToken);
+                    : await IssueTokensAsync(graceUser, cancellationToken, rotateFrom: leaf);
             }
 
             // @BR-f00-codebase-012: gửi lại sau 30s → coi là lộ mã, thu hồi mọi phiên
@@ -104,6 +106,23 @@ internal sealed class AuthService(
             return AuthErrors.InvalidRefreshToken;
 
         return await IssueTokensAsync(user, cancellationToken, rotateFrom: stored);
+    }
+
+    // @ADR-f00-codebase-003: lần theo ReplacedByTokenHash (tối đa 5 bước) tới hậu duệ mới nhất còn hiệu lực.
+    private async Task<RefreshToken?> FindLiveLeafAsync(RefreshToken start, DateTimeOffset now, CancellationToken ct)
+    {
+        var current = start;
+        for (var hop = 0; hop < 5 && current.ReplacedByTokenHash is { } next; hop++)
+        {
+            var child = await db.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == next, ct);
+            if (child is null)
+                return null;
+            if (child.RevokedAt is null)
+                return child.IsActive(now) ? child : null;
+            current = child;
+        }
+
+        return null;
     }
 
     private async Task<AppUser?> FindActiveUserAsync(Guid userId, DateTimeOffset now)

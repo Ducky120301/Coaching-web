@@ -20,17 +20,11 @@ public sealed class SessionSteps(AcceptanceContext ctx)
         return (await response.Content.ReadFromJsonAsync<AuthTokens>())!;
     }
 
-    private async Task<(string Email, string Password)> StudentAccount()
-    {
-        var account = await ctx.CreateStudentAsync();
-        return account;
-    }
-
     // @BR-f00-codebase-011
     [Given(@"một phiên vừa được gia hạn cách đây ""(\d+)"" giây")]
     public async Task SessionRefreshedSecondsAgo(int seconds)
     {
-        var (email, password) = await StudentAccount();
+        var (email, password) = await ctx.CreateStudentAsync();
         var first = await ctx.LoginOkAsync(email, password, "client");
         _replayToken = first.RefreshToken;
         _device1 = await Refresh(first.RefreshToken);
@@ -54,7 +48,7 @@ public sealed class SessionSteps(AcceptanceContext ctx)
     [Given("một tài khoản đang đăng nhập trên hai thiết bị")]
     public async Task LoggedInOnTwoDevices()
     {
-        var (email, password) = await StudentAccount();
+        var (email, password) = await ctx.CreateStudentAsync();
         _device1 = await ctx.LoginOkAsync(email, password, "client");
         _device2 = await ctx.LoginOkAsync(email, password, "client");
     }
@@ -83,7 +77,7 @@ public sealed class SessionSteps(AcceptanceContext ctx)
     [Given("một phiên đã đăng xuất")]
     public async Task LoggedOutSession()
     {
-        var (email, password) = await StudentAccount();
+        var (email, password) = await ctx.CreateStudentAsync();
         var tokens = await ctx.LoginOkAsync(email, password, "client");
         _replayToken = tokens.RefreshToken;
         var logout = await ctx.PostJsonAsync("/api/auth/logout", new { refreshToken = tokens.RefreshToken });

@@ -81,6 +81,8 @@ public sealed class AuthAndAuthorizationTests(ApiFactory factory)
         Assert.Contains("auth.invalid_credentials", await response.Content.ReadAsStringAsync());
     }
 
+    // @BR-f00-codebase-011
+    // @ADR-f00-codebase-003
     [Fact]
     public async Task Refresh_rotates_token_and_immediate_replay_is_within_grace_period()
     {
