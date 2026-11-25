@@ -142,9 +142,7 @@ export class StudentProfileComponent implements OnInit {
       return true;
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 409) {
-        this.conflict.set(true);
-        this.pending.set(null);
-        this.editingNote.set(false);
+        this.conflict.set(true); // giữ nguyên khung lý do / ô ghi chú để không mất chữ đã gõ; Tải lại chỉ làm mới dữ liệu + version
       } else {
         onError(error instanceof HttpErrorResponse && typeof error.error?.title === 'string'
           ? error.error.title

@@ -192,4 +192,18 @@ public sealed class RegistrationFormTests
         Assert.Empty(Student.Create(Guid.NewGuid(), Guid.NewGuid(), "Lan", email, at,
             Create(RegistrationSamples.Complete())).MissingRequiredFields);
     }
+
+    // @BR-f02-ho-so-hoc-vien-004: thêm mục vào RegistrationFields mà quên ánh xạ giá trị (hoặc ngược lại) sẽ gây KeyNotFoundException
+    [Fact]
+    public void Every_registration_field_code_has_a_value_mapping_and_vice_versa()
+    {
+        var method = typeof(RegistrationForm).GetMethod("ValuesByCode",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var mapped = ((IDictionary<string, object?>)method.Invoke(RegistrationForm.CreateEmpty(), null)!).Keys.ToHashSet();
+
+        Assert.Equal(RegistrationFields.All.Select(f => f.Code).OrderBy(c => c), mapped.OrderBy(c => c));
+        Assert.Equal(
+            RegistrationFields.All.Where(f => f.Required).Select(f => f.Code),
+            RegistrationForm.CreateEmpty().MissingRequired());
+    }
 }

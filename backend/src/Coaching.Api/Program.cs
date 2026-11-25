@@ -4,6 +4,7 @@ using Coaching.Application;
 using Coaching.Application.Abstractions;
 using Coaching.Infrastructure;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,19 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+    // Lỗi model-binding tự động của [ApiController] cũng phải là ProblemDetails có `code` + tiêu đề tiếng Việt, giữ `errors`.
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var problem = new ValidationProblemDetails(context.ModelState)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Dữ liệu gửi lên không hợp lệ.",
+            Type = "request.invalid",
+        };
+        problem.Extensions["code"] = "request.invalid";
+        return new ObjectResult(problem) { StatusCode = StatusCodes.Status400BadRequest };
+    });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();

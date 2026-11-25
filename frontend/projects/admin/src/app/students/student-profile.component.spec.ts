@@ -186,4 +186,56 @@ describe('StudentProfileComponent', () => {
     fixture.detectChanges();
     expect(el.querySelector('.note .msg')).toBeNull();
   });
+
+  // @BR-f02-ho-so-hoc-vien-015: 409 không làm mất ghi chú/lý do đã gõ; Tải lại giữ nguyên bản nháp, chỉ làm mới version
+  it('keeps the typed note and the editor open on 409, and keeps the draft after reload', async () => {
+    const { fixture, http, el, click } = await setup();
+
+    click('Sửa ghi chú');
+    fixture.detectChanges();
+    const note = el.querySelector('#internal-note') as HTMLTextAreaElement;
+    note.value = 'Đau vai trái, tránh overhead';
+    note.dispatchEvent(new Event('input'));
+    click('Lưu ghi chú');
+    http.expectOne('/api/admin/students/s1/internal-note').flush(
+      { title: 'Hồ sơ vừa được sửa ở nơi khác.', code: 'student.version_conflict' }, { status: 409, statusText: 'Conflict' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('button.reload')).not.toBeNull();
+    expect((el.querySelector('#internal-note') as HTMLTextAreaElement).value).toBe('Đau vai trái, tránh overhead');
+
+    click('Tải lại');
+    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'AAAAAAAB9F=' }));
+    await settle();
+    fixture.detectChanges();
+    expect((el.querySelector('#internal-note') as HTMLTextAreaElement).value).toBe('Đau vai trái, tránh overhead');
+
+    click('Lưu ghi chú');
+    const retry = http.expectOne('/api/admin/students/s1/internal-note');
+    expect(retry.request.body).toEqual({ note: 'Đau vai trái, tránh overhead', version: 'AAAAAAAB9F=' });
+    retry.flush(detail({ internalNote: 'Đau vai trái, tránh overhead' }));
+  });
+
+  it('keeps the status panel and typed reason open on 409, and keeps the reason after reload', async () => {
+    const { fixture, http, el, click } = await setup();
+
+    click('Tạm dừng');
+    fixture.detectChanges();
+    const reason = el.querySelector('#status-reason') as HTMLTextAreaElement;
+    reason.value = 'Đi công tác';
+    reason.dispatchEvent(new Event('input'));
+    click('Xác nhận');
+    http.expectOne('/api/admin/students/s1/coaching-status').flush(
+      { title: 'x', code: 'student.version_conflict' }, { status: 409, statusText: 'Conflict' });
+    await settle();
+    fixture.detectChanges();
+
+    expect((el.querySelector('#status-reason') as HTMLTextAreaElement).value).toBe('Đi công tác');
+    click('Tải lại');
+    http.expectOne('/api/admin/students/s1').flush(detail({ version: 'AAAAAAAB9F=' }));
+    await settle();
+    fixture.detectChanges();
+    expect((el.querySelector('#status-reason') as HTMLTextAreaElement).value).toBe('Đi công tác');
+  });
 });

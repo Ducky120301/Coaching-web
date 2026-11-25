@@ -31,6 +31,7 @@ internal sealed class StudentRepository(AppDbContext db) : IStudentRepository
 
         var rows = await query
             .OrderByDescending(s => s.CreatedAt)
+            .ThenByDescending(s => s.Id) // Guid v7: thứ tự ổn định khi cùng CreatedAt
             .Select(s => new { s.Id, s.FullName, s.Email, s.CoachingStatus, s.AccountStatus, s.CreatedAt })
             .ToListAsync(cancellationToken);
 
