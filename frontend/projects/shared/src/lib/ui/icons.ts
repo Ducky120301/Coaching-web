@@ -4,4 +4,5 @@ export const ICONS = {
   today: '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>',
   plus: '<path d="M12 5v14M5 12h14"></path>',
   search: '<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path>',
+  userPlus: '<circle cx="10" cy="8" r="4"></circle><path d="M3 21c0-4 3-6 7-6 1.5 0 2.8.3 3.9.8M19 14v6M16 17h6"></path>',
 } as const;

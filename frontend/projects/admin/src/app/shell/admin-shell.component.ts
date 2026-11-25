@@ -19,9 +19,12 @@ interface CoachProfile { id: string; displayName: string; email: string; }
           <p class="area muted">Khu vực coach</p>
         </div>
         <nav aria-label="Admin">
-          <a routerLink="/dashboard" routerLinkActive #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
+          <a routerLink="/dashboard" routerLinkActive #dash="routerLinkActive" [attr.aria-current]="dash.isActive ? 'page' : null">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Dashboard</a>
+          <a routerLink="/hoc-vien/moi" routerLinkActive #create="routerLinkActive" [attr.aria-current]="create.isActive ? 'page' : null">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" [innerHTML]="userPlusIcon"></svg>Tạo hồ sơ học viên</a>
         </nav>
         <div class="user-block">
           <dbx-user-menu [name]="coachName() ?? auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
@@ -45,9 +48,11 @@ interface CoachProfile { id: string; displayName: string; email: string; }
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminShellComponent {
+  private readonly sanitizer = inject(DomSanitizer);
   protected readonly auth = inject(AuthService);
-  protected readonly homeIcon = inject(DomSanitizer).bypassSecurityTrustHtml(ICONS.home);
-  /** Tên coach lấy từ hệ thống (hồ sơ coach) — thay lời chào ở trang chủ cũ. */
+  protected readonly homeIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.home);
+  protected readonly userPlusIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.userPlus);
+  /** Tên coach lấy từ hệ thống (hồ sơ coach). */
   protected readonly coachName = toSignal(
     inject(HttpClient).get<CoachProfile>(this.auth.apiUrl('/api/admin/profile')).pipe(
       map((p) => p.displayName),

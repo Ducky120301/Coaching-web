@@ -17,6 +17,18 @@ export const routes: Routes = [
         loadComponent: () => import('./students/student-list.component').then((m) => m.StudentListComponent),
         title: 'Học viên — Khu vực coach',
       },
+      {
+        path: 'hoc-vien/moi',
+        loadComponent: () => import('./students/student-form.component').then((m) => m.StudentFormComponent),
+        data: { mode: 'create' },
+        title: 'Tạo hồ sơ học viên — Khu vực coach',
+      },
+      {
+        path: 'hoc-vien/:id/sua',
+        loadComponent: () => import('./students/student-form.component').then((m) => m.StudentFormComponent),
+        data: { mode: 'edit' },
+        title: 'Sửa hồ sơ — Khu vực coach',
+      },
     ],
   },
   { path: '**', redirectTo: '' },

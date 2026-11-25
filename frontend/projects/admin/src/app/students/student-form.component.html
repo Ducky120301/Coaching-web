@@ -1,0 +1,111 @@
+<nav aria-label="Đường dẫn" class="crumbs">
+  <a routerLink="/dashboard">Học viên</a><span aria-hidden="true">/</span>
+  <span class="here">{{ isEdit() ? 'Sửa hồ sơ' : 'Tạo hồ sơ' }}</span>
+</nav>
+<h1>{{ isEdit() ? 'Sửa hồ sơ' : 'Tạo hồ sơ học viên' }}</h1>
+
+@if (loadFailed()) {
+  <p class="msg" role="status">Không tải được hồ sơ. Vui lòng tải lại trang.</p>
+} @else {
+  <div class="layout">
+    <form novalidate (submit)="submit($event)">
+      <p class="intro">Điền theo câu trả lời của học viên trong form đăng ký. Mục có dấu <span class="star">*</span> là bắt buộc trước khi gửi tài khoản.@if (!isEdit()) { Hồ sơ tự lưu trên máy này.}</p>
+
+      @for (sec of progress().sections; track sec.id) {
+        <section class="card" [attr.aria-labelledby]="'sec-' + sec.id">
+          <div class="sec-head">
+            <h2 [id]="'sec-' + sec.id">{{ sec.title }}</h2>
+            <span class="count" [class.full]="sec.full">{{ sec.count }}</span>
+          </div>
+          @if (sec.hint) {
+            <p class="hint">{{ sec.hint }}</p>
+          }
+          <div class="grid">
+            @for (f of sec.fields; track f.key) {
+              <div class="field" [class.wide]="f.wide">
+                <label [for]="'hs-' + f.key">{{ f.label }}@if (f.required) {<span aria-hidden="true" class="req"> *</span>}</label>
+                @switch (f.type) {
+                  @case ('date') {
+                    <input class="ctl" type="date" [id]="'hs-' + f.key" [value]="values()[f.key] ?? ''"
+                           [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                           (input)="setValue(f.key, $any($event.target).value)" />
+                  }
+                  @case ('area') {
+                    <textarea class="ctl" [id]="'hs-' + f.key" [rows]="f.rows ?? 3" [placeholder]="f.placeholder ?? ''"
+                              [value]="values()[f.key] ?? ''" [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                              (input)="setValue(f.key, $any($event.target).value)"></textarea>
+                  }
+                  @case ('select') {
+                    <select class="ctl" [id]="'hs-' + f.key" [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                            (change)="setValue(f.key, $any($event.target).value)">
+                      <option value="">Chọn…</option>
+                      @for (o of f.options ?? []; track o) {
+                        <option [value]="o" [selected]="values()[f.key] === o">{{ o }}</option>
+                      }
+                    </select>
+                  }
+                  @default {
+                    <div class="with-unit">
+                      <input class="ctl" type="text" [id]="'hs-' + f.key" [value]="values()[f.key] ?? ''" [placeholder]="f.placeholder ?? ''"
+                             [attr.inputmode]="f.type === 'decimal' || f.type === 'integer' ? 'decimal' : null"
+                             [readOnly]="isEdit() && f.key === 'email'"
+                             [class.err]="!!errors()[f.key]" [attr.aria-invalid]="!!errors()[f.key]"
+                             (input)="setValue(f.key, $any($event.target).value)" />
+                      @if (f.unit) {
+                        <span class="unit">{{ f.unit }}</span>
+                      }
+                    </div>
+                  }
+                }
+                @if (f.note) {
+                  <span class="note">{{ f.note }}</span>
+                }
+                @if (errors()[f.key]; as e) {
+                  <span class="field-err">{{ e }}</span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (conflict()) {
+        <p class="msg" role="status">Hồ sơ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.
+          <button type="button" class="reload" (click)="load()">Tải lại</button></p>
+      }
+      @if (message(); as m) {
+        <p class="msg" role="status">{{ m }}</p>
+      }
+      <div class="actions">
+        <button type="submit" class="primary" [disabled]="saving()">{{ isEdit() ? 'Lưu thay đổi' : 'Lưu hồ sơ' }}</button>
+        @if (!isEdit()) {
+          <button type="button" class="clear" (click)="clear()">Xoá trắng hồ sơ</button>
+        }
+      </div>
+    </form>
+
+    <aside>
+      <section class="side">
+        <h2 class="side-title">Hồ sơ đã điền</h2>
+        <div class="bar" aria-hidden="true">
+          <div class="fill" [class.complete]="progress().complete" [style.width.%]="progress().percent"></div>
+        </div>
+        <p class="total">{{ progress().totalText }}</p>
+        <ul>
+          @for (sec of progress().sections; track sec.id) {
+            <li><span>{{ sec.title }}</span><span class="count" [class.full]="sec.full">{{ sec.count }}</span></li>
+          }
+        </ul>
+      </section>
+      <section class="side account">
+        <h2>Trạng thái tài khoản</h2>
+        @if (loaded(); as d) {
+          <span class="acct" [class.pending]="d.accountStatus === 'PendingActivation'">{{ accountLabel[d.accountStatus] }}</span>
+        } @else {
+          <span class="acct">Chưa tạo</span>
+          <span class="acct-note">Hồ sơ ở trạng thái Chờ kích hoạt sau khi lưu.</span>
+        }
+      </section>
+    </aside>
+  </div>
+}
