@@ -75,6 +75,7 @@ public sealed class Student : AggregateRoot<Guid>
     public IReadOnlyList<StudentAccountEvent> AccountEvents => _accountEvents.AsReadOnly();
 
     /// <summary>Trạng thái tài khoản tại thời điểm <paramref name="now"/>; mật khẩu tạm hết hạn khi now &gt;= hạn.</summary>
+    // @BR-f01-p1-tai-khoan-hoc-vien-026: chưa gửi / đã gửi / mật khẩu tạm đã hết hạn / đã kích hoạt
     public AccountState GetAccountState(DateTimeOffset now)
     {
         if (AccountStatus == AccountStatus.Activated)
@@ -203,6 +204,7 @@ public sealed class Student : AggregateRoot<Guid>
     /// </summary>
     public void Activate(DateTimeOffset at)
     {
+        // @BR-f01-p1-tai-khoan-hoc-vien-016: chỉ Chờ kích hoạt → Đã kích hoạt; ghi thời điểm, mật khẩu tạm hết hiệu lực ngay
         if (AccountStatus == AccountStatus.Activated)
             throw new DomainException("account.already_activated", "Tài khoản đã kích hoạt.");
         AccountStatus = AccountStatus.Activated;

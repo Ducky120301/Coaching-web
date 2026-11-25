@@ -1,4 +1,5 @@
 using Coaching.Application.Common;
+using Coaching.Domain.Students;
 
 namespace Coaching.Application.Auth;
 
@@ -23,4 +24,28 @@ public static class AuthErrors
             ? "Tài khoản này không có quyền vào khu vực coach."
             : "Tài khoản này không có quyền vào khu vực học viên.",
         ErrorKind.Forbidden);
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-011 @BR-f01-p1-tai-khoan-hoc-vien-016: mã kích hoạt hết hạn / đã bị hủy (coach gửi lại, sửa email) / đã dùng
+    public static readonly Error ActivationInvalid = new(
+        "auth.activation_invalid",
+        "Phiên kích hoạt đã hết hạn. Vui lòng đăng nhập lại bằng mật khẩu tạm mới nhất.",
+        ErrorKind.Unauthorized);
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-013
+    public static readonly Error PasswordTooShort = new("auth.password_too_short", "Mật khẩu cần ít nhất 8 ký tự.");
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-013
+    public static readonly Error PasswordTooLong = new("auth.password_too_long", "Mật khẩu tối đa 128 ký tự.");
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-014
+    public static readonly Error PasswordMismatch = new("auth.password_mismatch", "Hai lần nhập mật khẩu không khớp.");
+
+    /// <summary>Lỗi 400 tương ứng kết quả PasswordPolicy.Check; null khi mật khẩu hợp lệ. Dùng cho kích hoạt và đặt lại.</summary>
+    public static Error? ForPassword(PasswordCheck check) => check switch
+    {
+        PasswordCheck.TooShort => PasswordTooShort,
+        PasswordCheck.TooLong => PasswordTooLong,
+        PasswordCheck.Mismatch => PasswordMismatch,
+        _ => null,
+    };
 }

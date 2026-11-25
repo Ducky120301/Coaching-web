@@ -20,6 +20,10 @@ internal sealed class AccountCredentials(UserManager<AppUser> users) : IAccountC
         return password;
     }
 
+    // @BR-f01-p1-tai-khoan-hoc-vien-015: lưu đúng từng ký tự (UserManager không trim); @BR-f01-p1-tai-khoan-hoc-vien-016: mật khẩu tạm bị thay
+    public async Task SetOwnPasswordAsync(Guid userId, string password, CancellationToken ct = default) =>
+        await ReplacePasswordAsync(await FindAsync(userId), password);
+
     private async Task<AppUser> FindAsync(Guid userId) =>
         await users.FindByIdAsync(userId.ToString())
         ?? throw new InvalidOperationException($"Không tìm thấy tài khoản {userId}.");

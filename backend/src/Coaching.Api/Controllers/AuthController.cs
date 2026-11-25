@@ -1,4 +1,5 @@
 using Coaching.Api.Common;
+using Coaching.Application.Accounts.Commands;
 using Coaching.Application.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,16 @@ public sealed class AuthController(IAuthService auth) : ControllerBase
         // @ADR-f01-p1-tai-khoan-hoc-vien-002: dạng cũ AuthTokens giữ nguyên; dạng mới { activationRequired, activationToken, activationTokenExpiresAt }
         return result.Value.Tokens is { } tokens ? Ok(tokens) : Ok(result.Value.Challenge);
     }
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-016: kích hoạt thành công → 200 AuthTokens (vào thẳng); không yêu cầu JWT, quyền đến từ mã kích hoạt
+    [HttpPost("activate")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType<AuthTokens>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Activate(ActivateAccountCommand command, [FromServices] ActivateAccountHandler handler,
+        CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(command, cancellationToken)).ToActionResult(this);
 
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.Auth)]

@@ -1,19 +1,15 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Coaching.Application.Abstractions;
 using Coaching.Application.Auth;
 using Coaching.Application.Students;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Emailing;
-using Coaching.Infrastructure.Identity;
-using Coaching.Infrastructure.Persistence;
 using Coaching.TestSupport;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Acceptance.Support;
@@ -153,26 +149,61 @@ public sealed partial class AccountApi(AcceptanceContext ctx, StudentApi api)
         Assert.Equal(title, problem!.Title);
     }
 
-    /// <summary>
-    /// Học viên Đã kích hoạt với mật khẩu riêng <paramref name="password"/>. Task 4 kích hoạt thẳng trong DB
-    /// (API kích hoạt có ở Task 5 — Task 5 thay thân hàm bằng luồng thật).
-    /// </summary>
+    /// <summary>Học viên Đã kích hoạt qua luồng thật: coach gửi → đăng nhập bằng mật khẩu tạm → đặt mật khẩu riêng.</summary>
     public async Task<StudentDetailDto> CreateActivatedAsync(string name = StudentName, string? email = null,
         string password = DefaultOwnPassword)
     {
         var detail = await CreateAsync(name, email);
-        await using var scope = ctx.Host.Services.CreateAsyncScope();
-        var sp = scope.ServiceProvider;
-        var db = sp.GetRequiredService<AppDbContext>();
-        var users = sp.GetRequiredService<UserManager<AppUser>>();
-        var student = await db.Students.SingleAsync(s => s.Id == detail.Id);
-        var user = (await users.FindByIdAsync(student.UserId.ToString()))!;
-        Assert.True((await users.AddPasswordAsync(user, password)).Succeeded);
-        student.Activate(sp.GetRequiredService<IClock>().UtcNow);
-        await db.SaveChangesAsync();
-        OwnPassword = password;
+        await SendOkAsync(name);
+        await StudentLoginAsync(TempPasswords[^1], email: Emails[name]);
+        await AssertActivationChallengeAsync();
+        Assert.Equal(HttpStatusCode.OK, (await TryActivateAsync(password, password)).StatusCode);
         return detail;
     }
+
+    /// <summary>Hồ sơ mới, coach gửi, học viên đăng nhập bằng mật khẩu tạm → đang ở bước đặt mật khẩu riêng.</summary>
+    public async Task ReachActivationStepAsync()
+    {
+        await CreateAsync();
+        await SendOkAsync();
+        await StudentLoginAsync(TempPasswords[^1]);
+        await AssertActivationChallengeAsync();
+    }
+
+    /// <summary>POST /api/auth/activate bằng mã kích hoạt của lần đăng nhập gần nhất.</summary>
+    public async Task<HttpResponseMessage> TryActivateAsync(string password, string confirmPassword)
+    {
+        var response = await ctx.PostJsonAsync("/api/auth/activate",
+            new { activationToken = ActivationToken, password, confirmPassword });
+        if (response.StatusCode == HttpStatusCode.OK)
+            OwnPassword = password;
+        return response;
+    }
+
+    /// <summary>Phản hồi gần nhất là phiên học viên (AuthTokens) gọi được /api/client.</summary>
+    public async Task AssertStudentSessionAsync()
+    {
+        Assert.Equal(HttpStatusCode.OK, ctx.LastResponse!.StatusCode);
+        var tokens = (await ctx.LastResponse.Content.ReadFromJsonAsync<AuthTokens>())!;
+        Assert.False(string.IsNullOrEmpty(tokens.AccessToken));
+        ctx.Tokens = tokens;
+        var me = await ctx.GetAsync("/api/client/me", tokens.AccessToken);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+    }
+
+    /// <summary>@BR-f01-p1-tai-khoan-hoc-vien-026: câu trạng thái tài khoản coach thấy, theo giờ Việt Nam.</summary>
+    public static string StateLabel(AccountInfoDto account) => account.State switch
+    {
+        "NotSent" => "Chưa gửi thông tin đăng nhập",
+        "Sent" => $"Đã gửi lúc {Vietnam(account.CredentialsSentAt!.Value, "dd'/'MM HH':'mm")}, "
+            + $"mật khẩu tạm còn hạn đến {Vietnam(account.TempPasswordExpiresAt!.Value, "dd'/'MM HH':'mm")}",
+        "TempPasswordExpired" => "Mật khẩu tạm đã hết hạn",
+        "Activated" => $"Đã kích hoạt ngày {Vietnam(account.ActivatedAt!.Value, "dd'/'MM'/'yyyy")}",
+        _ => throw new InvalidOperationException($"Trạng thái tài khoản lạ: {account.State}"),
+    };
+
+    private static string Vietnam(DateTimeOffset instant, string format) =>
+        instant.ToOffset(StepText.VietnamOffset).ToString(format, CultureInfo.InvariantCulture);
 
     /// <summary>Mật khẩu tạm trong thư (dòng "Mật khẩu tạm: …" của AccountEmails).</summary>
     public static string TempPassword(CapturedEmail mail) =>

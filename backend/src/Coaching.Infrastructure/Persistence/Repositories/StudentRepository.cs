@@ -20,6 +20,9 @@ internal sealed class StudentRepository(AppDbContext db) : IStudentRepository
     public Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
         db.Students.AsNoTracking().SingleOrDefaultAsync(s => s.UserId == userId, cancellationToken);
 
+    public Task<Student?> GetTrackedByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        db.Students.SingleOrDefaultAsync(s => s.UserId == userId, cancellationToken);
+
     // @BR-f02-ho-so-hoc-vien-023 @BR-f02-ho-so-hoc-vien-024 @ADR-f02-ho-so-hoc-vien-003:
     // 1 truy vấn theo index (CoachId, CreatedAt) + LIKE '%q%' trên SearchKey (EF escape ký tự đặc biệt của LIKE)
     public async Task<IReadOnlyList<StudentSummary>> ListAsync(Guid coachId, string normalizedQuery,

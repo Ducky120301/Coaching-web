@@ -8,4 +8,7 @@ public interface IAccountCredentials
 {
     /// <summary>Sinh mật khẩu tạm mới, thay mật khẩu hiện tại, trả mật khẩu gốc để đưa vào email (không lưu ở đâu khác).</summary>
     Task<string> SetTemporaryPasswordAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Đặt mật khẩu riêng đúng từng ký tự (đã qua PasswordPolicy); mật khẩu cũ (kể cả mật khẩu tạm) mất hiệu lực.</summary>
+    Task SetOwnPasswordAsync(Guid userId, string password, CancellationToken ct = default);
 }

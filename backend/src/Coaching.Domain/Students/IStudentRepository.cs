@@ -15,6 +15,11 @@ public interface IStudentRepository
     Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Hồ sơ của tài khoản đăng nhập, được theo dõi để sửa (kích hoạt). Không lọc theo coach: quyền đến từ mã kích hoạt đã băm.
+    /// </summary>
+    Task<Student?> GetTrackedByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// @BR-f02-ho-so-hoc-vien-023: mọi hồ sơ của coach ở mọi trạng thái, tạo sau đứng trước.
     /// @BR-f02-ho-so-hoc-vien-024: <paramref name="normalizedQuery"/> (đã qua SearchText.Normalize) rỗng = không lọc.
     /// </summary>

@@ -63,6 +63,13 @@ internal sealed class AuthService(
         return new LoginOutcome(await IssueTokensAsync(user, cancellationToken), null);
     }
 
+    public async Task<AuthTokens> IssueSessionAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString())
+            ?? throw new InvalidOperationException($"Không tìm thấy tài khoản {userId}.");
+        return await IssueTokensAsync(user, cancellationToken);
+    }
+
     private Task<Student?> FindPendingStudentAsync(Guid userId, CancellationToken ct) =>
         db.Students.AsNoTracking()
             .SingleOrDefaultAsync(s => s.UserId == userId && s.AccountStatus == AccountStatus.PendingActivation, ct);
@@ -77,12 +84,13 @@ internal sealed class AuthService(
             return AuthErrors.InvalidCredentials;
         }
 
-        // @ADR-f01-p1-tai-khoan-hoc-vien-002: mật khẩu tạm không mở web quản trị
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002 @BR-f01-p1-tai-khoan-hoc-vien-011: mật khẩu tạm không mở web quản trị (thông báo chung)
         if (app == ClientApp.Admin)
             return AuthErrors.InvalidCredentials;
 
         await ResetFailedAttemptsAsync(user);
-        // @ADR-f01-p1-tai-khoan-hoc-vien-002: không cấp JWT; mã kích hoạt 30 phút, không quá hạn mật khẩu tạm
+        // @ADR-f01-p1-tai-khoan-hoc-vien-002 @BR-f01-p1-tai-khoan-hoc-vien-011: không cấp JWT → chưa gọi được API dữ liệu nào;
+        // mã kích hoạt 30 phút, không quá hạn mật khẩu tạm
         var cap = now + AccountTokenLifetimes.Activation;
         var tempExpiry = pending.TempPasswordExpiresAt!.Value;
         var expiresAt = tempExpiry < cap ? tempExpiry : cap;

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Coaching.Application.Students;
 using Coaching.Infrastructure.Emailing;
@@ -42,6 +43,30 @@ internal static partial class AccountRequests
         TempPasswordPattern().Match(mail.TextBody) is { Success: true } match
             ? match.Groups[1].Value
             : throw new InvalidOperationException($"Thư tới {mail.To} không có dòng mật khẩu tạm.");
+
+    /// <summary>Hồ sơ mới → gửi thông tin → đăng nhập bằng mật khẩu tạm; trả mật khẩu tạm và mã kích hoạt.</summary>
+    public static async Task<(StudentDetailDto Student, string Temp, string ActivationToken)> ReachActivationAsync(ApiFactory factory)
+    {
+        var admin = await factory.CaptureAdminClientAsync();
+        var student = await CreateCompleteAsync(admin);
+        var temp = await SendCredentialsOkAsync(factory, admin, student);
+        var login = await LoginAsync(factory.Capture.CreateClient(), student.Email, temp);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var json = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        return (student, temp, json.RootElement.GetProperty("activationToken").GetString()!);
+    }
+
+    public static Task<HttpResponseMessage> ActivateAsync(HttpClient client, string token, string password, string confirmPassword) =>
+        client.PostAsJsonAsync("/api/auth/activate", new { activationToken = token, password, confirmPassword });
+
+    /// <summary>Học viên Đã kích hoạt qua luồng thật với mật khẩu riêng <paramref name="password"/>.</summary>
+    public static async Task<StudentDetailDto> CreateActivatedAsync(ApiFactory factory, string password = "Coach2025")
+    {
+        var (student, _, token) = await ReachActivationAsync(factory);
+        var response = await ActivateAsync(factory.Capture.CreateClient(), token, password, password);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return student;
+    }
 
     [GeneratedRegex(@"Mật khẩu tạm:\s*(\S+)")]
     private static partial Regex TempPasswordPattern();
