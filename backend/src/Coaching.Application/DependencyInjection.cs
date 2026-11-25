@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<CredentialsMailer>();
         services.AddScoped<SendCredentialsHandler>();
         services.AddScoped<ActivateAccountHandler>();
+        services.AddScoped<ChangeStudentEmailHandler>();
         return services;
     }
 }

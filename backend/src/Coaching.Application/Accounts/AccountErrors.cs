@@ -17,6 +17,10 @@ public static class AccountErrors
     public static readonly Error EmailSendFailed =
         new("account.email_send_failed", "Chưa gửi được email. Vui lòng thử lại sau.", ErrorKind.Unavailable);
 
+    // @BR-f01-p1-tai-khoan-hoc-vien-007
+    public static readonly Error EmailLocked = new(
+        "account.email_locked", "Tài khoản đã kích hoạt, không sửa được email.", ErrorKind.Conflict);
+
     // @NFR-f01-p1-tai-khoan-hoc-vien-003 @ADR-f01-p1-tai-khoan-hoc-vien-008
     public static readonly Error ClientUrlMissing =
         new("account.client_url_missing", "Chưa cấu hình địa chỉ web học viên nên chưa gửi được email.", ErrorKind.Unavailable);

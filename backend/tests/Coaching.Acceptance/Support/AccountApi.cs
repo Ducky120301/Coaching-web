@@ -180,6 +180,29 @@ public sealed partial class AccountApi(AcceptanceContext ctx, StudentApi api)
         return response;
     }
 
+    /// <summary>Email của hồ sơ ngay trước lần sửa gần nhất.</summary>
+    public string? PreviousEmail { get; private set; }
+
+    /// <summary>PUT email kèm version vừa đọc; ghi lại email cũ, số dòng lịch sử và mật khẩu tạm mới (nếu có thư mới).</summary>
+    public async Task<HttpResponseMessage> TryChangeEmailAsync(string email, string name = StudentName)
+    {
+        var current = await ViewAsync(name);
+        PreviousEmail = current.Email;
+        HistoryBefore = current.Account.History.Count;
+        var credentialMailsBefore = Outbox.All.Count(m => m.Subject == CredentialsSubject);
+        var response = await ctx.SendJsonAsync(HttpMethod.Put, $"/api/admin/students/{api.Ids[name]}/email",
+            new { email, version = current.Version }, api.AdminToken);
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var detail = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!;
+            Emails[name] = detail.Email;
+            if (Outbox.All.Count(m => m.Subject == CredentialsSubject) > credentialMailsBefore)
+                TempPasswords.Add(TempPassword(CredentialMails(detail.Email)[^1]));
+        }
+
+        return response;
+    }
+
     /// <summary>Phản hồi gần nhất là phiên học viên (AuthTokens) gọi được /api/client.</summary>
     public async Task AssertStudentSessionAsync()
     {

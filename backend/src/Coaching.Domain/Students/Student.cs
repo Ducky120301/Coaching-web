@@ -71,6 +71,7 @@ public sealed class Student : AggregateRoot<Guid>
 
     public DateTimeOffset? ActivatedAt { get; private set; }
 
+    // @BR-f01-p1-tai-khoan-hoc-vien-027: chỉ thêm — gửi lần đầu, gửi lại, sửa email, gửi link đặt lại, kích hoạt: mỗi việc đúng một dòng; không sửa, không xóa
     /// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-006: chỉ đọc; chỉ các hàm nghiệp vụ của Student thêm dòng.</summary>
     public IReadOnlyList<StudentAccountEvent> AccountEvents => _accountEvents.AsReadOnly();
 
@@ -211,6 +212,34 @@ public sealed class Student : AggregateRoot<Guid>
         ActivatedAt = at;
         TempPasswordExpiresAt = null;
         _accountEvents.Add(new StudentAccountEvent(AccountEventType.Activated, at, UserId));
+    }
+
+    /// <summary>
+    /// Coach sửa email trước khi kích hoạt. Trả true khi hồ sơ đã từng được gửi thông tin đăng nhập: use case phải gửi thông tin
+    /// mới tới email mới trong cùng transaction. Cùng email (sau chuẩn hóa) → không đổi gì, không thêm lịch sử, trả false.
+    /// </summary>
+    public bool ChangeEmail(Email newEmail, Guid actorUserId, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(newEmail);
+        // @BR-f01-p1-tai-khoan-hoc-vien-007: chỉ sửa được khi Chờ kích hoạt
+        if (AccountStatus == AccountStatus.Activated)
+            throw new DomainException("account.email_locked", "Tài khoản đã kích hoạt, không sửa được email.");
+        if (newEmail == Email)
+            return false;
+
+        var wasSent = CredentialsSentAt is not null;
+        // @BR-f01-p1-tai-khoan-hoc-vien-027: một dòng "sửa email từ … sang …"
+        _accountEvents.Add(new StudentAccountEvent(AccountEventType.EmailChanged, at, actorUserId, Email.Value, newEmail.Value));
+        Email = newEmail;
+        RefreshSearchKey();
+        if (wasSent)
+        {
+            // @BR-f01-p1-tai-khoan-hoc-vien-009: thông tin đăng nhập mới đi cùng lần sửa → hạn 72 giờ tính lại từ lúc sửa
+            CredentialsSentAt = at;
+            TempPasswordExpiresAt = at + TempPasswordLifetime;
+        }
+
+        return wasSent; // @BR-f01-p1-tai-khoan-hoc-vien-010: chưa gửi lần nào → false, không gửi thư
     }
 
     /// <summary>@ADR-f02-ho-so-hoc-vien-003: tính lại SearchKey (gọi khi tạo, khi đổi tên, và khi backfill lúc khởi động).</summary>

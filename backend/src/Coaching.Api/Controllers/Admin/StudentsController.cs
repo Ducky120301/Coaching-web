@@ -57,4 +57,11 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> SendCredentials(Guid id, [FromServices] SendCredentialsHandler handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
+
+    // @BR-f01-p1-tai-khoan-hoc-vien-007: sửa email chỉ khi Chờ kích hoạt; route riêng, bắt buộc version như mọi lệnh sửa
+    [HttpPut("{id:guid}/email")]
+    [ProducesResponseType<StudentDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ChangeEmail(Guid id, [FromBody] ChangeStudentEmailCommand command,
+        [FromServices] ChangeStudentEmailHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 }

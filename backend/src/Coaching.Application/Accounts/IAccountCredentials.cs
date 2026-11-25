@@ -1,3 +1,6 @@
+using Coaching.Application.Common;
+using Coaching.Domain.Common;
+
 namespace Coaching.Application.Accounts;
 
 /// <summary>
@@ -11,4 +14,10 @@ public interface IAccountCredentials
 
     /// <summary>Đặt mật khẩu riêng đúng từng ký tự (đã qua PasswordPolicy); mật khẩu cũ (kể cả mật khẩu tạm) mất hiệu lực.</summary>
     Task SetOwnPasswordAsync(Guid userId, string password, CancellationToken ct = default);
+
+    /// <summary>
+    /// Đổi email đăng nhập (Email + UserName) của tài khoản. Trùng với bất kỳ tài khoản nào (kể cả coach, không phân biệt
+    /// hoa/thường) → StudentErrors.EmailTaken.
+    /// </summary>
+    Task<Result> ChangeEmailAsync(Guid userId, Email email, CancellationToken ct = default);
 }

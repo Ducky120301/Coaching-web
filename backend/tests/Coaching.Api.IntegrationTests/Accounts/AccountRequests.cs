@@ -68,6 +68,9 @@ internal static partial class AccountRequests
         return student;
     }
 
+    public static Task<HttpResponseMessage> ChangeEmailAsync(HttpClient admin, Guid id, string email, string version) =>
+        admin.PutAsJsonAsync($"/api/admin/students/{id}/email", new { email, version });
+
     [GeneratedRegex(@"Mật khẩu tạm:\s*(\S+)")]
     private static partial Regex TempPasswordPattern();
 }
