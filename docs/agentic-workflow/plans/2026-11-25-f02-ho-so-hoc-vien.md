@@ -4549,7 +4549,7 @@ EOF
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-023`, `@BR-f02-ho-so-hoc-vien-024`, `@BR-f02-ho-so-hoc-vien-025` | `@ADR-f02-ho-so-hoc-vien-003`
 
-- [ ] **Step 1: Viết Domain test cho chuẩn hóa tìm kiếm**
+- [x] **Step 1: Viết Domain test cho chuẩn hóa tìm kiếm**
 
 `backend/tests/Coaching.Domain.Tests/Students/SearchTextTests.cs`:
 ```csharp
@@ -4592,12 +4592,12 @@ public sealed class SearchTextTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~SearchTextTests"`
 Expected: FAIL — build error `The name 'SearchText' does not exist in the current context`.
 
-- [ ] **Step 3: Domain — `SearchText`, `SearchKey`, tóm tắt danh sách**
+- [x] **Step 3: Domain — `SearchText`, `SearchKey`, tóm tắt danh sách**
 
 `backend/src/Coaching.Domain/Students/SearchText.cs`:
 ```csharp
@@ -4698,12 +4698,12 @@ và thêm method sau `ChangeCoachingStatus`:
     Task<IReadOnlyList<StudentSummary>> ListAsync(Guid coachId, string normalizedQuery, CancellationToken cancellationToken = default);
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students"`
 Expected: không Failed (`SearchTextTests` 10 test mới).
 
-- [ ] **Step 5: Viết step defs `@api` cho BR-023, 024, 025**
+- [x] **Step 5: Viết step defs `@api` cho BR-023, 024, 025**
 
 `backend/tests/Coaching.Acceptance/Support/StudentApi.cs` — thêm method sau `TryChangeStatusAsync`:
 ```csharp
@@ -4777,7 +4777,7 @@ public sealed class StudentListSteps(AcceptanceContext ctx, StudentApi api)
 }
 ```
 
-- [ ] **Step 6: Viết integration test (không có xóa, tìm "đ", backfill)**
+- [x] **Step 6: Viết integration test (không có xóa, tìm "đ", backfill)**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/StudentListTests.cs`:
 ```csharp
@@ -4857,12 +4857,12 @@ public sealed class StudentListTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `The type or namespace name 'StudentListItemDto' could not be found` / `StudentRepository does not implement interface member ListAsync`.
 
-- [ ] **Step 8: Mapping, repository, use case, endpoint, backfill**
+- [x] **Step 8: Mapping, repository, use case, endpoint, backfill**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs` — thêm trước dòng `builder.Ignore(s => s.DomainEvents);`:
 ```csharp
@@ -4955,7 +4955,7 @@ public sealed class ListStudentsHandler(CurrentCoach currentCoach, IStudentRepos
             await db.SaveChangesAsync(cancellationToken);
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng PASS**
+- [x] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-023|Category=BR-f02-ho-so-hoc-vien-024|Category=BR-f02-ho-so-hoc-vien-025)&Category!=web"`
 Expected: `Passed: 3`, `Failed: 0`.
@@ -4966,7 +4966,7 @@ Expected: `Passed: 33`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
