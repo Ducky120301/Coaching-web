@@ -131,13 +131,15 @@ Business rules nằm trong `docs/prd/*.md` với mã BR-xx cố định. Code v�
 | `HvTienDo` | HV07 Tiến độ | client | `/progress` |
 | `Admin-Dashboard` | AD02 Dashboard | admin | `/dashboard` |
 | `Admin-Review` | AD06 Xử lý review tuần | admin | `/students/:id/reviews/:week` |
-| `AdTaoHoSo` | AD01 Tạo hồ sơ học viên | admin | `/students/new` |
-| `AdHoSo` | AD01/AD03 Hồ sơ học viên | admin | `/students/:id` |
+| `AdTaoHoSo` | AD01 Tạo hồ sơ học viên | admin | `/hoc-vien/moi` |
+| `AdHoSo` | AD01/AD03 Hồ sơ học viên | admin | `/hoc-vien/:id` (sửa: `/hoc-vien/:id/sua`) |
 | `AdSoanGiaoAn` | AD04 Soạn giáo án | admin | `/students/:id/phases/:phaseId/edit` |
 | `AdThemBuoi` | AD04 Thêm buổi tập | admin | `/students/:id/phases/:phaseId/sessions/new` |
 | `AdThuVien` | Thư viện bài tập | admin | `/library/exercises` |
 | `AdPhatHanh` | AD05 Phát hành phase | admin | `/students/:id/phases/:phaseId/publish` |
 | `AdChuyenPhase` | AD07 Tổng kết & chuyển phase | admin | `/students/:id/phases/:phaseId/close` |
+
+Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…`.
 
 Dữ liệu mẫu (giáo án, dinh dưỡng, thuật ngữ) có trong `window.__CLIENT__` của prototype, dùng làm seed/dev data.
 
