@@ -28,6 +28,11 @@ public sealed class ActivateAccountHandler(
 
         var activated = await unitOfWork.ExecuteInTransactionAsync<Guid>(async ct =>
         {
+            // @ADR-f01-p1-tai-khoan-hoc-vien-003 @BR-f01-p1-tai-khoan-hoc-vien-005: tiêu mã TRƯỚC mọi thay đổi, có điều kiện
+            // trong transaction — coach gửi lại (hủy mã) commit sau bước kiểm tra ở trên thì kích hoạt thất bại, rollback
+            if (!await tokens.ConsumeAsync(command.ActivationToken!, ct))
+                return Result<Guid>.Failure(AuthErrors.ActivationInvalid);
+
             var now = clock.UtcNow;
             if (await students.GetTrackedByUserIdAsync(userId, ct) is not { } student || !student.IsTempPasswordValid(now))
                 return Result<Guid>.Failure(AuthErrors.ActivationInvalid);
@@ -36,7 +41,6 @@ public sealed class ActivateAccountHandler(
             await unitOfWork.SaveChangesAsync(ct);
             // @BR-f01-p1-tai-khoan-hoc-vien-015: lưu đúng từng ký tự; @BR-f01-p1-tai-khoan-hoc-vien-016: mật khẩu tạm mất hiệu lực ngay
             await credentials.SetOwnPasswordAsync(userId, command.Password!, ct);
-            await tokens.ConsumeAsync(command.ActivationToken!, ct);
             return Result<Guid>.Success(userId);
         }, cancellationToken);
         if (!activated.IsSuccess)

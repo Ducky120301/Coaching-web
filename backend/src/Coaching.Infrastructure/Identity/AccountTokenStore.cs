@@ -46,14 +46,17 @@ internal sealed class AccountTokenStore(AppDbContext db, IClock clock) : IAccoun
             .SingleOrDefaultAsync(ct);
     }
 
-    public async Task ConsumeAsync(string rawToken, CancellationToken ct = default)
+    public async Task<bool> ConsumeAsync(string rawToken, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rawToken);
         var hash = TokenHasher.Hash(rawToken);
         var now = clock.UtcNow;
-        await db.AccountTokens
-            .Where(t => t.TokenHash == hash && t.ConsumedAt == null)
+        // @ADR-f01-p1-tai-khoan-hoc-vien-003: tiêu có điều kiện, nguyên tử — chỉ token còn hiệu lực (chưa tiêu, chưa hủy,
+        // now < ExpiresAt); đúng một dòng bị cập nhật mới là tiêu thành công
+        var affected = await db.AccountTokens
+            .Where(t => t.TokenHash == hash && t.ConsumedAt == null && t.RevokedAt == null && t.ExpiresAt > now)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.ConsumedAt, (DateTimeOffset?)now), ct);
+        return affected == 1;
     }
 
     public async Task RevokeAllAsync(Guid userId, AccountTokenPurpose purpose, CancellationToken ct = default)

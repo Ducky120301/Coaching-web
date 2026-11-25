@@ -28,8 +28,11 @@ public interface IAccountTokens
     /// <summary>UserId nếu token đúng mục đích, chưa tiêu, chưa hủy và now &lt; ExpiresAt; ngược lại null. Không tiêu token.</summary>
     Task<Guid?> FindValidAsync(string? rawToken, AccountTokenPurpose purpose, CancellationToken ct = default);
 
-    /// <summary>Đánh dấu đã dùng (lần đầu); gọi lại không đổi gì.</summary>
-    Task ConsumeAsync(string rawToken, CancellationToken ct = default);
+    /// <summary>
+    /// @ADR-f01-p1-tai-khoan-hoc-vien-003: tiêu nguyên tử, có điều kiện — chỉ khi token chưa tiêu, chưa hủy và now &lt; ExpiresAt.
+    /// true khi đúng một token được tiêu; false (không đổi gì) nếu đã tiêu/hủy/hết hạn/không tồn tại.
+    /// </summary>
+    Task<bool> ConsumeAsync(string rawToken, CancellationToken ct = default);
 
     Task RevokeAllAsync(Guid userId, AccountTokenPurpose purpose, CancellationToken ct = default);
 

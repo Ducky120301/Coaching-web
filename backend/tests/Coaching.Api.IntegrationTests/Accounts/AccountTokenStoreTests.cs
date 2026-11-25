@@ -77,20 +77,49 @@ public sealed class AccountTokenStoreTests : IDisposable
         Assert.Null(await Tokens(t => t.FindValidAsync("khong-phai-token", AccountTokenPurpose.Activation)));
     }
 
-    // @ADR-f01-p1-tai-khoan-hoc-vien-003: dùng một lần — đã tiêu thì không hợp lệ; tiêu lại không lỗi, không đổi mốc
+    // @ADR-f01-p1-tai-khoan-hoc-vien-003: dùng một lần — lần tiêu đầu trả true; tiêu lại trả false, không đổi mốc
     [Fact]
-    public async Task Consumed_token_is_invalid_and_consume_is_idempotent()
+    public async Task Consume_succeeds_once_then_returns_false_without_changing_consumed_at()
     {
         var userId = await NewUserAsync();
         var raw = await Tokens(t => t.IssueAsync(userId, AccountTokenPurpose.PasswordReset, AccountTokenSource.Coach, Start.AddMinutes(30)));
 
-        await Tokens(t => t.ConsumeAsync(raw));
+        Assert.True(await Tokens(t => t.ConsumeAsync(raw)));
         _time.Set(Start.AddMinutes(1));
-        await Tokens(t => t.ConsumeAsync(raw));
+        Assert.False(await Tokens(t => t.ConsumeAsync(raw)));
 
         Assert.Null(await Tokens(t => t.FindValidAsync(raw, AccountTokenPurpose.PasswordReset)));
         var row = await Db(db => db.AccountTokens.AsNoTracking().SingleAsync(t => t.UserId == userId));
         Assert.Equal(Start, row.ConsumedAt);
+    }
+
+    // @ADR-f01-p1-tai-khoan-hoc-vien-003: token đã bị hủy (vd. coach gửi lại thông tin) không tiêu được
+    [Fact]
+    public async Task Consume_on_revoked_token_returns_false_and_leaves_it_unconsumed()
+    {
+        var userId = await NewUserAsync();
+        var raw = await Tokens(t => t.IssueAsync(userId, AccountTokenPurpose.Activation, AccountTokenSource.Login, Start.AddMinutes(30)));
+        await Tokens(t => t.RevokeAllAsync(userId, AccountTokenPurpose.Activation));
+
+        Assert.False(await Tokens(t => t.ConsumeAsync(raw)));
+
+        var row = await Db(db => db.AccountTokens.AsNoTracking().SingleAsync(t => t.UserId == userId));
+        Assert.Null(row.ConsumedAt);
+    }
+
+    // @ADR-f01-p1-tai-khoan-hoc-vien-003: token hết hạn (now >= ExpiresAt) không tiêu được
+    [Fact]
+    public async Task Consume_on_expired_token_returns_false()
+    {
+        var userId = await NewUserAsync();
+        var expiresAt = Start.AddMinutes(30);
+        var raw = await Tokens(t => t.IssueAsync(userId, AccountTokenPurpose.Activation, AccountTokenSource.Login, expiresAt));
+        _time.Set(expiresAt);
+
+        Assert.False(await Tokens(t => t.ConsumeAsync(raw)));
+
+        var row = await Db(db => db.AccountTokens.AsNoTracking().SingleAsync(t => t.UserId == userId));
+        Assert.Null(row.ConsumedAt);
     }
 
     // @ADR-f01-p1-tai-khoan-hoc-vien-003: token mới hủy token cũ cùng user + mục đích, không đụng mục đích khác
