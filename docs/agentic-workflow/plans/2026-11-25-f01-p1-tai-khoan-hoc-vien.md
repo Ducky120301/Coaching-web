@@ -1999,7 +1999,7 @@ EOF
 
 > Vì sao `Student.Activate` và seed demo kích hoạt nằm ở task này: từ task này, học viên Chờ kích hoạt chỉ đăng nhập được bằng mật khẩu tạm còn hạn (ADR-f01-p1-tai-khoan-hoc-vien-002). Helper test F00/F02 (`CreateStudentAsync`) và học viên demo (BR-f00-codebase-020) đều là học viên có mật khẩu riêng nhưng đang Chờ kích hoạt, nên phải được kích hoạt ngay trong task này để các scenario cũ vẫn xanh. Task 5 thêm annotation BR-f01-p1-tai-khoan-hoc-vien-016 và use case kích hoạt.
 
-- [ ] **Step 1: Viết Domain test cho gửi thông tin đăng nhập và hạn mật khẩu tạm**
+- [x] **Step 1: Viết Domain test cho gửi thông tin đăng nhập và hạn mật khẩu tạm**
 
 `backend/tests/Coaching.Domain.Tests/Students/SendCredentialsTests.cs`:
 ```csharp
@@ -2126,12 +2126,12 @@ public sealed class SendCredentialsTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.SendCredentialsTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'RecordCredentialsSent'` (và `IsTempPasswordValid`, `Activate`).
 
-- [ ] **Step 3: Domain — `IsTempPasswordValid`, `RecordCredentialsSent`, `Activate`**
+- [x] **Step 3: Domain — `IsTempPasswordValid`, `RecordCredentialsSent`, `Activate`**
 
 `backend/src/Coaching.Domain/Students/Student.cs` — thêm 3 method sau method `ChangeCoachingStatus` (trước `RefreshSearchKey`):
 ```csharp
@@ -2181,12 +2181,12 @@ Expected: FAIL — build error `'Student' does not contain a definition for 'Rec
     }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.SendCredentialsTests"`
 Expected: `Passed: 8`.
 
-- [ ] **Step 5: Hạ tầng acceptance — provider Capture, học viên helper đã kích hoạt, `AccountApi`**
+- [x] **Step 5: Hạ tầng acceptance — provider Capture, học viên helper đã kích hoạt, `AccountApi`**
 
 `backend/tests/Coaching.Acceptance/Support/AcceptanceContext.cs`:
 - Thêm hằng số ngay dưới `public const string AdminName = "Coach Duobexiuuu";`:
@@ -2412,7 +2412,7 @@ public sealed partial class AccountApi(AcceptanceContext ctx, StudentApi api)
 
 > `System.Diagnostics` dùng ở Task 7 (`Stopwatch` trong `WaitForMailsAsync`); giữ `using` từ bây giờ để Task 7 chỉ thêm member.
 
-- [ ] **Step 6: Viết step defs `@api` cho BR-001→006, BR-012, BR-025**
+- [x] **Step 6: Viết step defs `@api` cho BR-001→006, BR-012, BR-025**
 
 `backend/tests/Coaching.Acceptance/Steps/CredentialsSteps.cs`:
 ```csharp
@@ -2653,12 +2653,12 @@ public sealed class CredentialsSteps(AcceptanceContext ctx, StudentApi api, Acco
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-001|Category=BR-f01-p1-tai-khoan-hoc-vien-002|Category=BR-f01-p1-tai-khoan-hoc-vien-003|Category=BR-f01-p1-tai-khoan-hoc-vien-004|Category=BR-f01-p1-tai-khoan-hoc-vien-005|Category=BR-f01-p1-tai-khoan-hoc-vien-006|Category=BR-f01-p1-tai-khoan-hoc-vien-012|Category=BR-f01-p1-tai-khoan-hoc-vien-025)&Category!=web"`
 Expected: FAIL — build xanh (Domain đã có `Activate` từ Step 3), lỗi lúc chạy: `Assert.Equal() Failure: Expected: OK, Actual: NotFound` ở `POST /api/admin/students/{id}/credentials` (route chưa có); scenario BR-004/BR-012 đỏ ở cùng bước gửi.
 
-- [ ] **Step 8: Application — lỗi, port mật khẩu, thời hạn mã kích hoạt, gửi thư trong transaction**
+- [x] **Step 8: Application — lỗi, port mật khẩu, thời hạn mã kích hoạt, gửi thư trong transaction**
 
 `backend/src/Coaching.Application/Accounts/AccountErrors.cs` — thêm 2 member vào đầu class `AccountErrors` (giữ nguyên `ClientUrlMissing` và `EmailSendFailed` đã có từ Task 2; chỉ thêm comment `// @BR-f01-p1-tai-khoan-hoc-vien-006 @ADR-f01-p1-tai-khoan-hoc-vien-004` ngay trên dòng khai báo `EmailSendFailed` sẵn có):
 ```csharp
@@ -2841,7 +2841,7 @@ public sealed record LoginOutcome(AuthTokens? Tokens, ActivationChallenge? Chall
         services.AddScoped<SendCredentialsHandler>();
 ```
 
-- [ ] **Step 9: Infrastructure — `AccountCredentials`, đăng nhập trả mã kích hoạt, seed demo kích hoạt**
+- [x] **Step 9: Infrastructure — `AccountCredentials`, đăng nhập trả mã kích hoạt, seed demo kích hoạt**
 
 `backend/src/Coaching.Infrastructure/Identity/AccountCredentials.cs`:
 ```csharp
@@ -3152,7 +3152,7 @@ internal sealed class AuthService(
             await db.SaveChangesAsync(cancellationToken);
 ```
 
-- [ ] **Step 10: API — route gửi thông tin đăng nhập + body đăng nhập hai dạng**
+- [x] **Step 10: API — route gửi thông tin đăng nhập + body đăng nhập hai dạng**
 
 `backend/src/Coaching.Api/Controllers/Admin/StudentsController.cs` — thêm action cuối class:
 ```csharp
@@ -3184,12 +3184,12 @@ internal sealed class AuthService(
 Run: `cd backend && grep -rn "LoginAsync(" src --include=*.cs`
 Expected: chỉ còn `IAuthService.cs`, `AuthService.cs`, `AuthController.cs` — không có nơi gọi nào khác cần sửa (test gọi qua HTTP, body `AuthTokens` không đổi).
 
-- [ ] **Step 11: Chạy acceptance — kỳ vọng PASS (trừ BR-005 sc.3 của Task 5)**
+- [x] **Step 11: Chạy acceptance — kỳ vọng PASS (trừ BR-005 sc.3 của Task 5)**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-001|Category=BR-f01-p1-tai-khoan-hoc-vien-002|Category=BR-f01-p1-tai-khoan-hoc-vien-003|Category=BR-f01-p1-tai-khoan-hoc-vien-004|Category=BR-f01-p1-tai-khoan-hoc-vien-005|Category=BR-f01-p1-tai-khoan-hoc-vien-006|Category=BR-f01-p1-tai-khoan-hoc-vien-012|Category=BR-f01-p1-tai-khoan-hoc-vien-025)&Category!=web"`
 Expected: `Passed: 16`, `Failed: 1` — chỉ scenario "Đang đặt mật khẩu riêng bằng mật khẩu tạm cũ thì không lưu được" (BR-005) báo `MissingStepDefinition` (bind ở Task 5). (BR-001: 3 ví dụ + 1; BR-002: 2; BR-003: 1; BR-004: 2; BR-005: 2; BR-006: 2; BR-012: 2 ví dụ; BR-025: 1.)
 
-- [ ] **Step 12: Integration test — helper Capture, mật khẩu tạm, đăng nhập bằng mật khẩu tạm, DTO không có bí mật, demo kích hoạt**
+- [x] **Step 12: Integration test — helper Capture, mật khẩu tạm, đăng nhập bằng mật khẩu tạm, DTO không có bí mật, demo kích hoạt**
 
 `backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs`:
 - Task 2 đã đổi `ApiFactory` sang `Email:Provider=Capture` + `App:ClientBaseUrl` (`ClientBaseUrl`, `Outbox` đã có). Chỉ thêm hai alias sau method `AdminClientAsync()` để test F01-P1 đọc rõ ý:
@@ -3551,17 +3551,17 @@ bằng (từ Task 4 demo có dòng lịch sử "Activated" → xóa dòng con tr
     }
 ```
 
-- [ ] **Step 13: Chạy integration — kỳ vọng PASS**
+- [x] **Step 13: Chạy integration — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Accounts|FullyQualifiedName~AccountSecretsDtoTests|FullyQualifiedName~DemoSeedStudentTests"`
 Expected: `Passed: 10` (SendCredentialsTests 3, TempPasswordLoginTests 4, AccountSecretsDtoTests 1, DemoSeedStudentTests 2).
 
-- [ ] **Step 14: Verify toàn bộ**
+- [x] **Step 14: Verify toàn bộ**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Domain, Application, Integration, scenario F00/F02 và scenario BR-001→006, 012, 025 của F01-P1 xanh. Chỉ được đỏ các scenario `@api` của Task 5–7 với lỗi `MissingStepDefinition` (kich-hoat BR-011, 013, 014, 015, 016; thong-tin-dang-nhap BR-005 sc.3, BR-007→010, 026, 027; toàn bộ dat-lai-mat-khau). Mọi lỗi khác phải sửa trước khi commit.
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
