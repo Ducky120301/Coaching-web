@@ -7408,12 +7408,12 @@ EOF
 
 **Owns:** —
 
-- [ ] **Step 1: Chạy e2e của F02 — kỳ vọng FAIL**
+- [x] **Step 1: Chạy e2e của F02 — kỳ vọng FAIL**
 
 Run: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait` rồi `cd frontend && npm run e2e -- --tags "@BR-f02-ho-so-hoc-vien-003 or @BR-f02-ho-so-hoc-vien-024"`
 Expected: FAIL — 4 scenario `Undefined` (`coach "Coach Duobexiuuu" đã đăng nhập`, `coach tạo hồ sơ học viên chỉ với họ tên … và email …`, `có hồ sơ … với email …`, …).
 
-- [ ] **Step 2: Viết step defs `@web`**
+- [x] **Step 2: Viết step defs `@web`**
 
 `frontend/e2e/steps/student-profile.steps.ts`:
 ```ts
@@ -7473,14 +7473,14 @@ Then('kết quả có hồ sơ {string}', async function (this: E2EWorld, fullNa
 });
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng PASS**
+- [x] **Step 3: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run e2e -- --tags "@BR-f02-ho-so-hoc-vien-003 or @BR-f02-ho-so-hoc-vien-024"`
 Expected: `4 scenarios (4 passed)` (BR-003: 1; BR-024: 3 ví dụ "quan", "Quân", "hquan").
 Run: `cd frontend && npm run e2e`
 Expected: không scenario nào failed (gồm scenario `@web` F00 đã cập nhật ở Task 7).
 
-- [ ] **Step 4: Cập nhật bảng route trong CLAUDE.md**
+- [x] **Step 4: Cập nhật bảng route trong CLAUDE.md**
 
 `CLAUDE.md` — trong bảng "Page key", thay 2 dòng:
 ```markdown
@@ -7497,7 +7497,7 @@ và thêm ngay sau bảng (trước dòng "Dữ liệu mẫu (giáo án, dinh d�
 Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…`.
 ```
 
-- [ ] **Step 5: Nghiệm thu toàn bộ F02**
+- [x] **Step 5: Nghiệm thu toàn bộ F02**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
@@ -7507,7 +7507,7 @@ Kiểm tay (ghi kết quả vào mô tả commit/MR, không chặn commit):
 - So 3 màn (Dashboard, Tạo/Sửa hồ sơ, Hồ sơ học viên) với prototype ở 390px và 1280px.
 - NFR-f02-ho-so-hoc-vien-005: trên môi trường test có 500 hồ sơ, đo `GET /api/admin/students` và `GET /api/admin/students/{id}` — p95 < 500 ms.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 ```bash
 git add frontend/e2e/steps/student-profile.steps.ts CLAUDE.md
 git commit -F - <<'EOF'
