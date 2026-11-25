@@ -44,6 +44,6 @@ public sealed class ChangeCoachingStatusHandler(
             return StudentErrors.VersionConflict; // @BR-f02-ho-so-hoc-vien-015: hai lệnh cùng phiên bản → chỉ một thành công
         }
 
-        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach, clock.UtcNow));
     }
 }

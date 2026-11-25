@@ -40,6 +40,6 @@ public sealed class UpdateStudentHandler(
             return StudentErrors.VersionConflict; // @BR-f02-ho-so-hoc-vien-015 @ADR-f02-ho-so-hoc-vien-004
         }
 
-        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach, clock.UtcNow));
     }
 }

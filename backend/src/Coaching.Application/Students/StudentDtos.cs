@@ -6,6 +6,29 @@ namespace Coaching.Application.Students;
 /// <summary>Một dòng lịch sử trạng thái coaching (@BR-f02-ho-so-hoc-vien-020).</summary>
 public sealed record StatusChangeDto(string From, string To, string Actor, DateTimeOffset At, string Reason);
 
+/// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-006: một dòng lịch sử tài khoản — không có mật khẩu hay token.</summary>
+public sealed record AccountEventDto(string Type, DateTimeOffset At, string? FromEmail, string? ToEmail);
+
+/// <summary>Trạng thái + lịch sử tài khoản đăng nhập. History xếp mới nhất trước.</summary>
+public sealed record AccountInfoDto(
+    string State,
+    DateTimeOffset? CredentialsSentAt,
+    DateTimeOffset? TempPasswordExpiresAt,
+    DateTimeOffset? ActivatedAt,
+    IReadOnlyList<AccountEventDto> History)
+{
+    public static AccountInfoDto From(Student student, DateTimeOffset now) => new(
+        student.GetAccountState(now).ToString(),
+        student.CredentialsSentAt,
+        student.TempPasswordExpiresAt,
+        student.ActivatedAt,
+        student.AccountEvents // @ADR-f01-p1-tai-khoan-hoc-vien-006: mới nhất trước
+            .OrderByDescending(e => e.At)
+            .ThenByDescending(e => e.Id)
+            .Select(e => new AccountEventDto(e.Type.ToString(), e.At, e.FromEmail, e.ToEmail))
+            .ToList());
+}
+
 /// <summary>Hồ sơ chi tiết cho coach — CHỈ dùng ở /api/admin (có ghi chú nội bộ).</summary>
 public sealed record StudentDetailDto(
     Guid Id,
@@ -22,9 +45,11 @@ public sealed record StudentDetailDto(
     string Version,
     string? InternalNote,
     DateTimeOffset? InternalNoteUpdatedAt,
-    IReadOnlyList<StatusChangeDto> StatusHistory)
+    IReadOnlyList<StatusChangeDto> StatusHistory,
+    AccountInfoDto Account)
 {
-    public static StudentDetailDto From(Student student, Coach coach) => new(
+    /// <param name="now">Thời điểm hiện tại (IClock.UtcNow) — để tính mật khẩu tạm đã hết hạn chưa.</param>
+    public static StudentDetailDto From(Student student, Coach coach, DateTimeOffset now) => new(
         student.Id,
         student.CoachId,
         student.FullName,
@@ -44,7 +69,8 @@ public sealed record StudentDetailDto(
             .ThenByDescending(c => c.Id)
             .Select(c => new StatusChangeDto(c.FromStatus.ToString(), c.ToStatus.ToString(),
                 ActorName(c.ActorUserId, coach), c.At, c.Reason))
-            .ToList());
+            .ToList(),
+        AccountInfoDto.From(student, now)); // @ADR-f01-p1-tai-khoan-hoc-vien-006
 
     /// <summary>MVP chỉ có coach sở hữu hồ sơ thao tác trên hồ sơ.</summary>
     public static string ActorName(Guid userId, Coach coach) =>

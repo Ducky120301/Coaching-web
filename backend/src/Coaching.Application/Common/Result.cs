@@ -7,6 +7,9 @@ public enum ErrorKind
     Forbidden,
     NotFound,
     Conflict,
+
+    /// <summary>Dịch vụ phụ thuộc (email, cấu hình) chưa sẵn sàng → 503.</summary>
+    Unavailable,
 }
 
 public sealed record Error(string Code, string Message, ErrorKind Kind = ErrorKind.Validation);

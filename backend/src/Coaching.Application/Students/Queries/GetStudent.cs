@@ -1,10 +1,11 @@
+using Coaching.Application.Abstractions;
 using Coaching.Application.Coaches;
 using Coaching.Application.Common;
 using Coaching.Domain.Students;
 
 namespace Coaching.Application.Students.Queries;
 
-public sealed class GetStudentHandler(CurrentCoach currentCoach, IStudentRepository students)
+public sealed class GetStudentHandler(CurrentCoach currentCoach, IStudentRepository students, IClock clock)
 {
     public async Task<Result<StudentDetailDto>> HandleAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -14,6 +15,6 @@ public sealed class GetStudentHandler(CurrentCoach currentCoach, IStudentReposit
         var student = await students.GetAsync(id, coach.Id, cancellationToken);
         return student is null
             ? StudentErrors.NotFound
-            : Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+            : Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach, clock.UtcNow));
     }
 }

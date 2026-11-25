@@ -53,6 +53,20 @@ internal sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         });
         builder.Navigation(s => s.StatusHistory).UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        // @ADR-f01-p1-tai-khoan-hoc-vien-006: lịch sử tài khoản là entity con, bảng riêng, chỉ thêm
+        builder.OwnsMany(s => s.AccountEvents, e =>
+        {
+            e.ToTable("StudentAccountEvents");
+            e.WithOwner().HasForeignKey("StudentId");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.Type).HasConversion<string>().HasMaxLength(30);
+            e.Property(x => x.FromEmail).HasMaxLength(Email.MaxLength);
+            e.Property(x => x.ToEmail).HasMaxLength(Email.MaxLength);
+            e.HasIndex("StudentId", nameof(StudentAccountEvent.At));
+        });
+        builder.Navigation(s => s.AccountEvents).UsePropertyAccessMode(PropertyAccessMode.Field);
+
         // @ADR-f02-ho-so-hoc-vien-003
         builder.Property(s => s.SearchKey).HasMaxLength(Student.SearchKeyMaxLength).IsRequired();
         builder.Ignore(s => s.DomainEvents);

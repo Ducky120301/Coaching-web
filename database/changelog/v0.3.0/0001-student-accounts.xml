@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+  <changeSet id="v0.3.0-0001-student-accounts" author="duc.hm4@kiotviet.com">
+    <comment>F01-P1: Students (CredentialsSentAt, TempPasswordExpiresAt, ActivatedAt) + StudentAccountEvents + AccountTokens</comment>
+    <sqlFile path="scripts/0001-student-accounts.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO" stripComments="false"/>
+    <rollback>
+      <sqlFile path="rollback/0001-student-accounts.rollback.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO"/>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>

@@ -14,7 +14,13 @@ public sealed class Student : AggregateRoot<Guid>
     public const int ReasonMaxLength = 500; // @ADR-f02-ho-so-hoc-vien-009
     public const int SearchKeyMaxLength = 400; // họ tên 100 + " " + email 256
 
+    /// <summary>Mật khẩu tạm sống 72 giờ kể từ lần gửi gần nhất.</summary>
+    public static readonly TimeSpan TempPasswordLifetime = TimeSpan.FromHours(72);
+
     private readonly List<CoachingStatusChange> _statusHistory = [];
+
+    // @ADR-f01-p1-tai-khoan-hoc-vien-006
+    private readonly List<StudentAccountEvent> _accountEvents = [];
 
     public Guid CoachId { get; private set; }
 
@@ -56,6 +62,29 @@ public sealed class Student : AggregateRoot<Guid>
 
     /// <summary>@BR-f02-ho-so-hoc-vien-021: chỉ đọc; chỉ ChangeCoachingStatus thêm dòng.</summary>
     public IReadOnlyList<CoachingStatusChange> StatusHistory => _statusHistory.AsReadOnly();
+
+    /// <summary>Lần gửi thông tin đăng nhập gần nhất (null = chưa gửi).</summary>
+    public DateTimeOffset? CredentialsSentAt { get; private set; }
+
+    /// <summary>Hạn mật khẩu tạm đang dùng; null khi chưa gửi hoặc đã kích hoạt.</summary>
+    public DateTimeOffset? TempPasswordExpiresAt { get; private set; }
+
+    public DateTimeOffset? ActivatedAt { get; private set; }
+
+    /// <summary>@ADR-f01-p1-tai-khoan-hoc-vien-006: chỉ đọc; chỉ các hàm nghiệp vụ của Student thêm dòng.</summary>
+    public IReadOnlyList<StudentAccountEvent> AccountEvents => _accountEvents.AsReadOnly();
+
+    /// <summary>Trạng thái tài khoản tại thời điểm <paramref name="now"/>; mật khẩu tạm hết hạn khi now &gt;= hạn.</summary>
+    public AccountState GetAccountState(DateTimeOffset now)
+    {
+        if (AccountStatus == AccountStatus.Activated)
+            return AccountState.Activated;
+        if (CredentialsSentAt is null)
+            return AccountState.NotSent;
+        return TempPasswordExpiresAt is { } expiresAt && now >= expiresAt
+            ? AccountState.TempPasswordExpired
+            : AccountState.Sent;
+    }
 
     private Student() { }
 

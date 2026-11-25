@@ -43,7 +43,7 @@ public sealed class CreateStudentHandler(
 
             students.Add(student);
             await unitOfWork.SaveChangesAsync(ct);
-            return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+            return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach, now));
         }, cancellationToken);
     }
 }

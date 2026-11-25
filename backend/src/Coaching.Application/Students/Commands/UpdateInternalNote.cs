@@ -35,6 +35,6 @@ public sealed class UpdateInternalNoteHandler(
             return StudentErrors.VersionConflict;
         }
 
-        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach));
+        return Result<StudentDetailDto>.Success(StudentDetailDto.From(student, coach, clock.UtcNow));
     }
 }
