@@ -6723,7 +6723,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Hồ sơ học v
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec cho định dạng ngày giờ VN và số**
+- [x] **Step 1: Viết spec cho định dạng ngày giờ VN và số**
 
 `frontend/projects/admin/src/app/students/format.spec.ts`:
 ```ts
@@ -6745,12 +6745,12 @@ describe('format', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './format'`.
 
-- [ ] **Step 3: `format.ts`**
+- [x] **Step 3: `format.ts`**
 
 `frontend/projects/admin/src/app/students/format.ts`:
 ```ts
@@ -6788,12 +6788,12 @@ export function formatNumber(value: number): string {
 }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: PASS.
 
-- [ ] **Step 5: Viết spec cho màn Hồ sơ học viên**
+- [x] **Step 5: Viết spec cho màn Hồ sơ học viên**
 
 `frontend/projects/admin/src/app/students/student-profile.component.spec.ts`:
 ```ts
@@ -6953,12 +6953,12 @@ describe('StudentProfileComponent', () => {
 });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './student-profile.component'`.
 
-- [ ] **Step 7: API đổi trạng thái, khung lý do, màn Hồ sơ**
+- [x] **Step 7: API đổi trạng thái, khung lý do, màn Hồ sơ**
 
 `frontend/projects/admin/src/app/students/students.api.ts` — thêm `CoachingStatus` vào import từ `./student.models`, rồi thêm method sau `updateNote`:
 ```ts
@@ -7375,7 +7375,7 @@ details h3 { margin: 14px 0 8px; font-size: 14px; font-weight: 600; }
       },
 ```
 
-- [ ] **Step 8: Chạy — kỳ vọng PASS**
+- [x] **Step 8: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS (`StudentProfileComponent` 5 test, `format` 2 test).
@@ -7383,7 +7383,7 @@ Run: `cd frontend && npx ng build admin`
 Expected: build thành công.
 Kiểm tay: mở một hồ sơ → bấm "Tạm dừng" → khung lý do mở dưới header → "Xác nhận" → chip "Tạm dừng", dòng mới trong "Lịch sử coaching"; sửa ghi chú tại chỗ → "Chỉ coach thấy. Sửa lần cuối dd/MM."; "Sửa thông tin" mở `/hoc-vien/:id/sua`. So với page `AdHoSo` ở 390px và 1280px (avatar 64px, h1 43px, nút 44px, card radius 12 padding 16px 18px, ghi chú nền `--warnBg`).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 ```bash
 git add frontend/projects/admin
 git commit -F - <<'EOF'
