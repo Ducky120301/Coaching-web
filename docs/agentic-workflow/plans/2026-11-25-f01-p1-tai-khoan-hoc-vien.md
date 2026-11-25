@@ -5973,7 +5973,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)", page `Main` của p
 
 **Owns:** `@ADR-f01-p1-tai-khoan-hoc-vien-010`
 
-- [ ] **Step 1: Viết spec cho AuthService ở web học viên (đăng nhập bằng mật khẩu tạm, kích hoạt, quên / đặt lại mật khẩu)**
+- [x] **Step 1: Viết spec cho AuthService ở web học viên (đăng nhập bằng mật khẩu tạm, kích hoạt, quên / đặt lại mật khẩu)**
 
 `frontend/projects/shared/src/lib/auth/auth.service.spec.ts` — thêm import ở đầu file:
 ```ts
@@ -6069,12 +6069,12 @@ describe('AuthService (web học viên)', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: FAIL — `Cannot find module './activation-store'` (và `auth.activate is not a function`…).
 
-- [ ] **Step 3: Model `LoginResult`, `ActivationStore`, `LoginNoticeStore`, AuthService**
+- [x] **Step 3: Model `LoginResult`, `ActivationStore`, `LoginNoticeStore`, AuthService**
 
 `frontend/projects/shared/src/lib/auth/models.ts` — thêm cuối file:
 ```ts
@@ -6213,12 +6213,12 @@ export * from './lib/auth/activation-store';
 export * from './lib/account/login-notice';
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: PASS (`AuthService (web học viên)` 5 test; `AuthService` F00 vẫn xanh). `LoginPageComponent` spec F00 vẫn xanh vì `loginImpl` trả `Promise<void>` chỉ lệch kiểu ở spec — nếu `tsc` của vitest báo lỗi kiểu thì làm tiếp Step 5 trước khi chạy lại.
 
-- [ ] **Step 5: Viết spec cho trang Đăng nhập ("Quên mật khẩu?" chỉ ở web học viên, mật khẩu tạm → /kich-hoat, câu báo mang sang)**
+- [x] **Step 5: Viết spec cho trang Đăng nhập ("Quên mật khẩu?" chỉ ở web học viên, mật khẩu tạm → /kich-hoat, câu báo mang sang)**
 
 `frontend/projects/shared/src/lib/login/login-page.component.spec.ts` (thay toàn bộ):
 ```ts
@@ -6331,12 +6331,12 @@ describe('LoginPageComponent', () => {
 });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: FAIL — 5 test mới đỏ (không có nút "Quên mật khẩu?", không chuyển `/kich-hoat`, không có `[role="status"]`…).
 
-- [ ] **Step 7: `AuthFrameComponent`, `auth-form.scss`, trang Đăng nhập**
+- [x] **Step 7: `AuthFrameComponent`, `auth-form.scss`, trang Đăng nhập**
 
 `frontend/projects/shared/src/lib/login/auth-frame.component.ts`:
 ```ts
@@ -6548,12 +6548,12 @@ export class LoginPageComponent {
 export * from './lib/login/auth-frame.component';
 ```
 
-- [ ] **Step 8: Chạy — kỳ vọng PASS**
+- [x] **Step 8: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: PASS (`LoginPageComponent` 10 test).
 
-- [ ] **Step 9: Viết spec cho 3 màn Kích hoạt, Quên mật khẩu, Đặt lại mật khẩu**
+- [x] **Step 9: Viết spec cho 3 màn Kích hoạt, Quên mật khẩu, Đặt lại mật khẩu**
 
 `frontend/projects/shared/src/lib/account/activate-page.component.spec.ts`:
 ```ts
@@ -6800,12 +6800,12 @@ describe('ResetPasswordPageComponent', () => {
 });
 ```
 
-- [ ] **Step 10: Chạy — kỳ vọng FAIL**
+- [x] **Step 10: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test shared --watch=false`
 Expected: FAIL — `Cannot find module './activate-page.component'`, `'./forgot-password-page.component'`, `'./reset-password-page.component'`.
 
-- [ ] **Step 11: Lỗi dùng chung, checklist mật khẩu, 3 màn, route web học viên**
+- [x] **Step 11: Lỗi dùng chung, checklist mật khẩu, 3 màn, route web học viên**
 
 `frontend/projects/shared/src/lib/account/account-errors.ts`:
 ```ts
@@ -7160,7 +7160,7 @@ export const routes: Routes = [
 ];
 ```
 
-- [ ] **Step 12: Chạy — kỳ vọng PASS**
+- [x] **Step 12: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS (`ActivatePageComponent` 6 test, `ForgotPasswordPageComponent` 3 test, `ResetPasswordPageComponent` 4 test, `LoginPageComponent` 10 test, `AuthService (web học viên)` 5 test; admin/client không đổi).
@@ -7168,7 +7168,7 @@ Run: `cd frontend && npx ng build client && npx ng build admin`
 Expected: build thành công cả hai.
 Kiểm tay (`npx ng serve client` + API local Task 1–7, `Email:Provider=Capture`): đăng nhập bằng mật khẩu tạm đọc ở `GET /api/test/emails?to=` → `/kich-hoat`; tải lại `/kich-hoat` → về `/login`; lưu "Coach2026" → `/hom-nay`; "Quên mật khẩu?" → `/quen-mat-khau` → hộp xanh câu chung; mở link đặt lại → lưu → `/login` hộp xanh "Đã đặt lại mật khẩu. Đăng nhập bằng mật khẩu mới."; mở lại link cũ → hộp `--warnBg` + "Xin link mới". So với page `Main` (`docs/duobexiuuu-coaching-design.html#Main&frame`: login → bấm "Quên mật khẩu?" → isForgot; submit login → isActivate) ở 390px và 1280px: ô 52px radius 14, nút chính 54px Barlow 700 22px, "Quên mật khẩu?" 14px `--primary` cùng hàng nhãn, checklist tick 16px gap 8, hộp `role=status` nền `--okBg` chữ `--okInk` padding 16 radius 12, "Quay lại đăng nhập" 15px. Web quản trị `/login` không có "Quên mật khẩu?", hình học không đổi.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 ```bash
 git add frontend/projects/shared frontend/projects/client
 git commit -F - <<'EOF'
