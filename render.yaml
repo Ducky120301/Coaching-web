@@ -1,14 +1,16 @@
-# @ADR-f00-codebase-010 — môi trường test (Staging). Secret `sync: false` nhập trên dashboard Render.
+# @ADR-f00-codebase-010 @ADR-f00-codebase-012 — môi trường test (Staging). Deploy do GitHub Actions gọi deploy hook
+# (autoDeployTrigger: "off") nên Render chỉ chạy image/bản build đã qua CI. Package GHCR để public hoặc khai báo
+# Registry Credentials trên Render. Secret `sync: false` nhập trên dashboard Render.
 services:
   - type: web
     name: coaching-api
-    runtime: docker
+    runtime: image
+    image:
+      url: ghcr.io/ducky120301/coaching-web-api:latest
     plan: free
     region: singapore
-    dockerContext: ./backend
-    dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /health
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: "off"
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Staging
@@ -41,7 +43,7 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npx ng build admin && node scripts/write-config.mjs dist/admin/browser
     staticPublishPath: dist/admin/browser
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: "off"
     routes:
       - type: rewrite
         source: /*
@@ -65,7 +67,7 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npx ng build client && node scripts/write-config.mjs dist/client/browser
     staticPublishPath: dist/client/browser
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: "off"
     routes:
       - type: rewrite
         source: /*

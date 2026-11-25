@@ -22,7 +22,7 @@ Lộ trình: **P0** codebase → **P1** Admin hồ sơ & thư viện → **P2** 
 | Auth | ASP.NET Core Identity + JWT (access token ngắn hạn + refresh token), role `Admin` / `Student` |
 | Frontend | Angular (1 workspace, 2 app + 1 lib dùng chung) |
 | Email | `IEmailSender` → Resend (free tier), dự phòng Amazon SES |
-| CI/CD | GitHub Actions; môi trường test deploy lên Render (API = Docker web service, 2 app Angular = static site), SQL Server test do PO cung cấp |
+| CI/CD | GitHub Actions (theo mẫu Healthy app): test → đẩy image API lên GHCR → Liquibase update DB staging → gọi deploy hook Render (API = image, 2 app Angular = static site). DB staging: database `Coaching` trên SQL Server hosted dùng chung với Healthy app |
 | Acceptance | Reqnroll (.NET) cho @api/@integration; CucumberJS + Playwright cho @web; so ảnh pixelmatch với prototype |
 | Hosting production | Chưa chốt (PO báo sau) — code phải chạy được bằng Docker trên VPS Linux bất kỳ |
 
