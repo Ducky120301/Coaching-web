@@ -5011,7 +5011,7 @@ EOF
 
 **Owns:** `@BR-f01-p1-tai-khoan-hoc-vien-017`, `@BR-f01-p1-tai-khoan-hoc-vien-018`, `@BR-f01-p1-tai-khoan-hoc-vien-019`, `@BR-f01-p1-tai-khoan-hoc-vien-020`, `@BR-f01-p1-tai-khoan-hoc-vien-021`, `@BR-f01-p1-tai-khoan-hoc-vien-022`, `@BR-f01-p1-tai-khoan-hoc-vien-023`, `@BR-f01-p1-tai-khoan-hoc-vien-024` | `@ADR-f01-p1-tai-khoan-hoc-vien-005`, `@ADR-f01-p1-tai-khoan-hoc-vien-009`
 
-- [ ] **Step 1: Viết Domain test cho ghi nhận link đặt lại**
+- [x] **Step 1: Viết Domain test cho ghi nhận link đặt lại**
 
 `backend/tests/Coaching.Domain.Tests/Students/ResetLinkTests.cs`:
 ```csharp
@@ -5067,12 +5067,12 @@ public sealed class ResetLinkTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.ResetLinkTests"`
 Expected: FAIL — build error `'Student' does not contain a definition for 'RecordResetLinkSent'`.
 
-- [ ] **Step 3: Domain — `RecordResetLinkSent`**
+- [x] **Step 3: Domain — `RecordResetLinkSent`**
 
 `backend/src/Coaching.Domain/Students/Student.cs` — thêm method sau `ChangeEmail`:
 ```csharp
@@ -5087,12 +5087,12 @@ Expected: FAIL — build error `'Student' does not contain a definition for 'Rec
     }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.ResetLinkTests"`
 Expected: `Passed: 4`.
 
-- [ ] **Step 5: Acceptance — `AccountApi` đặt lại mật khẩu + step defs dat-lai-mat-khau**
+- [x] **Step 5: Acceptance — `AccountApi` đặt lại mật khẩu + step defs dat-lai-mat-khau**
 
 `backend/tests/Coaching.Acceptance/Support/AccountApi.cs`:
 - Thêm vào đầu file:
@@ -5421,12 +5421,12 @@ public sealed class PasswordResetSteps(AcceptanceContext ctx, StudentApi api, Ac
 }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-017|Category=BR-f01-p1-tai-khoan-hoc-vien-018|Category=BR-f01-p1-tai-khoan-hoc-vien-019|Category=BR-f01-p1-tai-khoan-hoc-vien-020|Category=BR-f01-p1-tai-khoan-hoc-vien-021|Category=BR-f01-p1-tai-khoan-hoc-vien-022|Category=BR-f01-p1-tai-khoan-hoc-vien-023|Category=BR-f01-p1-tai-khoan-hoc-vien-024)&Category!=web"`
 Expected: FAIL — build error `The type or namespace name 'ForgotPasswordResponse' could not be found` (Application chưa có `Accounts/Commands/RequestPasswordReset.cs`).
 
-- [ ] **Step 7: Application — lỗi, thời hạn, port, ba use case**
+- [x] **Step 7: Application — lỗi, thời hạn, port, ba use case**
 
 `backend/src/Coaching.Application/Accounts/AccountErrors.cs` — thêm member:
 ```csharp
@@ -5640,7 +5640,7 @@ public sealed class ResetPasswordHandler(
         services.AddScoped<ResetPasswordHandler>();
 ```
 
-- [ ] **Step 8: Infrastructure — tách `SessionRevoker`, lý do thu hồi mới, tìm tài khoản theo email**
+- [x] **Step 8: Infrastructure — tách `SessionRevoker`, lý do thu hồi mới, tìm tài khoản theo email**
 
 `backend/src/Coaching.Infrastructure/Identity/RefreshTokenRevokedReason.cs` — thay toàn bộ:
 ```csharp
@@ -5712,7 +5712,7 @@ internal sealed class SessionRevoker(AppDbContext db, IClock clock) : ISessionRe
         services.AddScoped<ISessionRevoker>(sp => sp.GetRequiredService<SessionRevoker>());
 ```
 
-- [ ] **Step 9: API — route coach gửi link, Quên mật khẩu, đặt lại mật khẩu**
+- [x] **Step 9: API — route coach gửi link, Quên mật khẩu, đặt lại mật khẩu**
 
 `backend/src/Coaching.Api/Controllers/Admin/StudentsController.cs` — thêm action cuối class:
 ```csharp
@@ -5750,14 +5750,14 @@ internal sealed class SessionRevoker(AppDbContext db, IClock clock) : ISessionRe
     }
 ```
 
-- [ ] **Step 10: Chạy acceptance — kỳ vọng PASS**
+- [x] **Step 10: Chạy acceptance — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f01-p1-tai-khoan-hoc-vien-017|Category=BR-f01-p1-tai-khoan-hoc-vien-018|Category=BR-f01-p1-tai-khoan-hoc-vien-019|Category=BR-f01-p1-tai-khoan-hoc-vien-020|Category=BR-f01-p1-tai-khoan-hoc-vien-021|Category=BR-f01-p1-tai-khoan-hoc-vien-022|Category=BR-f01-p1-tai-khoan-hoc-vien-023|Category=BR-f01-p1-tai-khoan-hoc-vien-024)&Category!=web"`
 Expected: `Passed: 20`, `Failed: 0` (BR-017: 2 ví dụ + 1; BR-018: 2; BR-019: 2; BR-020: 2; BR-021: 2; BR-022: 3 ví dụ; BR-023: 4 ví dụ; BR-024: 2).
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "Category=BR-f00-codebase-012"`
 Expected: PASS — phát hiện lộ mã của F00 vẫn thu hồi mọi phiên qua `SessionRevoker`.
 
-- [ ] **Step 11: Integration test đặt lại mật khẩu**
+- [x] **Step 11: Integration test đặt lại mật khẩu**
 
 `backend/tests/Coaching.Api.IntegrationTests/Accounts/AccountRequests.cs`:
 - Thêm `using System.Diagnostics;` vào đầu file.
@@ -5926,12 +5926,12 @@ Expected: `Passed: 18` (SendCredentialsTests 3, TempPasswordLoginTests 4, Activa
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~RefreshGraceTests|FullyQualifiedName~AuthAndAuthorizationTests"`
 Expected: không Failed (thu hồi khi lộ mã của F00 đi qua `SessionRevoker`).
 
-- [ ] **Step 12: Verify toàn bộ**
+- [x] **Step 12: Verify toàn bộ**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed và không còn `MissingStepDefinition` nào — mọi scenario `@api` của thong-tin-dang-nhap, kich-hoat, dat-lai-mat-khau cùng F00/F02 xanh (scenario `@web` chỉ chạy ở Task 10).
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
