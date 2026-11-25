@@ -82,7 +82,7 @@ public sealed class AuthAndAuthorizationTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Refresh_rotates_token_and_old_refresh_token_is_rejected()
+    public async Task Refresh_rotates_token_and_immediate_replay_is_within_grace_period()
     {
         var (email, password) = await factory.CreateStudentAsync();
         var first = await factory.LoginAsync(email, password);
@@ -93,12 +93,9 @@ public sealed class AuthAndAuthorizationTests(ApiFactory factory)
         var second = (await refreshed.Content.ReadFromJsonAsync<AuthTokens>())!;
         Assert.NotEqual(first.RefreshToken, second.RefreshToken);
 
-        var reused = await client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(first.RefreshToken));
-        Assert.Equal(HttpStatusCode.Unauthorized, reused.StatusCode);
-
-        // Dùng lại token cũ bị coi là lộ token → toàn bộ phiên của user bị thu hồi.
-        var afterReuse = await client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(second.RefreshToken));
-        Assert.Equal(HttpStatusCode.Unauthorized, afterReuse.StatusCode);
+        // Gửi lại ngay (≤ 30s) vẫn hợp lệ; phần quá 30s được kiểm ở acceptance với FakeTimeProvider.
+        var replay = await client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(first.RefreshToken));
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
     }
 
     [Fact]

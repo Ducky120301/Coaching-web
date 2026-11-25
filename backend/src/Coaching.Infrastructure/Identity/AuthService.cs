@@ -19,6 +19,9 @@ internal sealed class AuthService(
     public const int MaxFailedAttempts = 5;
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
 
+    // @BR-f00-codebase-011 @BR-f00-codebase-012
+    public static readonly TimeSpan ReuseGracePeriod = TimeSpan.FromSeconds(30);
+
     public async Task<Result<AuthTokens>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -74,9 +77,21 @@ internal sealed class AuthService(
         if (stored is null)
             return AuthErrors.InvalidRefreshToken;
 
-        if (stored.RevokedAt is not null)
+        if (stored.RevokedAt is { } revokedAt)
         {
-            // Token đã bị thu hồi mà vẫn được dùng lại → nghi bị lộ: thu hồi toàn bộ phiên của user.
+            if (stored.RevokedReason != RefreshTokenRevokedReason.Rotated)
+                return AuthErrors.InvalidRefreshToken; // @BR-f00-codebase-013: phiên đã đăng xuất / đã bị thu hồi
+
+            if (now - revokedAt <= ReuseGracePeriod)
+            {
+                // @ADR-f00-codebase-003 @BR-f00-codebase-011: gửi trùng trong 30s → cấp cặp mới, không thu hồi
+                var graceUser = await FindActiveUserAsync(stored.UserId, now);
+                return graceUser is null
+                    ? AuthErrors.InvalidRefreshToken
+                    : await IssueTokensAsync(graceUser, cancellationToken);
+            }
+
+            // @BR-f00-codebase-012: gửi lại sau 30s → coi là lộ mã, thu hồi mọi phiên
             await RevokeAllAsync(stored.UserId, now, cancellationToken);
             return AuthErrors.InvalidRefreshToken;
         }
@@ -84,12 +99,17 @@ internal sealed class AuthService(
         if (!stored.IsActive(now))
             return AuthErrors.InvalidRefreshToken;
 
-        var user = await userManager.FindByIdAsync(stored.UserId.ToString());
-        if (user is null || IsLockedOut(user, now))
+        var user = await FindActiveUserAsync(stored.UserId, now);
+        if (user is null)
             return AuthErrors.InvalidRefreshToken;
 
-        var tokens = await IssueTokensAsync(user, cancellationToken, rotateFrom: stored);
-        return tokens;
+        return await IssueTokensAsync(user, cancellationToken, rotateFrom: stored);
+    }
+
+    private async Task<AppUser?> FindActiveUserAsync(Guid userId, DateTimeOffset now)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        return user is null || IsLockedOut(user, now) ? null : user;
     }
 
     public async Task LogoutAsync(string refreshToken, CancellationToken cancellationToken = default)
@@ -102,6 +122,7 @@ internal sealed class AuthService(
         if (stored is { RevokedAt: null })
         {
             stored.RevokedAt = clock.UtcNow;
+            stored.RevokedReason = RefreshTokenRevokedReason.Logout; // @BR-f00-codebase-013
             await db.SaveChangesAsync(cancellationToken);
         }
     }
@@ -126,6 +147,7 @@ internal sealed class AuthService(
         if (rotateFrom is not null)
         {
             rotateFrom.RevokedAt = now;
+            rotateFrom.RevokedReason = RefreshTokenRevokedReason.Rotated;
             rotateFrom.ReplacedByTokenHash = refreshEntity.TokenHash;
         }
 
@@ -143,6 +165,8 @@ internal sealed class AuthService(
     {
         await db.RefreshTokens
             .Where(t => t.UserId == userId && t.RevokedAt == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), cancellationToken);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.RevokedAt, now)
+                .SetProperty(t => t.RevokedReason, RefreshTokenRevokedReason.ReuseDetected), cancellationToken);
     }
 }

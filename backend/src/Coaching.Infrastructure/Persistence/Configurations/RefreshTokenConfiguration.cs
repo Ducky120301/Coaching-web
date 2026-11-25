@@ -13,6 +13,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.Property(t => t.Id).ValueGeneratedNever();
         builder.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
         builder.Property(t => t.ReplacedByTokenHash).HasMaxLength(64);
+        builder.Property(t => t.RevokedReason).HasConversion<string>().HasMaxLength(20);
         builder.HasIndex(t => t.TokenHash).IsUnique();
         builder.HasIndex(t => t.UserId);
         builder.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);

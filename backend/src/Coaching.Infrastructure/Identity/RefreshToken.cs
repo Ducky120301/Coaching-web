@@ -15,6 +15,8 @@ public sealed class RefreshToken
 
     public DateTimeOffset? RevokedAt { get; set; }
 
+    public RefreshTokenRevokedReason? RevokedReason { get; set; }
+
     public string? ReplacedByTokenHash { get; set; }
 
     public bool IsActive(DateTimeOffset now) => RevokedAt is null && ExpiresAt > now;

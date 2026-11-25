@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+  <changeSet id="v0.1.0-0002-refresh-token-revoked-reason" author="duc.hm4@kiotviet.com">
+    <comment>RefreshTokens.RevokedReason: Rotated | Logout | ReuseDetected</comment>
+    <sqlFile path="scripts/0002-refresh-token-revoked-reason.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO" stripComments="false"/>
+    <rollback>
+      <sqlFile path="rollback/0002-refresh-token-revoked-reason.rollback.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO"/>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>
