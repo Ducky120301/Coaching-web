@@ -19,6 +19,11 @@ export class E2EWorld extends World {
   visual: Record<string, unknown> = {};
   rejectedOnce = false;
   refreshStatus: number | null = null;
+  /** F01-P1: học viên tạo trong scenario (email thật đã có hậu tố +e2e…). */
+  student: { id: string; fullName: string; email: string } | null = null;
+  /** F01-P1: email viết trong feature (chuẩn hoá) → hậu tố +e2e… để không trùng dữ liệu của lần chạy trước. */
+  emailSuffix: Record<string, string> = {};
+  tempPassword = '';
 
   async openPage(url: string): Promise<Page> {
     const page = await this.context.newPage();

@@ -47,7 +47,10 @@ services:
       DemoSeed__Enabled: "true"
       DemoSeed__Email: ${DEMO_EMAIL}
       DemoSeed__Password: ${DEMO_PASSWORD}
-      Email__Provider: Log
+      # @ADR-f01-p1-tai-khoan-hoc-vien-007: thư gửi đi giữ trong bộ nhớ, e2e đọc qua GET /api/test/emails?to= (API chặn Capture ở Production)
+      Email__Provider: Capture
+      # @ADR-f01-p1-tai-khoan-hoc-vien-008: địa chỉ đăng nhập / link đặt lại trong email trỏ về web học viên của compose
+      App__ClientBaseUrl: http://localhost:4300
       RateLimiting__AuthPermitPerMinute: ${AUTH_PERMIT_PER_MINUTE:-10}
     ports: ["8080:8080"]
     depends_on:

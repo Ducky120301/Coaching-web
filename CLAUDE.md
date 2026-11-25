@@ -120,7 +120,7 @@ Business rules nằm trong `docs/prd/*.md` với mã BR-xx cố định. Code v�
 
 | Page key | Màn hình | App | Route gợi ý |
 |---|---|---|---|
-| `Main` | Đăng nhập, kích hoạt, quên mật khẩu | cả 2 | `/login`, `/activate`, `/forgot-password` |
+| `Main` | Đăng nhập, kích hoạt, quên mật khẩu, đặt lại mật khẩu | cả 2 (3 màn sau chỉ client) | `/login`, `/kich-hoat`, `/quen-mat-khau`, `/dat-lai-mat-khau#t=<token>` |
 | `HvHomNay` | HV01 Hôm nay | client | `/today` |
 | `HvLich` | HV02 Lịch và giáo án | client | `/schedule` |
 | `HvNhatKy` | HV03 Nhật ký buổi tập | client | `/sessions/:id/log` |
@@ -140,6 +140,8 @@ Business rules nằm trong `docs/prd/*.md` với mã BR-xx cố định. Code v�
 | `AdChuyenPhase` | AD07 Tổng kết & chuyển phase | admin | `/students/:id/phases/:phaseId/close` |
 
 Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…`.
+
+Route web học viên dùng tiếng Việt (ADR-f01-p1-tai-khoan-hoc-vien-010): đã có `/login`, `/kich-hoat` (mã kích hoạt chỉ trong bộ nhớ), `/quen-mat-khau`, `/dat-lai-mat-khau#t=<token>` (token sau `#`), `/hom-nay`. Route học viên chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt.
 
 Dữ liệu mẫu (giáo án, dinh dưỡng, thuật ngữ) có trong `window.__CLIENT__` của prototype, dùng làm seed/dev data.
 
@@ -214,6 +216,7 @@ dotnet test backend/Coaching.slnx --filter "Category!=web&Category!=manual"
 cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait
 # admin: http://localhost:4200   client: http://localhost:4300
+# compose dùng Email__Provider=Capture: thư gửi đi (mật khẩu tạm, link đặt lại) đọc ở http://localhost:8080/api/test/emails?to=<email>
 
 # Frontend
 cd frontend && npm ci
