@@ -1,0 +1,82 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+      - run: dotnet tool restore
+        working-directory: backend
+      - run: dotnet build Coaching.slnx
+        working-directory: backend
+      - run: dotnet test Coaching.slnx --no-build --filter "Category!=web&Category!=manual"
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build:all
+      - run: npm run test:ci
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Start stack
+        run: |
+          cp deploy/.env.example deploy/.env
+          sed -i 's/^AUTH_PERMIT_PER_MINUTE=.*/AUTH_PERMIT_PER_MINUTE=1000/' deploy/.env
+          docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait
+          for _ in $(seq 1 40); do curl -fs http://localhost:4200/health && break; sleep 3; done
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: frontend/e2e/reports
+      - if: failure()
+        run: docker compose -f deploy/docker-compose.yml logs liquibase api
+
+  # @ADR-f00-codebase-011: migrate DB môi trường test chỉ khi main xanh; Render (checksPass) chờ cả job này
+  db-migrate:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, e2e]
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: liquibase update
+        env:
+          LIQUIBASE_URL: ${{ secrets.LIQUIBASE_URL }}
+          LIQUIBASE_USERNAME: ${{ secrets.LIQUIBASE_USERNAME }}
+          LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PASSWORD }}
+        run: |
+          docker run --rm -v "$PWD/database/changelog:/liquibase/changelog:ro" liquibase/liquibase:4.33.0 \
+            --search-path=/liquibase/changelog --changelog-file=db.changelog-master.xml \
+            "--url=$LIQUIBASE_URL" "--username=$LIQUIBASE_USERNAME" "--password=$LIQUIBASE_PASSWORD" update
