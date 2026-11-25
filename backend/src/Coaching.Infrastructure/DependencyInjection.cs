@@ -62,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachRepository, CoachRepository>();
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IStudentAccounts, StudentAccounts>();
+        services.AddScoped<IAccountTokens, AccountTokenStore>(); // @ADR-f01-p1-tai-khoan-hoc-vien-003
 
         AddEmail(services, configuration, environment);
 

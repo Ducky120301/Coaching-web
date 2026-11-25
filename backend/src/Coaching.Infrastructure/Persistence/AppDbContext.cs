@@ -19,6 +19,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<AccountToken> AccountTokens => Set<AccountToken>();
+
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     // @ADR-f02-ho-so-hoc-vien-001: execution strategy (retry) bọc cả transaction; commit chỉ khi kết quả thành công

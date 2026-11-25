@@ -5,7 +5,8 @@ namespace Coaching.Infrastructure.Identity;
 
 internal static class TokenHasher
 {
-    public static string NewToken() => Base64UrlEncode(RandomNumberGenerator.GetBytes(64));
+    /// <summary>Token ngẫu nhiên base64url. Refresh token giữ 64 byte; token tài khoản dùng 32 byte.</summary>
+    public static string NewToken(int byteCount = 64) => Base64UrlEncode(RandomNumberGenerator.GetBytes(byteCount));
 
     public static string Hash(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
