@@ -151,4 +151,39 @@ describe('StudentProfileComponent', () => {
     expect(el.querySelector('.meta')?.textContent).toContain('Đã kết thúc');
     expect(el.querySelector('button.reload')).toBeNull();
   });
+
+  it('shows the server message in the status panel for a non-409 error', async () => {
+    const { fixture, http, el, click } = await setup();
+
+    click('Tạm dừng');
+    fixture.detectChanges();
+    const reason = el.querySelector('#status-reason') as HTMLTextAreaElement;
+    reason.value = 'Đi công tác';
+    reason.dispatchEvent(new Event('input'));
+    click('Xác nhận');
+    http.expectOne('/api/admin/students/s1/coaching-status').flush(
+      { title: 'Không thể tạm dừng học viên này.' }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(el.querySelector('app-coaching-status-panel')?.textContent).toContain('Không thể tạm dừng học viên này.');
+    expect(el.querySelector('button.reload')).toBeNull();
+  });
+
+  it('clears the note error when the note edit is cancelled', async () => {
+    const { fixture, http, el, click } = await setup();
+
+    click('Sửa ghi chú');
+    fixture.detectChanges();
+    click('Lưu ghi chú');
+    http.expectOne('/api/admin/students/s1/internal-note').flush(
+      { title: 'Ghi chú quá dài.' }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    fixture.detectChanges();
+    expect(el.querySelector('.note .msg')?.textContent).toContain('Ghi chú quá dài.');
+
+    click('Huỷ');
+    fixture.detectChanges();
+    expect(el.querySelector('.note .msg')).toBeNull();
+  });
 });

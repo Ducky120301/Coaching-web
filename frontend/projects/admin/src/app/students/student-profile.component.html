@@ -34,6 +34,21 @@
   <div class="layout">
     <div class="main-col">
       <section class="card">
+        <h2>Mục bắt buộc còn thiếu</h2>
+        @if (d.missingRequired.length > 0) {
+          <ul class="missing">
+            @for (code of d.missingRequired; track code) {
+              <li>{{ label(code) }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="small">Hồ sơ đã đủ mục bắt buộc.</p>
+        }
+      </section>
+    </div>
+
+    <aside>
+      <section class="card">
         <h2>Thông tin học viên</h2>
         <dl>
           <div><dt>Mục tiêu</dt><dd>{{ text(d, 'trainingGoal') }}</dd></div>
@@ -65,22 +80,6 @@
           <span class="small">Sửa lần cuối {{ formatDayTime(d.updatedAt) }}@if (d.updatedBy) { bởi {{ d.updatedBy }}}.</span>
         }
       </section>
-
-      <section class="card">
-        <h2>Mục bắt buộc còn thiếu</h2>
-        @if (d.missingRequired.length > 0) {
-          <ul class="missing">
-            @for (code of d.missingRequired; track code) {
-              <li>{{ label(code) }}</li>
-            }
-          </ul>
-        } @else {
-          <p class="small">Hồ sơ đã đủ mục bắt buộc.</p>
-        }
-      </section>
-    </div>
-
-    <aside>
       <section class="note">
         <h2>Ghi chú nội bộ</h2>
         @if (editingNote()) {
@@ -89,7 +88,7 @@
                     (input)="noteDraft.set($any($event.target).value)"></textarea>
           <div class="actions">
             <button type="button" class="primary" [disabled]="busy()" (click)="saveNote()">Lưu ghi chú</button>
-            <button type="button" class="secondary" (click)="editingNote.set(false)">Huỷ</button>
+            <button type="button" class="secondary" (click)="cancelNote()">Huỷ</button>
           </div>
         } @else {
           <p class="note-text">{{ d.internalNote ?? 'Chưa có ghi chú.' }}</p>

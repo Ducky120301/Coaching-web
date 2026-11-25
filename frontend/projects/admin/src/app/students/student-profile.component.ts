@@ -101,6 +101,11 @@ export class StudentProfileComponent implements OnInit {
     this.editingNote.set(true);
   }
 
+  protected cancelNote(): void {
+    this.noteError.set(null);
+    this.editingNote.set(false);
+  }
+
   // @BR-f02-ho-so-hoc-vien-014
   protected async saveNote(): Promise<void> {
     const d = this.detail()!;

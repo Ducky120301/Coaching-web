@@ -41,7 +41,7 @@ details h3 { margin: 14px 0 8px; font-size: 14px; font-weight: 600; }
 .note .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .link-btn { align-self: flex-start; border: 0; background: transparent; padding: 0; color: var(--primary); font: inherit; font-size: 14px;
   font-weight: 600; cursor: pointer; text-decoration: underline; }
-.history-title { font-family: var(--font-head); font-weight: 700; font-size: 24px !important; }
+.history .history-title { font-family: var(--font-head); font-weight: 700; font-size: 24px; }
 .history ol { margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--soft); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
 .by { color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
