@@ -7,6 +7,7 @@ using Reqnroll;
 namespace Coaching.Acceptance.Steps;
 
 // @BR-f00-codebase-008
+// @ADR-f00-codebase-004: kịch bản người dùng B kiểm việc chia giới hạn theo IP thật từ X-Forwarded-For
 [Binding]
 public sealed class RateLimitSteps(AcceptanceContext ctx)
 {

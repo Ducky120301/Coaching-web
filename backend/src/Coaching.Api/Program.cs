@@ -15,6 +15,7 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddJwtAuth(builder.Configuration);
 builder.Services.AddCoachingRateLimiting(builder.Configuration);
 // @ADR-f00-codebase-004: lấy IP client từ hop cuối X-Forwarded-For (Render / nginx nối IP thật vào cuối)
+// Giả định triển khai: API CHỈ nhận request qua proxy (Render / nginx compose) — gọi thẳng API thì client tự đặt được XFF.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
