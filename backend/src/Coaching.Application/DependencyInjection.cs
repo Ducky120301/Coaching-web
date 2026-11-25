@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<CreateStudentHandler>();
         services.AddScoped<GetStudentHandler>();
         services.AddScoped<UpdateStudentHandler>();
+        services.AddScoped<UpdateInternalNoteHandler>();
+        services.AddScoped<GetStudentSelfHandler>();
         return services;
     }
 }

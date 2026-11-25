@@ -1,15 +1,17 @@
-using Coaching.Application.Abstractions;
+using Coaching.Api.Common;
+using Coaching.Application.Students.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coaching.Api.Controllers.Client;
 
-public sealed record StudentMeDto(Guid UserId, string Email, string FullName);
-
-public sealed class MeController(ICurrentUser currentUser) : ClientControllerBase
+public sealed class MeController(GetStudentSelfHandler getSelf) : ClientControllerBase
 {
-    /// <summary>Thông tin tài khoản học viên đang đăng nhập (hồ sơ đầy đủ bổ sung ở P1/P4).</summary>
+    /// <summary>
+    /// Hồ sơ của học viên đang đăng nhập.
+    /// @ADR-f02-ho-so-hoc-vien-007 @BR-f02-ho-so-hoc-vien-016: DTO riêng phía học viên, không có ghi chú nội bộ.
+    /// </summary>
     [HttpGet]
-    [ProducesResponseType<StudentMeDto>(StatusCodes.Status200OK)]
-    public IActionResult Get() =>
-        Ok(new StudentMeDto(currentUser.UserId!.Value, currentUser.Email ?? string.Empty, currentUser.FullName ?? string.Empty));
+    [ProducesResponseType<StudentSelfDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(CancellationToken cancellationToken) =>
+        (await getSelf.HandleAsync(cancellationToken)).ToActionResult(this);
 }

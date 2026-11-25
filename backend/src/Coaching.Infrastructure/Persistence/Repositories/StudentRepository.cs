@@ -17,5 +17,8 @@ internal sealed class StudentRepository(AppDbContext db) : IStudentRepository
         return student;
     }
 
+    public Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        db.Students.AsNoTracking().SingleOrDefaultAsync(s => s.UserId == userId, cancellationToken);
+
     public void Add(Student student) => db.Students.Add(student);
 }

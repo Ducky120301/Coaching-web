@@ -3,7 +3,7 @@ using Coaching.Domain.Students;
 
 namespace Coaching.Application.Students;
 
-/// <summary>Hồ sơ chi tiết cho coach (chỉ dùng ở /api/admin).</summary>
+/// <summary>Hồ sơ chi tiết cho coach — CHỈ dùng ở /api/admin (có ghi chú nội bộ).</summary>
 public sealed record StudentDetailDto(
     Guid Id,
     Guid CoachId,
@@ -16,7 +16,9 @@ public sealed record StudentDetailDto(
     IReadOnlyList<string> MissingRequired,
     DateTimeOffset? UpdatedAt,
     string? UpdatedBy,
-    string Version)
+    string Version,
+    string? InternalNote,
+    DateTimeOffset? InternalNoteUpdatedAt)
 {
     public static StudentDetailDto From(Student student, Coach coach) => new(
         student.Id,
@@ -30,7 +32,9 @@ public sealed record StudentDetailDto(
         student.MissingRequiredFields, // @BR-f02-ho-so-hoc-vien-004
         student.UpdatedAt, // @BR-f02-ho-so-hoc-vien-013
         student.UpdatedByUserId is { } editor ? ActorName(editor, coach) : null,
-        StudentVersion.Format(student.Version)); // @ADR-f02-ho-so-hoc-vien-004
+        StudentVersion.Format(student.Version), // @ADR-f02-ho-so-hoc-vien-004
+        student.InternalNote, // @BR-f02-ho-so-hoc-vien-016: coach thấy ghi chú
+        student.InternalNoteUpdatedAt); // @BR-f02-ho-so-hoc-vien-014
 
     /// <summary>MVP chỉ có coach sở hữu hồ sơ thao tác trên hồ sơ.</summary>
     public static string ActorName(Guid userId, Coach coach) =>

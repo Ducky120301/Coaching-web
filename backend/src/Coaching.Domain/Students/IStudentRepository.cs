@@ -11,5 +11,8 @@ public interface IStudentRepository
     /// </summary>
     Task<Student?> GetForUpdateAsync(Guid id, Guid coachId, byte[] expectedVersion, CancellationToken cancellationToken = default);
 
+    /// <summary>Hồ sơ của tài khoản đăng nhập (dùng cho /api/client — lọc theo user trong token).</summary>
+    Task<Student?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
     void Add(Student student);
 }

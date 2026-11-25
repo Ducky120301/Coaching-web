@@ -10,6 +10,7 @@ public sealed class Student : AggregateRoot<Guid>
 {
     // @ADR-f02-ho-so-hoc-vien-009
     public const int FullNameMaxLength = 100;
+    public const int InternalNoteMaxLength = 5000; // @ADR-f02-ho-so-hoc-vien-009
 
     public Guid CoachId { get; private set; }
 
@@ -39,6 +40,12 @@ public sealed class Student : AggregateRoot<Guid>
 
     /// <summary>@ADR-f02-ho-so-hoc-vien-004: rowversion do SQL Server sinh, dùng chặn ghi đè.</summary>
     public byte[] Version { get; private set; } = [];
+
+    /// <summary>Chỉ coach thấy — không bao giờ có trong dữ liệu trả cho học viên (@BR-f02-ho-so-hoc-vien-016).</summary>
+    public string? InternalNote { get; private set; }
+
+    /// <summary>@BR-f02-ho-so-hoc-vien-014: thời điểm sửa ghi chú, tách khỏi UpdatedAt của hồ sơ.</summary>
+    public DateTimeOffset? InternalNoteUpdatedAt { get; private set; }
 
     private Student() { }
 
@@ -78,6 +85,19 @@ public sealed class Student : AggregateRoot<Guid>
         Registration = registration;
         UpdatedAt = at;
         UpdatedByUserId = actorUserId;
+    }
+
+    /// <summary>@BR-f02-ho-so-hoc-vien-014: thời điểm sửa ghi chú chỉ đổi khi nội dung ghi chú đổi.</summary>
+    public void UpdateInternalNote(string? note, DateTimeOffset at)
+    {
+        var value = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        if (value is not null && value.Length > InternalNoteMaxLength)
+            throw new DomainException("student.internal_note_too_long",
+                $"Ghi chú nội bộ tối đa {InternalNoteMaxLength} ký tự.");
+        if (value == InternalNote)
+            return;
+        InternalNote = value;
+        InternalNoteUpdatedAt = at;
     }
 
     // @BR-f02-ho-so-hoc-vien-003

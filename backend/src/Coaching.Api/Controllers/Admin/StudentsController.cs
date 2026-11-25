@@ -31,4 +31,10 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateStudentCommand command,
         [FromServices] UpdateStudentHandler handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
+
+    [HttpPut("{id:guid}/internal-note")]
+    [ProducesResponseType<StudentDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateInternalNote(Guid id, [FromBody] UpdateInternalNoteCommand command,
+        [FromServices] UpdateInternalNoteHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
 }
