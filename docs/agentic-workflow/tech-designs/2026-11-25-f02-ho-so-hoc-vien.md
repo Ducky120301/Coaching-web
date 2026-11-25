@@ -51,7 +51,7 @@ N/A — gói trong 1 API + 1 web admin hiện có, không thêm service hay inte
 ### Quyết định kiến trúc
 
 - `ADR-f02-ho-so-hoc-vien-001` — Tạo `Student` và tài khoản Identity "Chờ kích hoạt" trong cùng một transaction
-  - **Quyết định**: `CreateStudentHandler` gọi port `IStudentAccounts.CreatePendingAsync(email, fullName)` (tạo `AppUser` role Student, **không mật khẩu**, chưa đăng nhập được) rồi `Student.Create(...)` giữ `UserId`; cả hai bọc trong `IUnitOfWork.ExecuteInTransactionAsync`. Trạng thái tài khoản (`PendingActivation`) nằm ở `Student`.
+  - **Quyết định**: `CreateStudentHandler` gọi port `IStudentAccounts.CreatePendingAsync(userId, email, fullName)` (tạo `AppUser` role Student, **không mật khẩu**, chưa đăng nhập được) rồi `Student.Create(...)` giữ `UserId`; cả hai bọc trong `IUnitOfWork.ExecuteInTransactionAsync`. Trạng thái tài khoản (`PendingActivation`) nằm ở `Student`.
   - **Lý do**: email duy nhất toàn hệ thống (gồm cả tài khoản coach) có sẵn ở Identity `NormalizedEmail` + unique index, và F01-P1 chỉ cần đặt mật khẩu tạm cho user đã có.
   - **Trade-off chấp nhận**: `UserManager.CreateAsync` tự `SaveChanges`, nên cần transaction tường minh thay vì một `SaveChanges`.
 - `ADR-f02-ho-so-hoc-vien-002` — Câu trả lời form lưu dạng JSON, chỉ các cột cần truy vấn là cột riêng
@@ -97,7 +97,7 @@ N/A — gói trong 1 API + 1 web admin hiện có, không thêm service hay inte
 
 **Application** (`backend/src/Coaching.Application/Students/`)
 - `Commands/CreateStudent`, `Commands/UpdateStudent`, `Commands/UpdateInternalNote`, `Commands/ChangeCoachingStatus`, `Queries/GetStudent`, `Queries/ListStudents`, `Queries/GetStudentSelf`.
-- Port `IStudentAccounts.CreatePendingAsync(Email, fullName) → Result<Guid>` (`email_taken` → 409).
+- Port `IStudentAccounts.CreatePendingAsync(Guid userId, Email email, string fullName) → Result` (`email_taken` → 409); handler tạo `userId` và kiểm hồ sơ xong mới tạo tài khoản.
 - `IUnitOfWork.ExecuteInTransactionAsync(Func<CancellationToken, Task>, CancellationToken)`.
 - Coach hiện tại: lấy `Coach` theo `ICurrentUser.UserId` (`ICoachRepository.GetByUserIdAsync`).
 

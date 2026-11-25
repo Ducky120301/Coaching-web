@@ -5650,6 +5650,8 @@ EOF
 
 ### Task 8: [UI] Tạo hồ sơ + Sửa hồ sơ — `StudentFormComponent` dùng chung
 
+> Lưu ý: route `/hoc-vien/:id` đến Task 9 mới có. Ở Task 8, sau khi lưu, trình duyệt sẽ rơi vào route `**` rồi về `/dashboard`. Đây là hành vi đúng tạm thời, không phải lỗi.
+
 Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Tạo hồ sơ học viên** (`/hoc-vien/moi`, page `AdTaoHoSo`) và **Sửa hồ sơ** (`/hoc-vien/:id/sua`, dùng lại form `AdTaoHoSo`, điền sẵn, email chỉ xem, nút "Lưu thay đổi").
 
 **Files:**
