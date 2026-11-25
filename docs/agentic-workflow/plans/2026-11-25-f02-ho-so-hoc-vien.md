@@ -113,7 +113,7 @@ CLAUDE.md (M) bảng route
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-001`, `@BR-f02-ho-so-hoc-vien-002`, `@BR-f02-ho-so-hoc-vien-003`, `@BR-f02-ho-so-hoc-vien-005`, `@BR-f02-ho-so-hoc-vien-006`, `@BR-f02-ho-so-hoc-vien-007` | `@ADR-f02-ho-so-hoc-vien-001`
 
-- [ ] **Step 1: Liquibase v0.2.0 — hai bảng mới**
+- [x] **Step 1: Liquibase v0.2.0 — hai bảng mới**
 
 `database/changelog/v0.2.0/scripts/0001-students.sql`:
 ```sql
@@ -211,7 +211,7 @@ GO
   <include file="v0.2.0/changelog.xml" relativeToChangelogFile="true"/>
 ```
 
-- [ ] **Step 2: Viết Domain test cho `Student.Create`**
+- [x] **Step 2: Viết Domain test cho `Student.Create`**
 
 `backend/tests/Coaching.Domain.Tests/Students/StudentTests.cs`:
 ```csharp
@@ -277,12 +277,12 @@ public sealed class StudentTests
 }
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students"`
 Expected: FAIL — build error `The type or namespace name 'Students' does not exist in the namespace 'Coaching.Domain'`.
 
-- [ ] **Step 4: Domain — trạng thái, aggregate, repository**
+- [x] **Step 4: Domain — trạng thái, aggregate, repository**
 
 `backend/src/Coaching.Domain/Students/AccountStatus.cs`:
 ```csharp
@@ -388,12 +388,12 @@ public interface IStudentRepository
 }
 ```
 
-- [ ] **Step 5: Chạy — kỳ vọng PASS**
+- [x] **Step 5: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students"`
 Expected: `Passed: 6`.
 
-- [ ] **Step 6: Hạ tầng test acceptance — đồng hồ cố định, gửi JSON có token, helper học viên tạo kèm `Student`**
+- [x] **Step 6: Hạ tầng test acceptance — đồng hồ cố định, gửi JSON có token, helper học viên tạo kèm `Student`**
 
 `backend/tests/Coaching.Acceptance/Support/AcceptanceContext.cs` — thay toàn bộ:
 ```csharp
@@ -642,7 +642,7 @@ public sealed class StudentApi(AcceptanceContext ctx)
 }
 ```
 
-- [ ] **Step 7: Viết step defs `@api` cho BR-001, 002, 003, 005, 006, 007**
+- [x] **Step 7: Viết step defs `@api` cho BR-001, 002, 003, 005, 006, 007**
 
 `backend/tests/Coaching.Acceptance/Steps/StudentCreateSteps.cs`:
 ```csharp
@@ -776,7 +776,7 @@ public sealed class StudentCreateSteps(AcceptanceContext ctx, StudentApi api)
 }
 ```
 
-- [ ] **Step 8: Viết integration test (seed bị loại + rollback + seed demo)**
+- [x] **Step 8: Viết integration test (seed bị loại + rollback + seed demo)**
 
 `backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs` — thay toàn bộ:
 ```csharp
@@ -1056,12 +1056,12 @@ public sealed class DemoSeedStudentTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng FAIL**
+- [x] **Step 9: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `The type or namespace name 'StudentDetailDto' could not be found` (và `AppDbContext.Students` chưa có).
 
-- [ ] **Step 10: Application — port, lỗi, DTO, use case**
+- [x] **Step 10: Application — port, lỗi, DTO, use case**
 
 `backend/src/Coaching.Application/Abstractions/IUnitOfWork.cs` — thay toàn bộ:
 ```csharp
@@ -1257,7 +1257,7 @@ public static class DependencyInjection
 }
 ```
 
-- [ ] **Step 11: Infrastructure — mapping, repository, tài khoản, transaction, seed demo**
+- [x] **Step 11: Infrastructure — mapping, repository, tài khoản, transaction, seed demo**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs`:
 ```csharp
@@ -1431,7 +1431,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         }
 ```
 
-- [ ] **Step 12: API — `StudentsController`**
+- [x] **Step 12: API — `StudentsController`**
 
 `backend/src/Coaching.Api/Controllers/Admin/StudentsController.cs`:
 ```csharp
@@ -1465,7 +1465,7 @@ public sealed class StudentsController : AdminControllerBase
 }
 ```
 
-- [ ] **Step 13: Chạy — kỳ vọng PASS**
+- [x] **Step 13: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-001|Category=BR-f02-ho-so-hoc-vien-002|Category=BR-f02-ho-so-hoc-vien-003|Category=BR-f02-ho-so-hoc-vien-005|Category=BR-f02-ho-so-hoc-vien-006|Category=BR-f02-ho-so-hoc-vien-007)&Category!=web"`
 Expected: `Passed: 10`, `Failed: 0` (BR-001: 1 + 3 ví dụ outline; BR-002: 2; BR-003: 1; BR-005/006/007: 1 mỗi rule).
@@ -1474,7 +1474,7 @@ Expected: `Passed: 6`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed (scenario F00 chạy với đồng hồ bắt đầu 01/11/2026 và helper `CreateStudentAsync` mới).
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 ```bash
 git add database/changelog backend/src backend/tests/Coaching.Domain.Tests/Students backend/tests/Coaching.Acceptance backend/tests/Coaching.Api.IntegrationTests
 git commit -F - <<'EOF'
