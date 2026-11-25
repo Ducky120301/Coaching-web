@@ -203,7 +203,7 @@ Kích hoạt: `login` (mật khẩu tạm còn hạn) → phát `Activation` tok
   - **Tạo hồ sơ** (`AdTaoHoSo`, `/hoc-vien/moi`):
     - Nút chính "Lưu và gửi thông tin đăng nhập": gọi `POST /students`, rồi `POST /students/{id}/credentials`.
     - Nút "Chỉ lưu hồ sơ" (đổi lại theo prototype).
-    - Thông báo dùng đúng câu prototype: "Đã lưu hồ sơ và gửi thông tin đăng nhập." hoặc "Còn {n} mục bắt buộc chưa điền. Các ô thiếu đã được đánh dấu đỏ." Nếu gửi lỗi sau khi đã lưu: "Đã lưu hồ sơ nhưng chưa gửi được thông tin đăng nhập. Vui lòng thử lại." rồi chuyển sang trang hồ sơ.
+    - Thông báo dùng đúng câu prototype: "Đã lưu hồ sơ và gửi thông tin đăng nhập." . Còn thiếu mục bắt buộc: hồ sơ vẫn được lưu (BR-f01-p1-tai-khoan-hoc-vien-002), không gửi, chuyển sang trang hồ sơ với câu "Đã lưu hồ sơ. Còn {n} mục bắt buộc chưa điền nên chưa gửi thông tin đăng nhập." (PO duyệt cùng plan 2026-11-26). Nếu gửi lỗi sau khi đã lưu: "Đã lưu hồ sơ nhưng chưa gửi được thông tin đăng nhập. Vui lòng thử lại." rồi chuyển sang trang hồ sơ.
     - Aside "Trạng thái tài khoản": `stText`/`stNote` như prototype. Card "Học viên sẽ nhận gì" như prototype.
   - **Hồ sơ** (`AdHoSo`, `/hoc-vien/:id`):
     - Header: sau chip coaching hiện "Kích hoạt dd/MM/yyyy" (13px, `--muted`) khi đã kích hoạt.
