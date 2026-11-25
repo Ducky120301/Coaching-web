@@ -87,7 +87,7 @@ status: ready
 
 **Owns:** — | `@ADR-f01-p1-tai-khoan-hoc-vien-006`
 
-- [ ] **Step 1: Liquibase v0.3.0 — 3 cột `Students`, bảng `StudentAccountEvents`, bảng `AccountTokens`**
+- [x] **Step 1: Liquibase v0.3.0 — 3 cột `Students`, bảng `StudentAccountEvents`, bảng `AccountTokens`**
 
 `database/changelog/v0.3.0/scripts/0001-student-accounts.sql`:
 ```sql
@@ -182,7 +182,7 @@ GO
   <include file="v0.3.0/changelog.xml" relativeToChangelogFile="true"/>
 ```
 
-- [ ] **Step 2: Viết Domain test — hồ sơ mới chưa gửi, chưa có lịch sử tài khoản**
+- [x] **Step 2: Viết Domain test — hồ sơ mới chưa gửi, chưa có lịch sử tài khoản**
 
 `backend/tests/Coaching.Domain.Tests/Students/StudentAccountTests.cs`:
 ```csharp
@@ -219,12 +219,12 @@ public sealed class StudentAccountTests
 }
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.StudentAccountTests"`
 Expected: FAIL — build error `The type or namespace name 'AccountState' could not be found` và `'Student' does not contain a definition for 'GetAccountState'`.
 
-- [ ] **Step 4: Domain — loại sự kiện, trạng thái tài khoản, entity lịch sử, trường mới của `Student`**
+- [x] **Step 4: Domain — loại sự kiện, trạng thái tài khoản, entity lịch sử, trường mới của `Student`**
 
 `backend/src/Coaching.Domain/Students/AccountEventType.cs`:
 ```csharp
@@ -337,12 +337,12 @@ public sealed class StudentAccountEvent : Entity<Guid>
 
 (c) không đổi `Create`: trường mới mặc định null, danh sách rỗng.
 
-- [ ] **Step 5: Chạy — kỳ vọng PASS**
+- [x] **Step 5: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.StudentAccountTests"`
 Expected: `Passed: 2`, `Failed: 0`.
 
-- [ ] **Step 6: Viết test DTO, 503 và schema**
+- [x] **Step 6: Viết test DTO, 503 và schema**
 
 `backend/tests/Coaching.Application.Tests/Students/StudentDetailDtoTests.cs`:
 ```csharp
@@ -460,14 +460,14 @@ public sealed class AccountSchemaTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentDetailDtoTests"`
 Expected: FAIL — build error `No overload for method 'From' takes 3 arguments` và `The type or namespace name 'AccountInfoDto' could not be found`.
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~AccountSchemaTests|FullyQualifiedName~ResultExtensionsTests"`
 Expected: FAIL — build error `'ErrorKind' does not contain a definition for 'Unavailable'` và `'StudentDetailDto' does not contain a definition for 'Account'`.
 
-- [ ] **Step 8: Application + Api — `ErrorKind.Unavailable` → 503, `AccountInfoDto`, `From(student, coach, now)` ở mọi caller**
+- [x] **Step 8: Application + Api — `ErrorKind.Unavailable` → 503, `AccountInfoDto`, `From(student, coach, now)` ở mọi caller**
 
 `backend/src/Coaching.Application/Common/Result.cs` — thay enum `ErrorKind`:
 ```csharp
@@ -605,7 +605,7 @@ Kiểm không còn caller cũ:
 Run: `grep -rn "StudentDetailDto.From(student, coach)" backend/src backend/tests`
 Expected: không có dòng nào.
 
-- [ ] **Step 9: Infrastructure — map `AccountEvents` vào `StudentAccountEvents`**
+- [x] **Step 9: Infrastructure — map `AccountEvents` vào `StudentAccountEvents`**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs` — thêm ngay sau dòng `builder.Navigation(s => s.StatusHistory).UsePropertyAccessMode(PropertyAccessMode.Field);`:
 ```csharp
@@ -626,7 +626,7 @@ Expected: không có dòng nào.
 ```
 (`CredentialsSentAt`, `TempPasswordExpiresAt`, `ActivatedAt` map theo convention — `datetimeoffset NULL`; `TempPasswordLifetime` là static nên EF bỏ qua.)
 
-- [ ] **Step 10: Chạy — kỳ vọng PASS**
+- [x] **Step 10: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentDetailDtoTests"`
 Expected: `Passed: 1`, `Failed: 0`.
@@ -635,7 +635,7 @@ Expected: `Passed: 3`, `Failed: 0`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed — mọi test F00/F02 (Domain, Application, Integration, Acceptance) vẫn xanh; scenario F01-P1 chưa có (`.feature` của F01-P1 nằm ngoài acceptance cho tới khi bind — nếu đã include thì chỉ được fail `MissingStepDefinition`, theo interim rule).
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 ```bash
 git add database/changelog backend/src backend/tests/Coaching.Domain.Tests/Students/StudentAccountTests.cs backend/tests/Coaching.Application.Tests/Students backend/tests/Coaching.Api.IntegrationTests/Students/AccountSchemaTests.cs backend/tests/Coaching.Api.IntegrationTests/Common
 git commit -F - <<'EOF'
