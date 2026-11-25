@@ -1508,7 +1508,7 @@ EOF
 
 **Owns:** `@BR-f02-ho-so-hoc-vien-004`, `@BR-f02-ho-so-hoc-vien-008`, `@BR-f02-ho-so-hoc-vien-009`, `@BR-f02-ho-so-hoc-vien-010`, `@BR-f02-ho-so-hoc-vien-011` | `@ADR-f02-ho-so-hoc-vien-002`, `@ADR-f02-ho-so-hoc-vien-006`, `@ADR-f02-ho-so-hoc-vien-009`
 
-- [ ] **Step 1: Mẫu form đủ mục dùng chung cho test**
+- [x] **Step 1: Mẫu form đủ mục dùng chung cho test**
 
 `backend/tests/Coaching.TestSupport/Coaching.TestSupport.csproj` — thêm trước `</Project>`:
 ```xml
@@ -1581,7 +1581,7 @@ public static class RegistrationSamples
 }
 ```
 
-- [ ] **Step 2: Viết Domain test cho form**
+- [x] **Step 2: Viết Domain test cho form**
 
 `backend/tests/Coaching.Domain.Tests/Students/RegistrationFormTests.cs`:
 ```csharp
@@ -1782,12 +1782,12 @@ public sealed class RegistrationFormTests
 }
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~RegistrationFormTests"`
 Expected: FAIL — build error `The type or namespace name 'RegistrationInput' could not be found`.
 
-- [ ] **Step 4: Domain — input, lựa chọn, danh mục mục form, `RegistrationForm`**
+- [x] **Step 4: Domain — input, lựa chọn, danh mục mục form, `RegistrationForm`**
 
 `backend/src/Coaching.Domain/Students/RegistrationInput.cs`:
 ```csharp
@@ -2201,12 +2201,12 @@ public sealed class RegistrationForm
             Registration = registration ?? RegistrationForm.CreateEmpty(),
 ```
 
-- [ ] **Step 5: Chạy — kỳ vọng PASS**
+- [x] **Step 5: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students"`
 Expected: không Failed (`RegistrationFormTests` + `StudentTests`).
 
-- [ ] **Step 6: Hạ tầng acceptance — ngày giờ VN, nhãn mục form, tạo hồ sơ kèm form**
+- [x] **Step 6: Hạ tầng acceptance — ngày giờ VN, nhãn mục form, tạo hồ sơ kèm form**
 
 `backend/tests/Coaching.Acceptance/Support/StepText.cs`:
 ```csharp
@@ -2308,7 +2308,7 @@ public static class RegistrationLabels
     }
 ```
 
-- [ ] **Step 7: Viết step defs `@api` cho BR-004, 008, 009, 010, 011**
+- [x] **Step 7: Viết step defs `@api` cho BR-004, 008, 009, 010, 011**
 
 `backend/tests/Coaching.Acceptance/Steps/StudentRegistrationSteps.cs`:
 ```csharp
@@ -2416,7 +2416,7 @@ public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi a
 }
 ```
 
-- [ ] **Step 8: Viết integration test (seed bị loại + JSON round-trip)**
+- [x] **Step 8: Viết integration test (seed bị loại + JSON round-trip)**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/RegistrationValidationTests.cs`:
 ```csharp
@@ -2478,12 +2478,12 @@ public sealed class RegistrationValidationTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng FAIL**
+- [x] **Step 9: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet build Coaching.slnx`
 Expected: FAIL — build error `'StudentDetailDto' does not contain a definition for 'Registration'`.
 
-- [ ] **Step 10: Lưu form vào hồ sơ — mapping JSON, use case, DTO**
+- [x] **Step 10: Lưu form vào hồ sơ — mapping JSON, use case, DTO**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/StudentConfiguration.cs` — thêm trước dòng `builder.Ignore(s => s.DomainEvents);`:
 ```csharp
@@ -2572,7 +2572,7 @@ public sealed record StudentDetailDto(
 }
 ```
 
-- [ ] **Step 11: Chạy — kỳ vọng PASS**
+- [x] **Step 11: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-004|Category=BR-f02-ho-so-hoc-vien-008|Category=BR-f02-ho-so-hoc-vien-009|Category=BR-f02-ho-so-hoc-vien-010|Category=BR-f02-ho-so-hoc-vien-011)&Category!=web"`
 Expected: `Passed: 17`, `Failed: 0`.
@@ -2581,7 +2581,7 @@ Expected: `Passed: 10`.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 ```bash
 git add backend/src backend/tests
 git commit -F - <<'EOF'
