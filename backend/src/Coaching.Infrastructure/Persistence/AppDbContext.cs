@@ -23,9 +23,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // @ADR-f02-ho-so-hoc-vien-001: execution strategy (retry) bọc cả transaction; commit chỉ khi kết quả thành công
     public Task<Result<T>> ExecuteInTransactionAsync<T>(
-        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken = default) =>
-        Database.CreateExecutionStrategy().ExecuteAsync(async ct =>
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken = default)
+    {
+        var attempt = 0;
+        return Database.CreateExecutionStrategy().ExecuteAsync(async ct =>
         {
+            // Retry: clear tracker để entity của lần thất bại trước (AppUser, Student) không bị track trùng key.
+            if (++attempt > 1)
+                ChangeTracker.Clear();
             await using var transaction = await Database.BeginTransactionAsync(ct);
             var result = await operation(ct);
             if (result.IsSuccess)
@@ -34,6 +39,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
                 await transaction.RollbackAsync(ct);
             return result;
         }, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
