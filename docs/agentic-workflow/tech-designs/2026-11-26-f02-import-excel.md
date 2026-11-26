@@ -92,10 +92,10 @@ Câu lý do theo ô (tiếng Việt, cột = tiêu đề trong file): lấy từ
 
 ### Data Model / Database Changes
 Liquibase `database/changelog/v0.4.0/` (`0001-registration-google-form.xml`, `scripts/…sql`, `rollback/…sql`), không đổi cột. Với mỗi `Students` có khoá cũ trong `Registration`:
-- `$.bodyFatAndMethod` = ghép `bodyFatPercent` + " %" và `bodyFatMethod` bằng " – " (BR-f02-import-excel-008).
-- `$.weightHeightBeforeLifting` = ghép `weightBeforeLiftingKg` + " kg" và `heightThenCm` + " cm" bằng ", " (BR-f02-import-excel-009).
-- `$.bodyPhotoUrl` = link đầu tiên có giá trị theo thứ tự front, back, left, right (BR-f02-import-excel-010); các link còn lại nối vào `InternalNote` dạng `Ảnh mặt sau: …` / `Ảnh bên trái: …` / `Ảnh bên phải: …` (BR-f02-import-excel-011), `InternalNoteUpdatedAt = SYSDATETIMEOFFSET()` khi ghi chú đổi.
-- Xoá `$.availability`, `$.equipment` (BR-f02-import-excel-002) và các khoá cũ.
+- `$.BodyFatAndMethod` = ghép `bodyFatPercent` + " %" và `bodyFatMethod` bằng " – " (BR-f02-import-excel-008).
+- `$.WeightHeightBeforeLifting` = ghép `weightBeforeLiftingKg` + " kg" và `heightThenCm` + " cm" bằng ", " (BR-f02-import-excel-009).
+- `$.BodyPhotoUrl` = link đầu tiên có giá trị theo thứ tự front, back, left, right (BR-f02-import-excel-010); các link còn lại nối vào `InternalNote` dạng `Ảnh mặt sau: …` / `Ảnh bên trái: …` / `Ảnh bên phải: …` (BR-f02-import-excel-011), `InternalNoteUpdatedAt = SYSDATETIMEOFFSET()` khi ghi chú đổi.
+- Xoá `$.Availability`, `$.Equipment` (BR-f02-import-excel-002) và các khoá cũ.
 - Số thập phân hiển thị kiểu VN (72,5) khi ghép.
 
 ### Thiết kế giao diện (UI)

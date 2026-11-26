@@ -1277,7 +1277,7 @@ EOF
 
 **Owns:** `@BR-f02-import-excel-002`, `@BR-f02-import-excel-008`, `@BR-f02-import-excel-009`, `@BR-f02-import-excel-010`, `@BR-f02-import-excel-011` | `@ADR-f02-import-excel-002`
 
-- [ ] **Step 1: Mở `DatabaseFixture.FindChangelogDirectory` cho test dùng lại**
+- [x] **Step 1: Mở `DatabaseFixture.FindChangelogDirectory` cho test dùng lại**
 
 Trong `backend/tests/Coaching.TestSupport/DatabaseFixture.cs`, đổi:
 ```csharp
@@ -1289,7 +1289,7 @@ thành:
     public static string FindChangelogDirectory()
 ```
 
-- [ ] **Step 2: Viết integration test — seed JSON cũ, chạy script v0.4.0, so kết quả + chạy lại không đổi**
+- [x] **Step 2: Viết integration test — seed JSON cũ, chạy script v0.4.0, so kết quả + chạy lại không đổi**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/RegistrationMigrationTests.cs`:
 ```csharp
@@ -1501,12 +1501,12 @@ public sealed class RegistrationMigrationTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~RegistrationMigrationTests"`
 Expected: FAIL — `Changeset_v0_4_0_is_applied_by_liquibase` (`Assert.Equal() Failure: Expected: 1 Actual: 0`); `Old_registration_is_moved_to_google_form_fields` và `Running_the_script_again_changes_nothing` lỗi `System.IO.DirectoryNotFoundException`/`FileNotFoundException` cho `v0.4.0/scripts/0001-registration-google-form.sql`. `Ef_writes_registration_json_keys_as_property_names` PASS (xác nhận khoá PascalCase).
 
-- [ ] **Step 4: Liquibase v0.4.0 — script chuyển dữ liệu, rollback, changeset, changelog, master**
+- [x] **Step 4: Liquibase v0.4.0 — script chuyển dữ liệu, rollback, changeset, changelog, master**
 
 `database/changelog/v0.4.0/scripts/0001-registration-google-form.sql`:
 ```sql
@@ -1623,17 +1623,17 @@ GO
   <include file="v0.4.0/changelog.xml" relativeToChangelogFile="true"/>
 ```
 
-- [ ] **Step 5: Chạy — kỳ vọng PASS**
+- [x] **Step 5: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~RegistrationMigrationTests"`
 Expected: PASS — 4 test `Passed` (`Changeset_v0_4_0_is_applied_by_liquibase`, `Ef_writes_registration_json_keys_as_property_names`, `Old_registration_is_moved_to_google_form_fields`, `Running_the_script_again_changes_nothing`), `Failed: 0`. (Nếu Liquibase lỗi khi dựng template, lỗi hiện ở `InitializeAsync` dạng `Liquibase update lỗi (exit …)` kèm log — sửa SQL rồi chạy lại.)
 
-- [ ] **Step 6: Verify tổng backend**
+- [x] **Step 6: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Mọi test `Passed` trừ scenario `@api` của `features/hoc-vien/ho-so/import-excel.feature` (BR-f02-import-excel-012…034) fail `No matching step definition found` (interim rule). Không lỗi khác.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add database/changelog/v0.4.0 database/changelog/db.changelog-master.xml backend/tests/Coaching.TestSupport/DatabaseFixture.cs backend/tests/Coaching.Api.IntegrationTests/Students/RegistrationMigrationTests.cs
