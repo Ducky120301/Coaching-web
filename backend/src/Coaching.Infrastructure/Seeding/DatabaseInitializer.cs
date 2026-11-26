@@ -6,6 +6,7 @@ using Coaching.Infrastructure.Identity;
 using Coaching.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -80,6 +81,11 @@ public static class DatabaseInitializer
 
         // @BR-f03-thu-vien-bai-tap-005 @ADR-f03-thu-vien-bai-tap-003: danh mục ban đầu cho mọi coach chưa có, ở mọi môi trường
         await ExerciseCatalogSeeder.SeedAsync(db, cancellationToken);
+
+        // @ADR-f03-thu-vien-bai-tap-007: thư viện ban đầu 99 bài — mọi môi trường, một lần mỗi coach (sau danh mục ban đầu);
+        // host test đặt Seed:ExerciseLibrary=false để bắt đầu với thư viện trống
+        if (sp.GetRequiredService<IConfiguration>().GetValue(ExerciseLibrarySeeder.EnabledKey, true))
+            await ExerciseLibrarySeeder.SeedAsync(db, clock.UtcNow, cancellationToken);
 
         // @ADR-f02-ho-so-hoc-vien-003: hồ sơ tạo trước khi có SearchKey (cột mặc định '') được tính lại một lần
         var withoutSearchKey = await db.Students.Where(s => s.SearchKey == "").ToListAsync(cancellationToken);

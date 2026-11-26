@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+  <!-- @ADR-f03-thu-vien-bai-tap-007: thư viện ban đầu nạp một lần mỗi coach -->
+  <changeSet id="v0.5.0-0002-exercise-library-seeds" author="duc.hm4@kiotviet.com">
+    <comment>F03: ExerciseLibrarySeeds — đánh dấu coach đã được nạp 99 bài ban đầu</comment>
+    <sqlFile path="scripts/0002-exercise-library-seeds.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO" stripComments="false"/>
+    <rollback>
+      <sqlFile path="rollback/0002-exercise-library-seeds.rollback.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO"/>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>

@@ -11,6 +11,12 @@ public interface IExerciseRepository
     /// <summary>@BR-f03-thu-vien-bai-tap-001: bài cùng khoá tên + dụng cụ (kể cả đang ẩn), không theo dõi.</summary>
     Task<Exercise?> FindByKeyAsync(Guid coachId, string nameKey, Guid equipmentId, CancellationToken ct = default);
 
+    /// <summary>
+    /// @BR-f03-thu-vien-bai-tap-016 @BR-f03-thu-vien-bai-tap-018 @BR-f03-thu-vien-bai-tap-019: bài của coach thoả MỌI điều kiện
+    /// của <paramref name="filter"/>, sắp theo tên.
+    /// </summary>
+    Task<IReadOnlyList<ExerciseListRow>> ListAsync(Guid coachId, ExerciseFilter filter, CancellationToken ct = default);
+
     void Add(Exercise e);
 
     void Remove(Exercise e);

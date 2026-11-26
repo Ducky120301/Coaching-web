@@ -14,6 +14,10 @@
     <ProjectReference Include="..\Coaching.Domain\Coaching.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- @ADR-f03-thu-vien-bai-tap-007: thư viện bài tập ban đầu, nạp ở mọi môi trường -->
+    <EmbeddedResource Include="Seeding\exercises.seed.json" LogicalName="Coaching.Infrastructure.Seeding.exercises.seed.json" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Coaching.Api.IntegrationTests" />
   </ItemGroup>
 </Project>

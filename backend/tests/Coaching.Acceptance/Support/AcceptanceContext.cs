@@ -42,6 +42,8 @@ public sealed class AcceptanceContext : IDisposable
         ["Email:Provider"] = "Capture",
         ["App:ClientBaseUrl"] = ClientBaseUrl,
         ["RateLimiting:AuthPermitPerMinute"] = "1000",
+        // @ADR-f03-thu-vien-bai-tap-007: scenario BDD bắt đầu với thư viện bài tập trống
+        ["Seed:ExerciseLibrary"] = "false",
     };
 
     public string ConnectionString { get; } = SqlServerHooks.NewDatabaseConnectionString();

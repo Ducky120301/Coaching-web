@@ -9,6 +9,13 @@ namespace Coaching.Api.Controllers.Admin;
 /// <summary>Thư viện bài tập của coach đang đăng nhập (AdminOnly — NFR-f03-thu-vien-bai-tap-002).</summary>
 public sealed class ExercisesController : AdminControllerBase
 {
+    // @BR-f03-thu-vien-bai-tap-016 @BR-f03-thu-vien-bai-tap-018 @BR-f03-thu-vien-bai-tap-019
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<ExerciseListItemDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] string? q, [FromQuery] Guid? muscleGroupId, [FromQuery] Guid? equipmentId,
+        [FromQuery] bool hidden, [FromServices] ListExercisesHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(new ListExercisesQuery(q, muscleGroupId, equipmentId, hidden), cancellationToken)).ToActionResult(this);
+
     // @ADR-f03-thu-vien-bai-tap-001 @BR-f03-thu-vien-bai-tap-001
     [HttpPost]
     [ProducesResponseType<ExerciseDetailDto>(StatusCodes.Status201Created)]

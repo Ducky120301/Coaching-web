@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<HideExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-015
         services.AddScoped<UnhideExerciseHandler>();
         services.AddScoped<DeleteExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-017
+        services.AddScoped<ListExercisesHandler>(); // @BR-f03-thu-vien-bai-tap-016 @BR-f03-thu-vien-bai-tap-018 @BR-f03-thu-vien-bai-tap-019
         // @ADR-f03-thu-vien-bai-tap-004: F05 đăng ký lại IExerciseUsage bằng truy vấn giáo án (đăng ký sau thắng)
         services.AddScoped<IExerciseUsage, NoExerciseUsage>();
         return services;

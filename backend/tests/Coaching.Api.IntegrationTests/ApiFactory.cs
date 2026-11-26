@@ -55,6 +55,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // @ADR-f01-p1-tai-khoan-hoc-vien-008
         builder.UseSetting("App:ClientBaseUrl", ClientBaseUrl);
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "1000");
+        // @ADR-f03-thu-vien-bai-tap-007: host test bắt đầu với thư viện bài tập trống (test nạp 99 bài tự bật lại)
+        builder.UseSetting("Seed:ExerciseLibrary", "false");
     }
 
     public async Task<AuthTokens> LoginAsync(string email, string password, ClientApp? app = null)

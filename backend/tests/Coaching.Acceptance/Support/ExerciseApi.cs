@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Coaching.Application.Exercises;
 using Coaching.Application.Exercises.Commands;
+using Coaching.Application.Exercises.Queries;
 
 namespace Coaching.Acceptance.Support;
 
@@ -92,6 +93,25 @@ public sealed class ExerciseApi(AcceptanceContext ctx, StudentApi coach, Exercis
     // @BR-f03-thu-vien-bai-tap-017
     public Task<HttpResponseMessage> TryDeleteAsync(string name) =>
         ctx.SendJsonAsync(HttpMethod.Delete, $"{Url}/{IdOf(name)}", null, coach.AdminToken);
+
+    // @BR-f03-thu-vien-bai-tap-016 @BR-f03-thu-vien-bai-tap-018 @BR-f03-thu-vien-bai-tap-019
+    public async Task<IReadOnlyList<ExerciseListItemDto>> ListAsync(string? q = null, string? muscleGroup = null,
+        string? equipment = null, bool hidden = false)
+    {
+        var query = new List<string>();
+        if (q is not null)
+            query.Add($"q={Uri.EscapeDataString(q)}");
+        if (muscleGroup is not null)
+            query.Add($"muscleGroupId={await catalog.MuscleGroupIdAsync(muscleGroup)}");
+        if (equipment is not null)
+            query.Add($"equipmentId={await catalog.EquipmentIdAsync(equipment)}");
+        if (hidden)
+            query.Add("hidden=true");
+
+        var response = await ctx.GetAsync(query.Count == 0 ? Url : $"{Url}?{string.Join('&', query)}", coach.AdminToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<List<ExerciseListItemDto>>())!;
+    }
 
     /// <summary>Đặt bài ở trạng thái đã ẩn qua API ẩn bài.</summary>
     public async Task HideAsync(string name) =>
