@@ -1663,7 +1663,7 @@ EOF
 
 **Owns:** —
 
-- [ ] **Step 1: Viết Application test cho `StudentRegistrar`**
+- [x] **Step 1: Viết Application test cho `StudentRegistrar`**
 
 `backend/tests/Coaching.Application.Tests/Students/StudentRegistrarTests.cs`:
 ```csharp
@@ -1818,12 +1818,12 @@ public sealed class StudentRegistrarTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentRegistrarTests"`
 Expected: FAIL — build error `The type or namespace name 'StudentRegistrar' could not be found`.
 
-- [ ] **Step 3: Tạo `StudentRegistrar`**
+- [x] **Step 3: Tạo `StudentRegistrar`**
 
 `backend/src/Coaching.Application/Students/StudentRegistrar.cs`:
 ```csharp
@@ -1869,7 +1869,7 @@ public sealed class StudentRegistrar(
 }
 ```
 
-- [ ] **Step 4: `CreateStudentHandler` dùng `StudentRegistrar` + đăng ký DI**
+- [x] **Step 4: `CreateStudentHandler` dùng `StudentRegistrar` + đăng ký DI**
 
 Thay toàn bộ `backend/src/Coaching.Application/Students/Commands/CreateStudent.cs`:
 ```csharp
@@ -1923,12 +1923,12 @@ và thêm ngay trước `services.AddScoped<CreateStudentHandler>();`:
         services.AddScoped<StudentRegistrar>();
 ```
 
-- [ ] **Step 5: Chạy Application test — kỳ vọng PASS**
+- [x] **Step 5: Chạy Application test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentRegistrarTests"`
 Expected: PASS — 4 test `Passed`, `Failed: 0`.
 
-- [ ] **Step 6: Chạy test hành vi tạo hồ sơ hiện có — kỳ vọng PASS (không đổi hành vi)**
+- [x] **Step 6: Chạy test hành vi tạo hồ sơ hiện có — kỳ vọng PASS (không đổi hành vi)**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~CreateStudentTests|FullyQualifiedName~InternalNoteTests|FullyQualifiedName~CoachIsolationTests|FullyQualifiedName~RegistrationValidationTests"`
 Expected: PASS — gồm `Account_is_rolled_back_when_saving_student_fails`, `Full_name_longer_than_100_is_rejected`, `Statuses_sent_in_body_are_ignored`; `Failed: 0`.
@@ -1936,12 +1936,12 @@ Expected: PASS — gồm `Account_is_rolled_back_when_saving_student_fails`, `Fu
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-ho-so-hoc-vien-001|Category=BR-f02-ho-so-hoc-vien-002|Category=BR-f02-ho-so-hoc-vien-003|Category=BR-f02-ho-so-hoc-vien-005|Category=BR-f02-ho-so-hoc-vien-006|Category=BR-f02-ho-so-hoc-vien-007|Category=BR-f02-ho-so-hoc-vien-014)&Category!=web"`
 Expected: PASS — mọi scenario `@api` của các BR trên (tạo hồ sơ, email trùng → 409, họ tên trống → 400, Chờ kích hoạt/Đang coaching, thuộc coach, ghi chú lúc tạo) `Passed`, `Failed: 0`.
 
-- [ ] **Step 7: Verify tổng backend**
+- [x] **Step 7: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Mọi test `Passed` trừ scenario `@api` của `features/hoc-vien/ho-so/import-excel.feature` (BR-f02-import-excel-012…034) fail `No matching step definition found` (interim rule). Số test pass/fail giống hệt sau Task 2 cộng 4 test `StudentRegistrarTests`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/src/Coaching.Application/Students/StudentRegistrar.cs backend/src/Coaching.Application/Students/Commands/CreateStudent.cs backend/src/Coaching.Application/DependencyInjection.cs backend/tests/Coaching.Application.Tests/Students/StudentRegistrarTests.cs
