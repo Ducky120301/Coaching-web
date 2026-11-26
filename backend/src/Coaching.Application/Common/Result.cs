@@ -12,7 +12,12 @@ public enum ErrorKind
     Unavailable,
 }
 
-public sealed record Error(string Code, string Message, ErrorKind Kind = ErrorKind.Validation);
+/// <summary><paramref name="Extensions"/>: dữ liệu thêm vào ProblemDetails (vd. hiddenExerciseId — BR-f03-thu-vien-bai-tap-001).</summary>
+public sealed record Error(
+    string Code,
+    string Message,
+    ErrorKind Kind = ErrorKind.Validation,
+    IReadOnlyDictionary<string, object?>? Extensions = null);
 
 public class Result
 {

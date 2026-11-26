@@ -1,7 +1,10 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Coaching.Application.Auth;
 using Coaching.Application.Common;
+using Coaching.Application.Exercises;
+using Coaching.Application.Exercises.Commands;
 using Coaching.Application.Exercises.Queries;
 using Coaching.Domain.Coaches;
 using Coaching.Domain.Common;
@@ -23,6 +26,47 @@ internal static class ExerciseRequests
 
     public static async Task<CategoriesDto> CategoriesAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<CategoriesDto>(CategoriesUrl))!;
+
+    /// <summary>Tên duy nhất trong DB dùng chung của collection (các test cùng coach admin).</summary>
+    public static string UniqueName(string label) => $"{label} {Guid.NewGuid():N}";
+
+    public static async Task<SaveExerciseCommand> CommandAsync(HttpClient client, string? name,
+        string muscleGroup = "Ngực", string equipment = "Machine")
+    {
+        var catalog = await CategoriesAsync(client);
+        return new SaveExerciseCommand(name,
+            catalog.MuscleGroups.Single(c => c.Name == muscleGroup).Id,
+            catalog.Equipment.Single(c => c.Name == equipment).Id,
+            null, null, null, null, null, null, null, null, null, null);
+    }
+
+    public static async Task<ExerciseDetailDto> CreateAsync(HttpClient client, string name, string muscleGroup = "Ngực",
+        string equipment = "Machine", Func<SaveExerciseCommand, SaveExerciseCommand>? change = null)
+    {
+        var command = await CommandAsync(client, name, muscleGroup, equipment);
+        var response = await client.PostAsJsonAsync(Url, change is null ? command : change(command));
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<ExerciseDetailDto>())!;
+    }
+
+    public static async Task<ExerciseDetailDto> GetAsync(HttpClient client, Guid id) =>
+        (await client.GetFromJsonAsync<ExerciseDetailDto>($"{Url}/{id}"))!;
+
+    public static SaveExerciseCommand ToCommand(ExerciseDetailDto d) =>
+        new(d.Name, d.MuscleGroupId, d.EquipmentId, d.VideoUrl, d.Sets, d.RepsMin, d.RepsMax, d.RirMin, d.RirMax,
+            d.RestSeconds, d.TechniqueNotes, d.CommonMistakes, d.Version);
+
+    public static Task<HttpResponseMessage> UpdateAsync(HttpClient client, ExerciseDetailDto current,
+        Func<SaveExerciseCommand, SaveExerciseCommand> change) =>
+        client.PutAsJsonAsync($"{Url}/{current.Id}", change(ToCommand(current)));
+
+    /// <summary>Đặt bài ở trạng thái ẩn thẳng trong DB (API ẩn bài có ở Task 4).</summary>
+    public static async Task HideInDatabaseAsync(ApiFactory factory, Guid id)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE [Exercises] SET [IsHidden] = 1 WHERE [Id] = {id}");
+    }
 
     /// <summary>
     /// Coach mới (tài khoản Admin + hồ sơ coach). <paramref name="withCatalog"/> = true: tạo luôn danh mục ban đầu

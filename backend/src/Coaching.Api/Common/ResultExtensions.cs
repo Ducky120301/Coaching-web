@@ -22,6 +22,12 @@ internal static class ResultExtensions
 
         var problem = new ProblemDetails { Status = status, Title = error.Message, Type = error.Code };
         problem.Extensions["code"] = error.Code;
+        // vd. hiddenExerciseId của exercise.duplicate (BR-f03-thu-vien-bai-tap-001)
+        if (error.Extensions is not null)
+        {
+            foreach (var (key, value) in error.Extensions)
+                problem.Extensions[key] = value;
+        }
         return new ObjectResult(problem) { StatusCode = status };
     }
 }

@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<ImportStudentsHandler>(); // @ADR-f02-import-excel-007
         services.AddScoped<ListCategoriesHandler>(); // @BR-f03-thu-vien-bai-tap-005
         services.AddScoped<AddCategoryHandler>(); // @BR-f03-thu-vien-bai-tap-006
+        services.AddScoped<CreateExerciseHandler>(); // @ADR-f03-thu-vien-bai-tap-001
+        services.AddScoped<UpdateExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-020
+        services.AddScoped<GetExerciseHandler>();
         return services;
     }
 }

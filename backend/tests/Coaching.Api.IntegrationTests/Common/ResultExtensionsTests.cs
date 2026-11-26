@@ -1,5 +1,6 @@
 using Coaching.Api.Common;
 using Coaching.Application.Common;
+using Coaching.Application.Exercises;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,24 @@ public sealed class ResultExtensionsTests
         Assert.Equal("account.email_send_failed", problem.Extensions["code"]);
         Assert.Equal("Chưa gửi được email. Vui lòng thử lại sau.", problem.Title);
     }
+
+    // @BR-f03-thu-vien-bai-tap-001: bài trùng đang ẩn → ProblemDetails mang hiddenExerciseId để gợi ý bỏ ẩn
+    [Fact]
+    public void Error_extensions_are_copied_to_problem()
+    {
+        var hiddenId = Guid.NewGuid();
+
+        var result = Assert.IsType<ObjectResult>(ExerciseErrors.Duplicate(hiddenId).ToProblem(new StubController()));
+
+        Assert.Equal(StatusCodes.Status409Conflict, result.StatusCode);
+        var problem = Assert.IsType<ProblemDetails>(result.Value);
+        Assert.Equal("exercise.duplicate", problem.Extensions["code"]);
+        Assert.Equal("Đã có bài cùng tên và dụng cụ.", problem.Title);
+        Assert.Equal(hiddenId, problem.Extensions["hiddenExerciseId"]);
+        Assert.False(Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(
+            ExerciseErrors.Duplicate(null).ToProblem(new StubController())).Value).Extensions.ContainsKey("hiddenExerciseId"));
+    }
+
 
     private sealed class StubController : ControllerBase;
 }

@@ -26,6 +26,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
 
     public DbSet<ExerciseCategory> ExerciseCategories => Set<ExerciseCategory>();
+    public DbSet<Exercise> Exercises => Set<Exercise>();
 
     // @ADR-f02-ho-so-hoc-vien-001: execution strategy (retry) bọc cả transaction; commit chỉ khi kết quả thành công
     public Task<Result<T>> ExecuteInTransactionAsync<T>(

@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachRepository, CoachRepository>();
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IExerciseCategoryRepository, ExerciseCategoryRepository>(); // @ADR-f03-thu-vien-bai-tap-003
+        services.AddScoped<IExerciseRepository, ExerciseRepository>(); // @ADR-f03-thu-vien-bai-tap-001
         services.AddScoped<IStudentAccounts, StudentAccounts>();
         services.AddScoped<IAccountCredentials, AccountCredentials>();
         services.AddScoped<SessionRevoker>();
