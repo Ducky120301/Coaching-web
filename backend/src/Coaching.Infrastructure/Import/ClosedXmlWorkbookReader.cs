@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Compression;
 using ClosedXML.Excel;
 using Coaching.Application.Students.Import;
 
@@ -11,6 +12,18 @@ namespace Coaching.Infrastructure.Import;
 /// </summary>
 internal sealed class ClosedXmlWorkbookReader : IWorkbookReader
 {
+    /// <summary>
+    /// @ADR-f02-import-excel-007: tổng dung lượng giải nén tối đa của mọi entry trong gói .xlsx. ClosedXML nạp cả workbook
+    /// vào bộ nhớ, nên giới hạn 5 MB nén không đủ — XML nén 50–1000 lần. 500 dòng câu trả lời form chỉ vài MB XML.
+    /// </summary>
+    public const long MaxUncompressedBytes = 50L * 1024 * 1024;
+
+    /// <summary>Tỉ lệ giải nén / nén tối đa của một entry lớn (≥ <see cref="RatioCheckMinBytes"/>); vượt = "zip bomb".</summary>
+    public const long MaxCompressionRatio = 200;
+
+    /// <summary>Entry nhỏ hơn mức này không xét tỉ lệ (XML nhỏ, lặp nhiều có thể nén rất cao mà vô hại).</summary>
+    public const long RatioCheckMinBytes = 1024 * 1024;
+
     private static readonly WorkbookCell BlankCell = new(null, null, null);
 
     public WorkbookSheet Read(Stream xlsx)
@@ -21,12 +34,34 @@ internal sealed class ClosedXmlWorkbookReader : IWorkbookReader
             using var buffer = new MemoryStream();
             xlsx.CopyTo(buffer);
             buffer.Position = 0;
+            EnsureInflatesWithinLimits(buffer);
+            buffer.Position = 0;
             using var workbook = new XLWorkbook(buffer);
             return ReadFirstSheet(workbook.Worksheet(1));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             throw new InvalidWorkbookException($"Không đọc được file .xlsx ({ex.GetType().Name}).");
+        }
+    }
+
+    /// <summary>
+    /// @ADR-f02-import-excel-007 @BR-f02-import-excel-014: chỉ đọc thư mục trung tâm của gói zip (không giải nén) — tổng
+    /// kích thước giải nén khai báo vượt <see cref="MaxUncompressedBytes"/> hoặc một entry lớn nén phi lý → file không đọc
+    /// được. Kích thước khai báo là đáng tin: ZipArchive ném lỗi khi dữ liệu giải nén vượt kích thước khai báo.
+    /// File không phải zip (.csv, .xls, .xlsx có mật khẩu) ném InvalidDataException ở đây → cùng lỗi file_invalid.
+    /// </summary>
+    private static void EnsureInflatesWithinLimits(Stream buffer)
+    {
+        using var zip = new ZipArchive(buffer, ZipArchiveMode.Read, leaveOpen: true);
+        var total = 0L;
+        foreach (var entry in zip.Entries)
+        {
+            total += entry.Length;
+            if (total > MaxUncompressedBytes)
+                throw new InvalidDataException("Gói .xlsx giải nén vượt giới hạn.");
+            if (entry.Length >= RatioCheckMinBytes && entry.Length > MaxCompressionRatio * Math.Max(entry.CompressedLength, 1))
+                throw new InvalidDataException($"Entry {entry.FullName} có tỉ lệ nén bất thường.");
         }
     }
 

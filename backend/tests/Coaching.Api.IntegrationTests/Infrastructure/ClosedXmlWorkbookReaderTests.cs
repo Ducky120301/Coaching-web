@@ -93,4 +93,43 @@ public sealed class ClosedXmlWorkbookReaderTests
 
         Assert.True(error is InvalidWorkbookException, $"{kind}: {error?.GetType().Name ?? "không ném lỗi"}");
     }
+
+    // @BR-f02-import-excel-014 @ADR-f02-import-excel-007: file nén cao ("zip bomb") — tổng dung lượng giải nén vượt
+    // MaxUncompressedBytes → từ chối trước khi ClosedXML nạp workbook vào bộ nhớ
+    [Fact]
+    public void Workbook_whose_entries_inflate_beyond_the_cap_is_rejected()
+    {
+        var bytes = WithExtraEntry(ImportWorkbook.Standard().AddValidRows(3).ToBytes(), "xl/worksheets/sheet2.xml",
+            ClosedXmlWorkbookReader.MaxUncompressedBytes + 1);
+
+        Assert.True(bytes.Length < 1024 * 1024, $"File test phải nhỏ (nén cao): {bytes.Length} byte");
+        Assert.Throws<InvalidWorkbookException>(() => _reader.Read(new MemoryStream(bytes)));
+    }
+
+    // @BR-f02-import-excel-014 @ADR-f02-import-excel-007: một entry có tỉ lệ nén phi lý (dưới mức tổng nhưng vài KB
+    // nở thành hàng chục MB) cũng bị từ chối
+    [Fact]
+    public void Workbook_with_an_absurdly_compressed_entry_is_rejected()
+    {
+        var bytes = WithExtraEntry(ImportWorkbook.Standard().AddValidRows(3).ToBytes(), "xl/worksheets/sheet2.xml",
+            20 * 1024 * 1024);
+
+        Assert.Throws<InvalidWorkbookException>(() => _reader.Read(new MemoryStream(bytes)));
+    }
+
+    /// <summary>Chép file .xlsx và thêm một entry toàn khoảng trắng (nén ~1000:1), ghi theo khối để test không tốn RAM.</summary>
+    private static byte[] WithExtraEntry(byte[] xlsx, string name, long size)
+    {
+        var output = new MemoryStream();
+        output.Write(xlsx);
+        using (var zip = new System.IO.Compression.ZipArchive(output, System.IO.Compression.ZipArchiveMode.Update, leaveOpen: true))
+        {
+            using var entry = zip.CreateEntry(name, System.IO.Compression.CompressionLevel.SmallestSize).Open();
+            var chunk = new byte[1024 * 1024];
+            Array.Fill(chunk, (byte)' ');
+            for (var written = 0L; written < size; written += chunk.Length)
+                entry.Write(chunk, 0, (int)Math.Min(chunk.Length, size - written));
+        }
+        return output.ToArray();
+    }
 }
