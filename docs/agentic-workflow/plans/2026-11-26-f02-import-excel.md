@@ -5939,3 +5939,5 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_017b7Z6NqFqiU4t4EbdWs9by
 EOF
 ```
+
+> **Kiểm tay sau Task 8 (NFR-f02-import-excel-001):** import file 500 dòng hợp lệ trên local compose (và staging sau khi push) — thời gian phản hồi < 60 s; ghi kết quả vào báo cáo verify-done. Nếu `dotnet restore` không tìm thấy ClosedXML 0.105.1 ở Task 4, dùng bản 0.105.x mới nhất có sẵn (MIT) và ghi lại trong báo cáo.
