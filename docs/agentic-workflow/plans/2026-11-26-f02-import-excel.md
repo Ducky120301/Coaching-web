@@ -4734,7 +4734,7 @@ Màn hình (tech-design §3 "Thiết kế giao diện (UI)"): **Form Tạo/Sửa
 
 **Owns:** —
 
-- [ ] **Step 1: Sửa prototype theo form Google Form và trích lại page**
+- [x] **Step 1: Sửa prototype theo form Google Form và trích lại page**
 
 Chạy từ gốc repo (script chỉ thay đúng 7 chuỗi, mỗi chuỗi phải xuất hiện đúng 1 lần — sai là dừng, không ghi file). `SECS` nằm trong factory dạng JSON thường; template `AdHoSo` nằm trong chuỗi JSON nên `"` và `/` đã escape (`\"`, `<\/`):
 
@@ -4794,7 +4794,7 @@ Expected: `41 26`; khối `<dl>` có đúng 4 dòng `Mục tiêu tập luyện`,
 
 Mở `docs/duobexiuuu-coaching-design.html#AdTaoHoSo` trong trình duyệt: nhóm "Số đo cơ thể hiện tại" kết thúc bằng ô "Mỡ cơ thể và cách đo"; "Tập luyện hiện tại" có ô chữ "Số năm tập luyện" và textarea rộng 2 cột "Cân nặng và chiều cao trước khi tập tạ"; "Chương trình tập sắp tới" có 1 ô rộng "Link ảnh toàn thân"; aside "Hồ sơ đã điền" ghi `0/26 mục bắt buộc, 0/41 mục tổng`.
 
-- [ ] **Step 2: Viết spec cho danh sách mục mới, payload, form và khối "Thông tin học viên"**
+- [x] **Step 2: Viết spec cho danh sách mục mới, payload, form và khối "Thông tin học viên"**
 
 `frontend/projects/admin/src/app/students/registration-fields.spec.ts` — thay toàn bộ file:
 ```ts
@@ -4979,12 +4979,12 @@ describe('registration fields', () => {
   });
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `registration fields` (`expected [ …'Lịch rảnh'… ] not to contain 'Lịch rảnh'`, `toHaveLength(37)` nhận 44), `StudentFormComponent` (`#hs-trainingYears` là `SELECT`, `2/26 mục bắt buộc` không có, `Còn 24 mục`), `StudentProfileComponent` (`dl.info` không có, `Link ảnh toàn thân` không có). Các test khác PASS.
 
-- [ ] **Step 4: Danh sách mục theo Google Form**
+- [x] **Step 4: Danh sách mục theo Google Form**
 
 `frontend/projects/admin/src/app/students/registration-fields.ts` — thay phần đầu file từ dòng `import { Registration, … }` tới hết khai báo `FIELD_LABEL` (các hàm `parseDecimal`, `parseInteger`, `toInputText`, `toPayload`, `toFormValues` giữ nguyên — chuỗi/URL đi nhánh `registration[field.key] = raw`):
 ```ts
@@ -5126,7 +5126,7 @@ bằng:
 ```
 (ô link vẫn là `input.ctl` 46px, padding `0 14px`, radius 14 như mọi ô chữ của prototype — prototype `"t": "text"`.)
 
-- [ ] **Step 5: Khối "Thông tin học viên" và link ảnh trên trang Hồ sơ**
+- [x] **Step 5: Khối "Thông tin học viên" và link ảnh trên trang Hồ sơ**
 
 `frontend/projects/admin/src/app/students/student-profile.component.html` — thay:
 ```html
@@ -5154,7 +5154,7 @@ bằng (nhãn nguyên văn `AdHoSo` đã sửa ở Step 1; dòng "Hạn review" 
   }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng PASS**
+- [x] **Step 6: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS — không test nào failed (`registration fields` 5 test, `StudentFormComponent` thêm 2 test, `StudentProfileComponent` thêm 1 test; shared/client không đổi).
@@ -5167,7 +5167,7 @@ Kiểm tay (compose có API Task 1: `docker compose -f deploy/docker-compose.yml
 - `/hoc-vien/:id`: card "Thông tin học viên" 3 dòng `dt` 12px `--muted` / `dd` 14px, mục trống ghi "Chưa có"; card rộng ≤ 400px ở 1280px, 1 cột ở 390px không tràn ngang.
 - `/hoc-vien/:id/sua`: ô hiện đúng giá trị đã lưu của các mục mới.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 `.kv/sdd/proto/*.md` bị `.gitignore` (`.kv/*`) — không commit, chỉ commit prototype:
 ```bash
