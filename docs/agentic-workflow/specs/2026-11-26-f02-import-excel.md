@@ -141,7 +141,7 @@ Form hồ sơ hiện tại lệch với Google Form: có hai mục Google Form k
 
 ## 4. Design Requirements / NFR + Compliance/Security
 - `NFR-f02-import-excel-001` (Performance) — Import file 500 dòng hoàn tất dưới 60 giây trên môi trường staging, và các thao tác khác của hệ thống vẫn phản hồi trong lúc import.
-- `NFR-f02-import-excel-002` (Security) — File upload không được lưu lại trên server sau khi xử lý xong; kết quả import không chứa dữ liệu nào khác ngoài số dòng, tên cột và lý do.
+- `NFR-f02-import-excel-002` (Security) — File upload không được lưu lại trên server sau khi xử lý xong; kết quả import chỉ gồm số dòng, email của dòng, mã hồ sơ đã tạo, tên cột và lý do (PO chốt 2026-11-26).
 - `NFR-f02-import-excel-003` (Compliance) — Thư viện đọc file Excel (nếu dùng) phải có giấy phép tự do (MIT hoặc Apache 2.0).
 - `NFR-f02-import-excel-004` (Data) — Việc chuyển dữ liệu hồ sơ cũ sang mục mới chạy một lần khi triển khai và chạy lại không làm sai dữ liệu đã chuyển.
 
