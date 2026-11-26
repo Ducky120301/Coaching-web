@@ -11,14 +11,13 @@ const FORGOT_MESSAGE = 'Nếu email này thuộc tài khoản học viên đã k
 const FULL_NAME = 'Phạm Hoàng Quân';
 const OWN_PASSWORD = 'Coach2025';
 
-/** Đủ 28 mục bắt buộc của `registration` (+ họ tên, email = 30), giá trị hợp lệ theo RegistrationForm của F02. */
+/** Đủ 24 mục bắt buộc của `registration` (+ họ tên, email = 26), giá trị hợp lệ theo RegistrationForm (Google Form, @ADR-f02-import-excel-001). */
 const FULL_REGISTRATION = {
   pack: 'Pack 2', price: 3500000, transferDate: '2026-01-15', address: 'Hà Nội', age: 28, heightCm: 170, weightKg: 72.5,
-  trainingYears: '1–2 năm', weeklyTrainingTime: '5 buổi, mỗi buổi 75 phút', weightBeforeLiftingKg: 65, heightThenCm: 168,
+  trainingYears: '1–2 năm', weeklyTrainingTime: '5 buổi, mỗi buổi 75 phút', weightHeightBeforeLifting: '65 kg, 168 cm',
   trainingGoal: 'Giảm mỡ, giữ cơ', medicalHistory: 'Không', foodBudgetReadiness: 'Sẵn sàng', activityLevel: 'Vừa',
   stressLevel: 'Vừa', sleepDuration: '7–8 tiếng', currentDiet: 'Ăn 3 bữa chính', mealAndTrainingTimes: 'Ăn 7h, 12h, 19h. Tập 17h30–19h.',
-  sessionsPerWeek: '4 buổi', programStyle: 'Upper / Lower', photoFrontUrl: 'https://drive.google.com/front',
-  photoBackUrl: 'https://drive.google.com/back', photoLeftUrl: 'https://drive.google.com/left', photoRightUrl: 'https://drive.google.com/right',
+  sessionsPerWeek: '4 buổi', programStyle: 'Upper / Lower', bodyPhotoUrl: 'https://drive.google.com/open?id=abc',
   expectations: 'Giáo án rõ ràng', previousCoaching: 'Chưa từng', investmentReason: 'Muốn khỏe hơn',
 };
 

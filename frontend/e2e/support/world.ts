@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Browser, BrowserContext, Page, chromium } from 'playwright';
 import { ADMIN_URL, CLIENT_URL } from './env';
+import type { ImportedLearner, ImportFile, ImportResultBody, SkippedLine } from '../steps/import.steps';
 
 setDefaultTimeout(60_000);
 let browser: Browser;
@@ -24,6 +25,11 @@ export class E2EWorld extends World {
   /** F01-P1: email viết trong feature (chuẩn hoá) → hậu tố +e2e… để không trùng dữ liệu của lần chạy trước. */
   emailSuffix: Record<string, string> = {};
   tempPassword = '';
+  /** F02 import Excel: file sinh trong scenario, các dòng học viên trong file, dòng dự kiến bị bỏ qua, kết quả API. */
+  importFile: ImportFile | null = null;
+  importRows: ImportedLearner[] = [];
+  importSkipped: SkippedLine[] = [];
+  importResult: ImportResultBody | null = null;
 
   async openPage(url: string): Promise<Page> {
     const page = await this.context.newPage();
