@@ -38,4 +38,15 @@ describe('AdminShellComponent', () => {
 
     expect(el.querySelector('aside.rail dbx-user-menu')).not.toBeNull();
   });
+
+  it('lists the library in the rail after the student items', () => {
+    const { el } = setup();
+
+    const links = [...el.querySelectorAll('nav[aria-label="Admin"] a')].map((a) => [a.textContent?.trim(), a.getAttribute('href')]);
+    expect(links).toEqual([
+      ['Dashboard', '/dashboard'],
+      ['Tạo hồ sơ học viên', '/hoc-vien/moi'],
+      ['Thư viện bài tập', '/thu-vien/bai-tap'],
+    ]);
+  });
 });

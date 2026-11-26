@@ -25,6 +25,9 @@ interface CoachProfile { id: string; displayName: string; email: string; }
           <a routerLink="/hoc-vien/moi" routerLinkActive #create="routerLinkActive" [attr.aria-current]="create.isActive ? 'page' : null">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="userPlusIcon"></svg>Tạo hồ sơ học viên</a>
+          <a routerLink="/thu-vien/bai-tap" routerLinkActive #library="routerLinkActive" [attr.aria-current]="library.isActive ? 'page' : null">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" [innerHTML]="dumbbellIcon"></svg>Thư viện bài tập</a>
         </nav>
         <div class="user-block">
           <dbx-user-menu [name]="coachName() ?? auth.user()?.fullName ?? ''" roleLabel="Quản trị viên" />
@@ -53,6 +56,7 @@ export class AdminShellComponent {
   protected readonly auth = inject(AuthService);
   protected readonly homeIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.home);
   protected readonly userPlusIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.userPlus);
+  protected readonly dumbbellIcon = this.sanitizer.bypassSecurityTrustHtml(ICONS.dumbbell);
   /** Tên coach lấy từ hệ thống (hồ sơ coach). */
   protected readonly coachName = toSignal(
     inject(HttpClient).get<CoachProfile>(this.auth.apiUrl('/api/admin/profile')).pipe(

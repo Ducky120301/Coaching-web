@@ -34,6 +34,12 @@ export const routes: Routes = [
         data: { mode: 'edit' },
         title: 'Sửa hồ sơ — Khu vực coach',
       },
+      // F03: route tiếng Việt theo @ADR-f02-ho-so-hoc-vien-008
+      {
+        path: 'thu-vien/bai-tap',
+        loadComponent: () => import('./exercises/exercise-library.component').then((m) => m.ExerciseLibraryComponent),
+        title: 'Thư viện bài tập — Khu vực coach',
+      },
     ],
   },
   { path: '**', redirectTo: '' },
