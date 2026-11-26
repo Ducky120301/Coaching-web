@@ -4,6 +4,7 @@ using Coaching.Application.Auth;
 using Coaching.Application.Students;
 using Coaching.Application.Students.Import;
 using Coaching.Domain.Coaches;
+using Coaching.Domain.Exercises;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Persistence.Repositories;
 using Coaching.Infrastructure.Audit;
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICoachRepository, CoachRepository>();
         services.AddScoped<IStudentRepository, StudentRepository>();
+        services.AddScoped<IExerciseCategoryRepository, ExerciseCategoryRepository>(); // @ADR-f03-thu-vien-bai-tap-003
         services.AddScoped<IStudentAccounts, StudentAccounts>();
         services.AddScoped<IAccountCredentials, AccountCredentials>();
         services.AddScoped<SessionRevoker>();

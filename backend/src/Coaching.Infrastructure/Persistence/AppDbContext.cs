@@ -1,11 +1,13 @@
 using Coaching.Application.Abstractions;
 using Coaching.Application.Common;
 using Coaching.Domain.Coaches;
+using Coaching.Domain.Exercises;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Audit;
 using Coaching.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.Persistence;
@@ -22,6 +24,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AccountToken> AccountTokens => Set<AccountToken>();
 
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
+
+    public DbSet<ExerciseCategory> ExerciseCategories => Set<ExerciseCategory>();
 
     // @ADR-f02-ho-so-hoc-vien-001: execution strategy (retry) bọc cả transaction; commit chỉ khi kết quả thành công
     public Task<Result<T>> ExecuteInTransactionAsync<T>(
@@ -67,6 +71,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         catch (DbUpdateConcurrencyException ex)
         {
             throw new ConcurrencyConflictException(ex);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+            {
+                // @BR-f03-thu-vien-bai-tap-006: hai request đua nhau qua bước kiểm trùng → use case trả 409 thay vì 500
+                throw new UniqueConstraintException(ex);
         }
     }
 

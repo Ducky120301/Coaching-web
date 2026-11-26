@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+  <!-- @ADR-f03-thu-vien-bai-tap-001 @ADR-f03-thu-vien-bai-tap-003: bảng ExerciseCategories + Exercises -->
+  <changeSet id="v0.5.0-0001-exercise-library" author="duc.hm4@kiotviet.com">
+    <comment>F03: thư viện bài tập — ExerciseCategories (nhóm cơ, dụng cụ) và Exercises (liều mặc định có cấu trúc, rowversion)</comment>
+    <sqlFile path="scripts/0001-exercise-library.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO" stripComments="false"/>
+    <rollback>
+      <sqlFile path="rollback/0001-exercise-library.rollback.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO"/>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>

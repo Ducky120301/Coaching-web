@@ -78,6 +78,9 @@ public static class DatabaseInitializer
             await db.SaveChangesAsync(cancellationToken);
         }
 
+        // @BR-f03-thu-vien-bai-tap-005 @ADR-f03-thu-vien-bai-tap-003: danh mục ban đầu cho mọi coach chưa có, ở mọi môi trường
+        await ExerciseCatalogSeeder.SeedAsync(db, cancellationToken);
+
         // @ADR-f02-ho-so-hoc-vien-003: hồ sơ tạo trước khi có SearchKey (cột mặc định '') được tính lại một lần
         var withoutSearchKey = await db.Students.Where(s => s.SearchKey == "").ToListAsync(cancellationToken);
         foreach (var student in withoutSearchKey)
