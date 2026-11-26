@@ -1,6 +1,7 @@
 import { Registration, RegistrationValue, StudentDetail } from './student.models';
 
-export type FieldType = 'text' | 'decimal' | 'integer' | 'date' | 'area' | 'select';
+/** `url`: ô 1 dòng nhận link (server kiểm http/https ≤ 2048, @BR-f02-import-excel-006). */
+export type FieldType = 'text' | 'decimal' | 'integer' | 'date' | 'area' | 'select' | 'url';
 
 export interface FieldDef {
   key: string;
@@ -24,9 +25,8 @@ export interface SectionDef {
 }
 
 /**
- * Form đăng ký theo page AdTaoHoSo (thứ tự, nhãn, placeholder, đơn vị nguyên văn prototype) + "Lịch rảnh", "Dụng cụ"
- * (không bắt buộc) trong "Tập luyện hiện tại"; bỏ "Gán giáo án" (F05). Danh sách lựa chọn là bản sao để hiển thị —
- * server kiểm lại (RegistrationOptions).
+ * Form đăng ký theo page AdTaoHoSo (thứ tự, nhãn, placeholder, đơn vị nguyên văn prototype — `SECS` đã sửa theo Google Form,
+ * @ADR-f02-import-excel-001); bỏ "Gán giáo án" (F05). Danh sách lựa chọn là bản sao để hiển thị — server kiểm lại (RegistrationOptions).
  */
 export const FORM_SECTIONS: readonly SectionDef[] = [
   {
@@ -54,24 +54,21 @@ export const FORM_SECTIONS: readonly SectionDef[] = [
       { key: 'leftArmCm', label: 'Tay trái (gồng biceps)', type: 'decimal', required: false, unit: 'cm' },
       { key: 'rightThighCm', label: 'Đùi phải (chỗ to nhất)', type: 'decimal', required: false, unit: 'cm' },
       { key: 'leftThighCm', label: 'Đùi trái (chỗ to nhất)', type: 'decimal', required: false, unit: 'cm' },
-      { key: 'bodyFatPercent', label: 'Mỡ cơ thể', type: 'decimal', required: false, unit: '%' },
-      { key: 'bodyFatMethod', label: 'Cách đo mỡ', type: 'select', required: false,
-        options: ['Ước lượng bằng mắt', 'Cân điện tử', 'InBody', 'Thước kẹp mỡ', 'DEXA', 'Khác'] },
+      // @BR-f02-import-excel-004 @BR-f02-import-excel-007: chữ tự do ≤ 200, không bắt buộc
+      { key: 'bodyFatAndMethod', label: 'Mỡ cơ thể và cách đo', type: 'text', required: false, placeholder: 'VD: 18% đo InBody' },
     ],
   },
   {
     id: 'tap', title: 'Tập luyện hiện tại',
     fields: [
-      { key: 'trainingYears', label: 'Số năm tập luyện', type: 'select', required: true,
-        options: ['Chưa tập', 'Dưới 6 tháng', '6–12 tháng', '1–2 năm', '2–3 năm', '3–5 năm', 'Trên 5 năm'] },
+      // @BR-f02-import-excel-003: chữ tự do ≤ 200, giữ nguyên văn
+      { key: 'trainingYears', label: 'Số năm tập luyện', type: 'text', required: true, placeholder: 'VD: 2 năm' },
       { key: 'weeklyTrainingTime', label: 'Thời gian dành cho tập mỗi tuần', type: 'text', required: true, placeholder: 'VD: 5 buổi, mỗi buổi 75 phút' },
-      { key: 'weightBeforeLiftingKg', label: 'Cân nặng trước khi tập tạ', type: 'decimal', required: true, unit: 'kg' },
-      { key: 'heightThenCm', label: 'Chiều cao khi đó', type: 'decimal', required: true, unit: 'cm' },
+      // @BR-f02-import-excel-005: đoạn văn ≤ 2000
+      { key: 'weightHeightBeforeLifting', label: 'Cân nặng và chiều cao trước khi tập tạ', type: 'area', required: true, wide: true, rows: 2, placeholder: 'VD: 60 kg, 1m70' },
       { key: 'trainingGoal', label: 'Mục tiêu tập luyện', type: 'area', required: true, wide: true, rows: 2 },
       { key: 'currentTraining', label: 'Chế độ tập hiện tại', type: 'area', required: false, wide: true, rows: 4, placeholder: 'Lịch chia nhóm cơ, bài, số set, rep…' },
       { key: 'medicalHistory', label: 'Tiền sử bệnh lý và chấn thương', type: 'area', required: true, wide: true, rows: 2, placeholder: 'Ghi "Không" nếu không có' },
-      { key: 'availability', label: 'Lịch rảnh', type: 'area', required: false, wide: true, rows: 2, placeholder: 'VD: T3–T7 buổi tối, CN buổi sáng' },
-      { key: 'equipment', label: 'Dụng cụ', type: 'area', required: false, wide: true, rows: 2, placeholder: 'VD: Phòng gym đầy đủ' },
     ],
   },
   {
@@ -98,10 +95,8 @@ export const FORM_SECTIONS: readonly SectionDef[] = [
         options: ['2 buổi', '3 buổi', '4 buổi', '5 buổi', '6 buổi', '7 buổi'] },
       { key: 'programStyle', label: 'Phong cách giáo án muốn theo', type: 'select', required: true,
         options: ['Push / Pull / Legs', 'Upper / Lower', 'Full body', 'Mỗi buổi một nhóm cơ', 'Để coach chọn', 'Khác'] },
-      { key: 'photoFrontUrl', label: 'Ảnh mặt trước (link)', type: 'text', required: true, placeholder: 'Link Google Drive' },
-      { key: 'photoBackUrl', label: 'Ảnh mặt sau (link)', type: 'text', required: true, placeholder: 'Link Google Drive' },
-      { key: 'photoLeftUrl', label: 'Ảnh bên trái (link)', type: 'text', required: true, placeholder: 'Link Google Drive' },
-      { key: 'photoRightUrl', label: 'Ảnh bên phải (link)', type: 'text', required: true, placeholder: 'Link Google Drive' },
+      // @BR-f02-import-excel-006: 1 link http/https thay 4 link ảnh
+      { key: 'bodyPhotoUrl', label: 'Link ảnh toàn thân', type: 'url', required: true, wide: true, placeholder: 'Link Google Drive' },
     ],
   },
   {
@@ -124,13 +119,11 @@ export const FORM_FIELDS: readonly FieldDef[] = FORM_SECTIONS.flatMap((s) => s.f
 
 const NOT_REGISTRATION = new Set(['fullName', 'email', 'internalNote']);
 
-/** 44 mục của `registration` (bỏ họ tên, email, ghi chú nội bộ). */
+/** 37 mục của `registration` (bỏ họ tên, email, ghi chú nội bộ). */
 export const REGISTRATION_FIELDS: readonly FieldDef[] = FORM_FIELDS.filter((f) => !NOT_REGISTRATION.has(f.key));
 
 /** Nhãn hiển thị theo mã mục (dùng cho "Mục bắt buộc còn thiếu"). */
-export const FIELD_LABEL: Readonly<Record<string, string>> = Object.fromEntries(
-  FORM_FIELDS.map((f) => [f.key, f.label.replace(/ \(link\)$/, '')]),
-);
+export const FIELD_LABEL: Readonly<Record<string, string>> = Object.fromEntries(FORM_FIELDS.map((f) => [f.key, f.label]));
 
 export type FormValues = Record<string, string>;
 

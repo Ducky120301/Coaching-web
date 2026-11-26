@@ -53,7 +53,7 @@ describe('StudentFormComponent', () => {
     control.dispatchEvent(new Event(control instanceof HTMLSelectElement ? 'change' : 'input'));
   }
 
-  /** Điền đủ 30 mục bắt buộc bằng giá trị hợp lệ. */
+  /** Điền đủ 26 mục bắt buộc bằng giá trị hợp lệ. */
   function fillAllRequired(el: HTMLElement) {
     for (const f of FORM_FIELDS.filter((x) => x.required)) {
       const value = f.key === 'email' ? 'lan@gmail.com'
@@ -61,7 +61,7 @@ describe('StudentFormComponent', () => {
         : f.type === 'date' ? '2026-11-01'
         : f.type === 'integer' ? '28'
         : f.type === 'decimal' ? '170'
-        : f.key.startsWith('photo') ? 'https://drive.google.com/x' : 'Lan';
+        : f.type === 'url' ? 'https://drive.google.com/x' : 'Lan';
       fill(el, f.key, value);
     }
   }
@@ -123,7 +123,7 @@ describe('StudentFormComponent', () => {
 
     expect((el.querySelector('#hs-fullName') as HTMLInputElement).value).toBe('Quân');
     expect((el.querySelector('#hs-weightKg') as HTMLInputElement).value).toBe('72,5');
-    expect(el.textContent).toContain('2/30 mục bắt buộc');
+    expect(el.textContent).toContain('2/26 mục bắt buộc');
   });
 
   it('"Xoá trắng hồ sơ" clears the form and the draft', () => {
@@ -174,6 +174,41 @@ describe('StudentFormComponent', () => {
     expect(options).toEqual(['Chọn…', '2 buổi', '3 buổi', '4 buổi', '5 buổi', '6 buổi', '7 buổi']);
   });
 
+  // @BR-f02-import-excel-001 @BR-f02-import-excel-003 @BR-f02-import-excel-004 @BR-f02-import-excel-005 @BR-f02-import-excel-006
+  it('asks the Google Form questions: free-text training years, merged items, one photo link, no Lịch rảnh / Dụng cụ', () => {
+    const { el } = setup('create');
+    const labels = [...el.querySelectorAll('label')].map((l) => l.textContent?.replace(/\s*\*$/, '').trim());
+
+    expect(el.querySelector('#hs-trainingYears')?.tagName).toBe('INPUT');
+    expect(el.querySelector('#hs-bodyFatAndMethod')?.tagName).toBe('INPUT');
+    expect(el.querySelector('#hs-weightHeightBeforeLifting')?.tagName).toBe('TEXTAREA');
+    expect(el.querySelector('#hs-bodyPhotoUrl')?.getAttribute('placeholder')).toBe('Link Google Drive');
+    expect(el.querySelector('#hs-bodyPhotoUrl')?.closest('.field')?.classList.contains('wide')).toBe(true);
+    expect(labels).toContain('Link ảnh toàn thân');
+    expect(labels).toContain('Mỡ cơ thể và cách đo');
+    expect(labels).not.toContain('Lịch rảnh');
+    expect(labels).not.toContain('Dụng cụ');
+    expect(el.querySelector('#hs-photoFrontUrl')).toBeNull();
+    expect(el.querySelector('#hs-availability')).toBeNull();
+    expect(el.textContent).toContain('0/26 mục bắt buộc, 0/40 mục tổng');
+  });
+
+  // @BR-f02-import-excel-003: số năm tập là chữ, gửi nguyên văn
+  it('sends training years and the full-body photo link as typed', () => {
+    const { http, el } = setup('create');
+    fill(el, 'fullName', 'Lan');
+    fill(el, 'email', 'lan@gmail.com');
+    fill(el, 'trainingYears', 'Khoảng 2 năm rưỡi');
+    fill(el, 'bodyPhotoUrl', 'https://drive.google.com/open?id=abc');
+
+    saveOnly(el);
+
+    const body = http.expectOne('/api/admin/students').request.body;
+    expect(body.registration['trainingYears']).toBe('Khoảng 2 năm rưỡi');
+    expect(body.registration['bodyPhotoUrl']).toBe('https://drive.google.com/open?id=abc');
+    expect('photoFrontUrl' in body.registration).toBe(false);
+  });
+
   // @BR-f02-ho-so-hoc-vien-001
   it('shows the server message when the email is already used', async () => {
     const { fixture, http, el, navigate } = setup('create');
@@ -204,7 +239,7 @@ describe('StudentFormComponent', () => {
 
     http.expectNone((req) => req.url.endsWith('/credentials'));
     expect(navigate).toHaveBeenCalledWith(`/hoc-vien/${detail().id}`, {
-      state: { notice: 'Đã lưu hồ sơ. Còn 28 mục bắt buộc chưa điền nên chưa gửi thông tin đăng nhập.' },
+      state: { notice: 'Đã lưu hồ sơ. Còn 24 mục bắt buộc chưa điền nên chưa gửi thông tin đăng nhập.' },
     });
   });
 

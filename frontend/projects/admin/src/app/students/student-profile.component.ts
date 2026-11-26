@@ -176,8 +176,9 @@ export class StudentProfileComponent implements OnInit {
     return value;
   }
 
+  /** "Link ảnh toàn thân" hiện thành link "Mở ảnh" (@BR-f02-import-excel-006). */
   protected isPhoto(field: FieldDef): boolean {
-    return field.key.startsWith('photo');
+    return field.type === 'url';
   }
 
   protected label(code: string): string {

@@ -27,8 +27,8 @@ function detail(overrides: Partial<StudentDetail> = {}): StudentDetail {
   return {
     id: 's1', coachId: 'c1', fullName: 'Lan', email: 'lan@gmail.com', accountStatus: 'PendingActivation', coachingStatus: 'Active',
     createdAt: '2026-11-20T02:00:00+00:00',
-    registration: { trainingGoal: 'Giảm mỡ, giữ cơ', availability: 'T3–T7 buổi tối', equipment: null, weightKg: 72.5 },
-    missingRequired: ['pack', 'photoBackUrl'], updatedAt: null, updatedBy: null, version: 'AAAAAAAAB9E=',
+    registration: { trainingGoal: 'Giảm mỡ, giữ cơ', sessionsPerWeek: '4 buổi', mealAndTrainingTimes: null, weightKg: 72.5 },
+    missingRequired: ['pack', 'bodyPhotoUrl'], updatedAt: null, updatedBy: null, version: 'AAAAAAAAB9E=',
     internalNote: null, internalNoteUpdatedAt: null, statusHistory: [], account: notSent,
     ...overrides,
   };
@@ -70,9 +70,34 @@ describe('StudentProfileComponent', () => {
     expect(buttons()).not.toContain('Tiếp tục coaching');
     expect(el.textContent).toContain('Giảm mỡ, giữ cơ');
     expect(el.querySelector('.missing')?.textContent).toContain('Gói đã mua');
-    expect(el.querySelector('.missing')?.textContent).toContain('Ảnh mặt sau');
+    expect(el.querySelector('.missing')?.textContent).toContain('Link ảnh toàn thân');
     expect(el.querySelector('a.edit')?.getAttribute('href')).toBe('/hoc-vien/s1/sua');
     expect(el.textContent).toContain('Chưa đổi trạng thái lần nào.');
+  });
+
+  // PO chốt 2026-11-26 (tech-design UI) + @BR-f02-import-excel-001 @BR-f02-import-excel-006
+  it('shows goal, sessions per week and meal/training times in the info block, and opens the full-body photo link', async () => {
+    const { el } = await setup(detail({
+      registration: {
+        trainingGoal: 'Giảm mỡ, giữ cơ', sessionsPerWeek: '4 buổi', mealAndTrainingTimes: null,
+        weightHeightBeforeLifting: '60kg, 1m70', bodyPhotoUrl: 'https://drive.google.com/open?id=abc',
+      },
+    }));
+
+    const rows = [...el.querySelectorAll('dl.info > div')]
+      .map((r) => [r.querySelector('dt')?.textContent?.trim(), r.querySelector('dd')?.textContent?.trim()]);
+    expect(rows).toEqual([
+      ['Mục tiêu tập luyện', 'Giảm mỡ, giữ cơ'],
+      ['Số buổi tập mỗi tuần', '4 buổi'],
+      ['Giờ có thể ăn và giờ đi tập', 'Chưa có'],
+    ]);
+    expect(el.textContent).not.toContain('Lịch rảnh');
+    expect(el.textContent).not.toContain('Dụng cụ');
+    const photo = el.querySelector('details a[href="https://drive.google.com/open?id=abc"]');
+    expect(photo?.textContent?.trim()).toBe('Mở ảnh');
+    expect(photo?.getAttribute('target')).toBe('_blank');
+    expect(el.querySelector('details')?.textContent).toContain('60kg, 1m70');
+    expect(el.querySelector('details')?.textContent).toContain('Cân nặng và chiều cao trước khi tập tạ');
   });
 
   // @BR-f02-ho-so-hoc-vien-017 @BR-f02-ho-so-hoc-vien-020: đổi trạng thái có lý do, thêm một dòng lịch sử

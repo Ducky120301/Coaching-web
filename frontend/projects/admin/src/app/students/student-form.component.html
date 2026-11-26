@@ -49,7 +49,7 @@
                   @default {
                     <div class="with-unit">
                       <input class="ctl" type="text" [id]="'hs-' + f.key" [value]="values()[f.key] ?? ''" [placeholder]="f.placeholder ?? ''"
-                             [attr.inputmode]="f.type === 'decimal' || f.type === 'integer' ? 'decimal' : null"
+                             [attr.inputmode]="f.type === 'decimal' || f.type === 'integer' ? 'decimal' : f.type === 'url' ? 'url' : null"
                              [readOnly]="f.key === 'email' && !emailEditable()"
                              [class.err]="!!errors()[f.key] || isMissing(f)" [attr.aria-invalid]="!!errors()[f.key] || isMissing(f)"
                              (input)="setValue(f.key, $any($event.target).value)" />
