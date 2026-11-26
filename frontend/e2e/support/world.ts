@@ -30,6 +30,8 @@ export class E2EWorld extends World {
   importRows: ImportedLearner[] = [];
   importSkipped: SkippedLine[] = [];
   importResult: ImportResultBody | null = null;
+  /** F03: hậu tố " e2e…" gắn vào mọi tên bài trong scenario (DB compose giữ dữ liệu + có 99 bài nạp sẵn). */
+  exerciseSuffix = '';
 
   async openPage(url: string): Promise<Page> {
     const page = await this.context.newPage();

@@ -135,11 +135,11 @@ Business rules nằm trong `docs/prd/*.md` với mã BR-xx cố định. Code v�
 | `AdHoSo` | AD01/AD03 Hồ sơ học viên | admin | `/hoc-vien/:id` (sửa: `/hoc-vien/:id/sua`) |
 | `AdSoanGiaoAn` | AD04 Soạn giáo án | admin | `/students/:id/phases/:phaseId/edit` |
 | `AdThemBuoi` | AD04 Thêm buổi tập | admin | `/students/:id/phases/:phaseId/sessions/new` |
-| `AdThuVien` | Thư viện bài tập | admin | `/library/exercises` |
+| `AdThuVien` | Thư viện bài tập | admin | `/thu-vien/bai-tap` (thêm: `/thu-vien/bai-tap/moi`, sửa: `/thu-vien/bai-tap/:id/sua`) |
 | `AdPhatHanh` | AD05 Phát hành phase | admin | `/students/:id/phases/:phaseId/publish` |
 | `AdChuyenPhase` | AD07 Tổng kết & chuyển phase | admin | `/students/:id/phases/:phaseId/close` |
 
-Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…`.
+Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`, `/thu-vien/bai-tap` (`?bai=<id>` chọn sẵn bài), `/thu-vien/bai-tap/moi`, `/thu-vien/bai-tap/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…` (màn theo học viên) hoặc `/thu-vien/…` (thư viện dùng chung).
 
 Route web học viên dùng tiếng Việt (ADR-f01-p1-tai-khoan-hoc-vien-010): đã có `/login`, `/kich-hoat` (mã kích hoạt chỉ trong bộ nhớ), `/quen-mat-khau`, `/dat-lai-mat-khau#t=<token>` (token sau `#`), `/hom-nay`. Route học viên chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt.
 
