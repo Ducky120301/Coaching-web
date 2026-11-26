@@ -1991,7 +1991,7 @@ EOF
 >
 > **Bảng tiêu đề (ADR-f02-import-excel-005):** lấy từ tiêu đề thật của template chuẩn hoá của PO `C:SERSADMINDOWNLOADSCOPY OF G���I Đ���C (CâU TR��� L���I)-2.XLSX` (40 C���T A�AN, GóI/GIá/NGàY CK Là 3 C���T RIêNG `B���N MUA PACK NàO?`, `GIá GóI B���N MUA`, `NGàY CHUY���N KHO���N`) + TIêU đ��� DùNG TRONG `IMPORT-EXCEL.FEATURE`. C���T G���P KI���U Cũ `B���N MUA PACK NàO, GIá BAO NHIêU Và NGàY CHUY���N KHO���N` (FILE Cũ `DOCS/FORM H��� Sơ EXCEL đ��� IMPORT.XLSX`) B��� B��� QUA.
 
-- [ ] **Step 1: Thêm package ClosedXML (ghim phiên bản) cho Infrastructure và TestSupport**
+- [x] **Step 1: Thêm package ClosedXML (ghim phiên bản) cho Infrastructure và TestSupport**
 
 `backend/Directory.Packages.props` — thêm ngay sau dòng `<PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />`:
 ```xml
@@ -2030,7 +2030,7 @@ EOF
 Run: `cd backend && dotnet restore Coaching.slnx`
 Expected: `Restored …Coaching.Infrastructure.csproj`, `…Coaching.TestSupport.csproj` — không có `NU1101`/`NU1102` (gói ClosedXML 0.105.1 tải được). Nếu restore báo không tìm thấy phiên bản: DỪNG, báo lại (không tự đổi version).
 
-- [ ] **Step 2: File .xlsx đặt mật khẩu (fixture) + builder `ImportWorkbook`**
+- [x] **Step 2: File .xlsx đặt mật khẩu (fixture) + builder `ImportWorkbook`**
 
 `backend/tests/Coaching.TestSupport/Fixtures/make-encrypted-xlsx.py`:
 ```python
@@ -2287,7 +2287,7 @@ public sealed class ImportWorkbook
 Run: `cd backend && dotnet build tests/Coaching.TestSupport`
 Expected: `Build succeeded` — `0 Warning(s)`, `0 Error(s)`.
 
-- [ ] **Step 3: Viết unit test nhận cột theo tiêu đề — kỳ vọng FAIL**
+- [x] **Step 3: Viết unit test nhận cột theo tiêu đề — kỳ vọng FAIL**
 
 `backend/tests/Coaching.Application.Tests/Students/Import/StudentImportColumnsTests.cs`:
 ```csharp
@@ -2378,7 +2378,7 @@ public sealed class StudentImportColumnsTests
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentImportColumnsTests"`
 Expected: FAIL — build error `CS0234: The type or namespace name 'Import' does not exist in the namespace 'Coaching.Application.Students'`.
 
-- [ ] **Step 4: Application — kiểu workbook, bảng cột, DTO, lỗi cả file**
+- [x] **Step 4: Application — kiểu workbook, bảng cột, DTO, lỗi cả file**
 
 `backend/src/Coaching.Application/Students/Import/Workbook.cs`:
 ```csharp
@@ -2547,7 +2547,7 @@ public static class ImportErrors
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~StudentImportColumnsTests"`
 Expected: `Passed: 51`, `Failed: 0`.
 
-- [ ] **Step 5: Viết test reader ClosedXML — kỳ vọng FAIL**
+- [x] **Step 5: Viết test reader ClosedXML — kỳ vọng FAIL**
 
 `backend/tests/Coaching.Api.IntegrationTests/Infrastructure/ClosedXmlWorkbookReaderTests.cs`:
 ```csharp
@@ -2625,7 +2625,7 @@ public sealed class ClosedXmlWorkbookReaderTests
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ClosedXmlWorkbookReaderTests"`
 Expected: FAIL — build error `CS0234: The type or namespace name 'Import' does not exist in the namespace 'Coaching.Infrastructure'`.
 
-- [ ] **Step 6: Infrastructure — `ClosedXmlWorkbookReader` + DI**
+- [x] **Step 6: Infrastructure — `ClosedXmlWorkbookReader` + DI**
 
 `backend/src/Coaching.Infrastructure/Import/ClosedXmlWorkbookReader.cs`:
 ```csharp
@@ -2710,7 +2710,7 @@ internal sealed class ClosedXmlWorkbookReader : IWorkbookReader
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ClosedXmlWorkbookReaderTests"`
 Expected: `Passed: 6`, `Failed: 0`.
 
-- [ ] **Step 7: Viết test API — integration (phân quyền) + acceptance (bind scenario BR-013…022)**
+- [x] **Step 7: Viết test API — integration (phân quyền) + acceptance (bind scenario BR-013…022)**
 
 `backend/tests/Coaching.Api.IntegrationTests/Students/ImportRequests.cs`:
 ```csharp
@@ -3131,7 +3131,7 @@ Expected: FAIL 4 test — route chưa có nên mọi request trả 404, vd `Asse
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-import-excel-013|Category=BR-f02-import-excel-014|Category=BR-f02-import-excel-015|Category=BR-f02-import-excel-016|Category=BR-f02-import-excel-017|Category=BR-f02-import-excel-018|Category=BR-f02-import-excel-019|Category=BR-f02-import-excel-020|Category=BR-f02-import-excel-021|Category=BR-f02-import-excel-022)&Category!=web"`
 Expected: FAIL 15 scenario — `POST /api/admin/students/import` trả 404 (vd `Expected: OK, Actual: NotFound` / `Expected: BadRequest, Actual: NotFound`); không scenario nào báo `MissingStepDefinition` hay `Ambiguous`.
 
-- [ ] **Step 8: Handler mức file (bản Task 4) + DI + endpoint**
+- [x] **Step 8: Handler mức file (bản Task 4) + DI + endpoint**
 
 `backend/src/Coaching.Application/Students/Import/ImportStudentsHandler.cs`:
 ```csharp
@@ -3363,7 +3363,7 @@ public sealed class ImportStudentsHandler(
     }
 ```
 
-- [ ] **Step 9: Chạy — kỳ vọng PASS**
+- [x] **Step 9: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ImportAuthorizationTests|FullyQualifiedName~ClosedXmlWorkbookReaderTests"`
 Expected: `Passed: 10`, `Failed: 0`.
@@ -3378,7 +3378,7 @@ Kiểm không ghi file ra đĩa (NFR-f02-import-excel-002, review):
 Run: `grep -rnE "File\.|Path\.|FileStream|CopyToFile" backend/src/Coaching.Application/Students/Import backend/src/Coaching.Infrastructure/Import`
 Expected: không có dòng nào.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 ```bash
 git add backend/Directory.Packages.props backend/src backend/tests/Coaching.TestSupport backend/tests/Coaching.Application.Tests/Students/Import backend/tests/Coaching.Api.IntegrationTests/Infrastructure/ClosedXmlWorkbookReaderTests.cs backend/tests/Coaching.Api.IntegrationTests/Students/ImportRequests.cs backend/tests/Coaching.Api.IntegrationTests/Students/ImportAuthorizationTests.cs backend/tests/Coaching.Acceptance/Support/ImportApi.cs backend/tests/Coaching.Acceptance/Steps/ImportSteps.cs backend/tests/Coaching.Acceptance/Steps/PasswordResetSteps.cs
 git commit -F - <<'EOF'
