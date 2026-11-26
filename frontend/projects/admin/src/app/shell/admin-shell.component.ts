@@ -19,13 +19,13 @@ interface CoachProfile { id: string; displayName: string; email: string; }
           <p class="area muted">Khu vực coach</p>
         </div>
         <nav aria-label="Admin">
-          <a routerLink="/dashboard" routerLinkActive #dash="routerLinkActive" [attr.aria-current]="dash.isActive ? 'page' : null">
+          <a routerLink="/dashboard" routerLinkActive ariaCurrentWhenActive="page">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="homeIcon"></svg>Dashboard</a>
-          <a routerLink="/hoc-vien/moi" routerLinkActive #create="routerLinkActive" [attr.aria-current]="create.isActive ? 'page' : null">
+          <a routerLink="/hoc-vien/moi" routerLinkActive ariaCurrentWhenActive="page">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="userPlusIcon"></svg>Tạo hồ sơ học viên</a>
-          <a routerLink="/thu-vien/bai-tap" routerLinkActive #library="routerLinkActive" [attr.aria-current]="library.isActive ? 'page' : null">
+          <a routerLink="/thu-vien/bai-tap" routerLinkActive ariaCurrentWhenActive="page">
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" [innerHTML]="dumbbellIcon"></svg>Thư viện bài tập</a>
         </nav>

@@ -1,18 +1,22 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, Routes, provideRouter } from '@angular/router';
 import { APP_CONFIG, CLIENT_APP } from '@coaching/shared';
 import { describe, expect, it } from 'vitest';
 import { AdminShellComponent } from './admin-shell.component';
 
+@Component({ template: '' })
+class BlankPage {}
+
 describe('AdminShellComponent', () => {
-  function setup() {
+  function setup(routes: Routes = []) {
     TestBed.configureTestingModule({
       providers: [
         { provide: APP_CONFIG, useValue: { apiBaseUrl: '' } },
         { provide: CLIENT_APP, useValue: 'admin' },
-        provideRouter([]),
+        provideRouter(routes),
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
@@ -48,5 +52,22 @@ describe('AdminShellComponent', () => {
       ['Tạo hồ sơ học viên', '/hoc-vien/moi'],
       ['Thư viện bài tập', '/thu-vien/bai-tap'],
     ]);
+  });
+
+  it('keeps the library rail item current when navigating inside the app from the list to the add form', async () => {
+    const { fixture, el } = setup([
+      { path: 'thu-vien/bai-tap', component: BlankPage },
+      { path: 'thu-vien/bai-tap/moi', component: BlankPage },
+    ]);
+    const router = TestBed.inject(Router);
+    const current = () => [...el.querySelectorAll('nav[aria-label="Admin"] a[aria-current="page"]')].map((a) => a.textContent?.trim());
+
+    await router.navigateByUrl('/thu-vien/bai-tap');
+    await fixture.whenStable();
+    expect(current()).toEqual(['Thư viện bài tập']);
+
+    await router.navigateByUrl('/thu-vien/bai-tap/moi');
+    await fixture.whenStable();
+    expect(current()).toEqual(['Thư viện bài tập']);
   });
 });
