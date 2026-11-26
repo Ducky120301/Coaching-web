@@ -1,6 +1,7 @@
 using Coaching.Application.Accounts;
 using Coaching.Application.Accounts.Commands;
 using Coaching.Application.Coaches;
+using Coaching.Application.Students;
 using Coaching.Application.Students.Commands;
 using Coaching.Application.Students.Queries;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class DependencyInjection
     {
         services.AddScoped<GetMyCoachProfileHandler>();
         services.AddScoped<CurrentCoach>();
+        services.AddScoped<StudentRegistrar>();
         services.AddScoped<CreateStudentHandler>();
         services.AddScoped<GetStudentHandler>();
         services.AddScoped<UpdateStudentHandler>();
