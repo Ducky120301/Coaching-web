@@ -30,24 +30,46 @@ internal sealed class ClosedXmlWorkbookReader : IWorkbookReader
         }
     }
 
+    /// <summary>
+    /// Chỉ duyệt ô có dữ liệu (RowsUsed / CellsUsed), không duyệt cả vùng dòng × cột — một ô lạc ở xa (vd XFD1048576)
+    /// không làm đọc hàng tỉ ô. Số cột = cột cuối có tiêu đề ở dòng 1 (ô ngoài các cột đó không thuộc mục nào,
+    /// @BR-f02-import-excel-020). Dòng trống bị bỏ (@BR-f02-import-excel-022). Dừng khi đã có MaxRows + 1 dòng dữ liệu —
+    /// đủ để handler báo vượt giới hạn (@BR-f02-import-excel-016).
+    /// </summary>
     private static WorkbookSheet ReadFirstSheet(IXLWorksheet sheet)
     {
-        var lastColumn = sheet.LastColumnUsed()?.ColumnNumber() ?? 0;
-        var lastRow = sheet.LastRowUsed()?.RowNumber() ?? 0; // dòng trống ở cuối không tính
+        var headerRow = sheet.Row(1);
+        var width = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 0;
 
-        var headers = new List<string>(lastColumn);
-        for (var c = 1; c <= lastColumn; c++)
-            headers.Add(ToCell(sheet.Cell(1, c)).Text ?? string.Empty);
+        var headers = Fill(headerRow, width).Select(c => c.Text ?? string.Empty).ToList();
 
-        var rows = new List<WorkbookRow>(Math.Max(0, lastRow - 1));
-        for (var r = 2; r <= lastRow; r++)
+        var rows = new List<WorkbookRow>();
+        foreach (var row in sheet.RowsUsed())
         {
-            var cells = new WorkbookCell[lastColumn];
-            for (var c = 1; c <= lastColumn; c++)
-                cells[c - 1] = ToCell(sheet.Cell(r, c));
-            rows.Add(new WorkbookRow(r, cells));
+            var rowNumber = row.RowNumber();
+            if (rowNumber == 1)
+                continue;
+            var cells = Fill(row, width);
+            if (cells.All(c => c.Text is null && c.Number is null && c.Date is null))
+                continue;
+            rows.Add(new WorkbookRow(rowNumber, cells));
+            if (rows.Count > ImportStudentsHandler.MaxRows)
+                break;
         }
         return new WorkbookSheet(headers, rows);
+    }
+
+    private static WorkbookCell[] Fill(IXLRow row, int width)
+    {
+        var cells = new WorkbookCell[width];
+        Array.Fill(cells, BlankCell);
+        foreach (var cell in row.CellsUsed())
+        {
+            var column = cell.Address.ColumnNumber;
+            if (column <= width)
+                cells[column - 1] = ToCell(cell);
+        }
+        return cells;
     }
 
     private static WorkbookCell ToCell(IXLCell cell) => cell.DataType switch

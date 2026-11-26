@@ -33,10 +33,20 @@ public sealed class ImportApi(AcceptanceContext ctx, StudentApi api)
 
     public ImportResultDto? Result { get; private set; }
 
+    /// <summary>@BR-f02-import-excel-025: mọi tài khoản (kèm role) ngay trước lần import gần nhất.</summary>
+    public IReadOnlyList<string> UsersBefore { get; private set; } = [];
+
+    /// <summary>@BR-f02-import-excel-025: hồ sơ đã biết tên trong scenario (StudentApi.Ids), JSON ngay trước lần import gần nhất.</summary>
+    public Dictionary<string, string> ProfilesBefore { get; } = new();
+
     public async Task<HttpResponseMessage> ImportAsync(byte[]? file = null)
     {
         file ??= RawFile ?? Workbook.ToBytes();
         StudentsBefore = await CountStudentsAsync();
+        UsersBefore = await UsersSnapshotAsync();
+        ProfilesBefore.Clear();
+        foreach (var name in api.Ids.Keys.ToList())
+            ProfilesBefore[name] = JsonSerializer.Serialize(await api.GetAsync(name));
 
         using var content = new MultipartFormDataContent();
         var part = new ByteArrayContent(file);
@@ -91,6 +101,20 @@ public sealed class ImportApi(AcceptanceContext ctx, StudentApi api)
         var value = Email.Create(email);
         await using var scope = ctx.Host.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<AppDbContext>().Students.AnyAsync(s => s.Email == value);
+    }
+
+    /// <summary>Mỗi tài khoản một dòng: Id, email, họ tên, băm mật khẩu, security stamp, các role.</summary>
+    public async Task<IReadOnlyList<string>> UsersSnapshotAsync()
+    {
+        await using var scope = ctx.Host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var users = await db.Users.AsNoTracking().ToListAsync();
+        var roles = await db.UserRoles.AsNoTracking().ToListAsync();
+        return users
+            .OrderBy(u => u.Id)
+            .Select(u => $"{u.Id}|{u.Email}|{u.FullName}|{u.PasswordHash}|{u.SecurityStamp}|" +
+                string.Join(",", roles.Where(r => r.UserId == u.Id).Select(r => r.RoleId).Order()))
+            .ToList();
     }
 
     /// <summary>Lần import gần nhất bị từ chối cả file: 400, đúng mã lỗi, tiêu đề chứa <paramref name="titleContains"/>.</summary>

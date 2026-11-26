@@ -35,13 +35,14 @@ public sealed class StudentCreateSteps(AcceptanceContext ctx, StudentApi api)
         Assert.False(await db.Students.AnyAsync(s => s.Email == value));
     }
 
-    // @BR-f02-ho-so-hoc-vien-001
-    [Given(@"^email ""([^""]*)"" đã thuộc về (một hồ sơ đang coaching|tài khoản coach|một hồ sơ đã kết thúc coaching)$")]
+    // @BR-f02-ho-so-hoc-vien-001 @BR-f02-import-excel-025 ("một hồ sơ học viên" = hồ sơ đang coaching)
+    [Given(@"^email ""([^""]*)"" đã thuộc về (một hồ sơ đang coaching|một hồ sơ học viên|tài khoản coach|một hồ sơ đã kết thúc coaching)$")]
     public async Task EmailBelongsTo(string email, string owner)
     {
         switch (owner)
         {
             case "một hồ sơ đang coaching":
+            case "một hồ sơ học viên":
                 await api.CreateOkAsync("Chủ email", email);
                 break;
             case "một hồ sơ đã kết thúc coaching":

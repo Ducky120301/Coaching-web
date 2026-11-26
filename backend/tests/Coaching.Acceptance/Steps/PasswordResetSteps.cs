@@ -166,6 +166,7 @@ public sealed class PasswordResetSteps(AcceptanceContext ctx, StudentApi api, Ac
     [When(@"^một người xin đặt lại mật khẩu cho email ""([^""]*)""$")]
     public Task SomeoneAsksForReset(string email) => account.ForgotAsync(email);
 
+    // @BR-f02-import-excel-029 (dùng lại): import không gửi email nào cho học viên
     [Then(@"^không email nào được gửi tới ""([^""]*)""$")]
     public async Task NoMailTo(string email)
     {

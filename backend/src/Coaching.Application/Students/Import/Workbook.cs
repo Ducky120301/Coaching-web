@@ -9,7 +9,10 @@ public sealed record WorkbookCell(string? Text, double? Number, DateTime? Date);
 /// <summary>RowNumber = số dòng Excel (tiêu đề = 1).</summary>
 public sealed record WorkbookRow(int RowNumber, IReadOnlyList<WorkbookCell> Cells);
 
-/// <summary>Sheet đầu tiên: tiêu đề dòng 1 + các dòng dữ liệu; dòng trống ở cuối đã bị bỏ.</summary>
+/// <summary>
+/// Sheet đầu tiên: tiêu đề dòng 1 + các dòng dữ liệu (dòng trống đã bị bỏ). Reader được dừng sau
+/// ImportStudentsHandler.MaxRows + 1 dòng dữ liệu — đủ để báo vượt giới hạn.
+/// </summary>
 public sealed record WorkbookSheet(IReadOnlyList<string> Headers, IReadOnlyList<WorkbookRow> Rows);
 
 /// <summary>@ADR-f02-import-excel-004: port đọc .xlsx — Application không phụ thuộc thư viện Excel.</summary>

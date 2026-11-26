@@ -31,9 +31,9 @@ public sealed class ClosedXmlWorkbookReaderTests
         Assert.Equal("12/11/2026", only.Cells[3].Text);
     }
 
-    // @BR-f02-import-excel-022: dòng trống ở giữa vẫn trả về (handler bỏ qua), dòng trống ở cuối bị bỏ
+    // @BR-f02-import-excel-022: dòng trống (ở giữa hay ở cuối) bị bỏ, số dòng Excel của dòng sau giữ nguyên
     [Fact]
-    public void Keeps_blank_middle_row_and_drops_trailing_blank_rows()
+    public void Skips_blank_rows_and_keeps_excel_row_numbers()
     {
         var workbook = ImportWorkbook.Standard();
         workbook.AddValidRow("a@gmail.com", "A");
@@ -43,8 +43,35 @@ public sealed class ClosedXmlWorkbookReaderTests
 
         var sheet = _reader.Read(new MemoryStream(workbook.ToBytes()));
 
-        Assert.Equal(new[] { 2, 3, 4 }, sheet.Rows.Select(r => r.RowNumber));
-        Assert.All(sheet.Rows[1].Cells, c => Assert.True(c.Text is null && c.Number is null && c.Date is null));
+        Assert.Equal(new[] { 2, 4 }, sheet.Rows.Select(r => r.RowNumber));
+    }
+
+    // @BR-f02-import-excel-016: một ô lạc ở tận XFD1048576 không làm đọc cả vùng dòng × cột — đọc theo dòng có dữ liệu,
+    // ô ngoài các cột tiêu đề bỏ qua, và dừng khi đã có MaxRows + 1 dòng dữ liệu (đủ để báo vượt 500 dòng)
+    [Fact]
+    public void Stray_far_cell_does_not_expand_the_scan_and_reading_stops_after_max_rows_plus_one()
+    {
+        var workbook = ImportWorkbook.Standard().AddValidRows(ImportStudentsHandler.MaxRows + 20);
+        var bytes = WithStrayCell(workbook.ToBytes(), "XFD1048576");
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var sheet = _reader.Read(new MemoryStream(bytes));
+        watch.Stop();
+
+        Assert.Equal(ImportStudentsHandler.MaxRows + 1, sheet.Rows.Count);
+        Assert.Equal(4, sheet.Headers.Count);
+        Assert.All(sheet.Rows, r => Assert.Equal(4, r.Cells.Count));
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"Đọc mất {watch.Elapsed}");
+    }
+
+    private static byte[] WithStrayCell(byte[] xlsx, string address)
+    {
+        using var input = new MemoryStream(xlsx);
+        using var workbook = new ClosedXML.Excel.XLWorkbook(input);
+        workbook.Worksheet(1).Cell(address).Value = "ô lạc";
+        using var output = new MemoryStream();
+        workbook.SaveAs(output);
+        return output.ToArray();
     }
 
     public static TheoryData<string> UnreadableKinds => new() { "csv", "xls", "broken", "encrypted" };
