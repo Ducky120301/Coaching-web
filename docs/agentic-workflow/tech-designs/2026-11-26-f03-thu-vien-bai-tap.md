@@ -68,7 +68,7 @@ N/A — gói trong API + web admin hiện có; YouTube chỉ là link, nhúng �
 - `ADR-f03-thu-vien-bai-tap-006` — API nhận liều mặc định có cấu trúc (`sets`, `repsMin`, `repsMax`, `rirMin`, `rirMax`, `restSeconds`); FE nhận chữ "10–12"/"10-12"/"10", tách thành min/max và hiển thị lại "10–12", "90s", trống là "—".
   - **Lý do:** F05 dùng lại được số (spec OQ-03); kiểm khoảng ở Domain (BR-f03-thu-vien-bai-tap-009–012).
   - **Trade-off:** Phân tích chữ nằm ở FE (và step test), không ở API.
-- `ADR-f03-thu-vien-bai-tap-007` — 99 bài prototype (đã gán theo Phụ lục) là file JSON nhúng trong Infrastructure (`Seeding/exercises.seed.json`); `ExerciseLibrarySeeder` được `DatabaseInitializer` gọi ở mọi môi trường và chỉ nạp cho coach có thư viện trống. Cấu hình `Seed:ExerciseLibrary=false` tắt bước này cho host test.
+- `ADR-f03-thu-vien-bai-tap-007` — 99 bài prototype (đã gán theo Phụ lục) là file JSON nhúng trong Infrastructure (`Seeding/exercises.seed.json`); `ExerciseLibrarySeeder` được `DatabaseInitializer` gọi ở mọi môi trường và chỉ nạp cho coach có thư viện trống; mỗi coach được ghi vào bảng đánh dấu `ExerciseLibrarySeeds` (CoachId, SeededAt, ExercisesAdded) nên coach đã xoá hết bài cũng không bị nạp lại. Cấu hình `Seed:ExerciseLibrary=false` tắt bước này cho host test.
   - **Lý do:** NFR-f03-thu-vien-bai-tap-003 (thư viện thật của coach, PO đổi 2026-11-27); điều kiện "thư viện trống" đảm bảo không nạp lại, không ghi đè.
   - **Trade-off:** Coach xoá hết bài thì lần khởi động sau sẽ nạp lại 99 bài — chấp nhận vì coach không có lý do xoá toàn bộ thư viện.
 
@@ -91,7 +91,7 @@ N/A — gói trong API + web admin hiện có; YouTube chỉ là link, nhúng �
 | `POST /api/admin/exercise-categories` | `{ kind: "MuscleGroup"\|"Equipment", name }` | `201 {id, kind, name}` | 409 `category.duplicate` "Đã có mục cùng tên."; 400 `category.name_required` |
 
 ### Data Model / Database Changes
-Liquibase `database/changelog/v0.5.0/`: bảng `ExerciseCategories` và `Exercises` (cột theo ADR-001/003; `Name nvarchar(100)`, `NameKey/SearchKey nvarchar(200)`, `VideoUrl nvarchar(2048)`, `TechniqueNotes/CommonMistakes nvarchar(2000)`, liều là cột `int NULL`; FK `MuscleGroupId/EquipmentId → ExerciseCategories`, `CoachId → Coaches`; index `(CoachId, IsHidden)`). Rollback xoá 2 bảng.
+Liquibase `database/changelog/v0.5.0/`: bảng `ExerciseCategories` và `Exercises` (cột theo ADR-001/003; `Name nvarchar(100)`, `NameKey/SearchKey nvarchar(200)`, `VideoUrl nvarchar(2048)`, `TechniqueNotes/CommonMistakes nvarchar(2000)`, liều là cột `int NULL`; FK `MuscleGroupId/EquipmentId → ExerciseCategories`, `CoachId → Coaches`; index `(CoachId, IsHidden)`). Changeset `v0.5.0-0002`: bảng đánh dấu `ExerciseLibrarySeeds(CoachId PK → Coaches, SeededAt, ExercisesAdded)` cho ADR-007. Rollback xoá 3 bảng.
 
 ### Thiết kế giao diện (UI)
 - **Design link**: `docs/duobexiuuu-coaching-design.html`, page `AdThuVien` (extract `.kv/sdd/proto/AdThuVien.md`). Token, font theo CLAUDE.md; 880 px; kiểm 390/1280 px.
