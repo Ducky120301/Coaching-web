@@ -34,12 +34,25 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             if (++attempt > 1)
                 ChangeTracker.Clear();
             await using var transaction = await Database.BeginTransactionAsync(ct);
-            var result = await operation(ct);
-            if (result.IsSuccess)
-                await transaction.CommitAsync(ct);
-            else
+            try
+            {
+                var result = await operation(ct);
+                if (result.IsSuccess)
+                {
+                    await transaction.CommitAsync(ct);
+                    return result;
+                }
                 await transaction.RollbackAsync(ct);
-            return result;
+                // @BR-f02-import-excel-033: unit-of-work thất bại không để lại entity Added (vd AppUser đụng chỉ mục duy nhất)
+                // trong context dùng chung — nếu không, mọi SaveChanges sau đó (dòng import kế tiếp) chèn lại và lỗi theo.
+                ChangeTracker.Clear();
+                return result;
+            }
+            catch
+            {
+                ChangeTracker.Clear();
+                throw;
+            }
         }, cancellationToken);
     }
 
