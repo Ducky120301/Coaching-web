@@ -24,6 +24,7 @@ public sealed class CreateExerciseHandler(
 
         // @BR-f03-thu-vien-bai-tap-002 → 400 exercise.name_required / exercise.name_too_long
         var exercise = Exercise.Create(coach.Id, command.Name, muscleGroup.Id, equipment.Id);
+        ExerciseDetails.Apply(exercise, command); // @BR-f03-thu-vien-bai-tap-007…014
 
         // @BR-f03-thu-vien-bai-tap-001: trùng (tên chuẩn hoá, dụng cụ) kể cả bài đang ẩn → 409; bài trùng đang ẩn → gợi ý bỏ ẩn
         if (await exercises.FindByKeyAsync(coach.Id, exercise.NameKey, equipment.Id, ct) is { } existing)

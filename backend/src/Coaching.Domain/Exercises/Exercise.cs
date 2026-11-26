@@ -84,4 +84,30 @@ public sealed class Exercise : AggregateRoot<Guid>
         MuscleGroupId = muscleGroupId;
         EquipmentId = equipmentId;
     }
+
+    // @BR-f03-thu-vien-bai-tap-007 @ADR-f03-thu-vien-bai-tap-005: chỉ link YouTube; trống → không có video
+    // @BR-f03-thu-vien-bai-tap-008: không có link = thiếu video (HasVideo)
+    public void SetVideo(string? url) => VideoUrl = YouTubeUrl.Normalize(url);
+
+    // @ADR-f03-thu-vien-bai-tap-006: liều đã kiểm bởi ExerciseDose.Create (BR-f03-thu-vien-bai-tap-009…012)
+    public void SetDose(ExerciseDose dose) => Dose = dose ?? throw new ArgumentNullException(nameof(dose));
+
+    // @BR-f03-thu-vien-bai-tap-013 @BR-f03-thu-vien-bai-tap-014: không bắt buộc, ≤ 2000 ký tự; kiểm cả hai trước khi ghi
+    public void SetNotes(string? technique, string? mistakes)
+    {
+        var techniqueNotes = Notes(technique, "Hướng dẫn kỹ thuật");
+        var commonMistakes = Notes(mistakes, "Lỗi hay gặp");
+        TechniqueNotes = techniqueNotes;
+        CommonMistakes = commonMistakes;
+    }
+
+    private static string? Notes(string? text, string label)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+        var trimmed = text.Trim();
+        if (trimmed.Length > NotesMaxLength)
+            throw new DomainException("exercise.notes_too_long", $"{label} tối đa {NotesMaxLength} ký tự.");
+        return trimmed;
+    }
 }

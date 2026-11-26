@@ -30,6 +30,7 @@ public sealed class UpdateExerciseHandler(
 
         exercise.Rename(command.Name); // @BR-f03-thu-vien-bai-tap-002
         exercise.Categorise(muscleGroup.Id, equipment.Id);
+        ExerciseDetails.Apply(exercise, command); // @BR-f03-thu-vien-bai-tap-007…014
 
         // @BR-f03-thu-vien-bai-tap-001: sửa thành (tên, dụng cụ) của bài KHÁC → 409; trùng chính nó (đổi hoa/thường) → lưu được
         if (await exercises.FindByKeyAsync(coach.Id, exercise.NameKey, exercise.EquipmentId, ct) is { } other && other.Id != exercise.Id)
