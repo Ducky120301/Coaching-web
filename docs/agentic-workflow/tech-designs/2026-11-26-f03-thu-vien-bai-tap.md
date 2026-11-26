@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-26-f03-thu-vien-bai-tap
-status: ready
+status: draft
 ---
 
 # Technical Design: F03 — Thư viện bài tập
@@ -68,9 +68,9 @@ N/A — gói trong API + web admin hiện có; YouTube chỉ là link, nhúng �
 - `ADR-f03-thu-vien-bai-tap-006` — API nhận liều mặc định có cấu trúc (`sets`, `repsMin`, `repsMax`, `rirMin`, `rirMax`, `restSeconds`); FE nhận chữ "10–12"/"10-12"/"10", tách thành min/max và hiển thị lại "10–12", "90s", trống là "—".
   - **Lý do:** F05 dùng lại được số (spec OQ-03); kiểm khoảng ở Domain (BR-f03-thu-vien-bai-tap-009–012).
   - **Trade-off:** Phân tích chữ nằm ở FE (và step test), không ở API.
-- `ADR-f03-thu-vien-bai-tap-007` — Seed ~99 bài prototype (đã gán theo Phụ lục) là file JSON nhúng trong Infrastructure; `DatabaseInitializer` chỉ nạp khi môi trường là `Development` hoặc `Local` và thư viện của coach đang trống.
-  - **Lý do:** NFR-f03-thu-vien-bai-tap-003 (chỉ dev); không ghi đè bài coach đã sửa.
-  - **Trade-off:** Staging bắt đầu với thư viện trống.
+- `ADR-f03-thu-vien-bai-tap-007` — 99 bài prototype (đã gán theo Phụ lục) là file JSON nhúng trong Infrastructure (`Seeding/exercises.seed.json`); `ExerciseLibrarySeeder` được `DatabaseInitializer` gọi ở mọi môi trường và chỉ nạp cho coach có thư viện trống. Cấu hình `Seed:ExerciseLibrary=false` tắt bước này cho host test.
+  - **Lý do:** NFR-f03-thu-vien-bai-tap-003 (thư viện thật của coach, PO đổi 2026-11-27); điều kiện "thư viện trống" đảm bảo không nạp lại, không ghi đè.
+  - **Trade-off:** Coach xoá hết bài thì lần khởi động sau sẽ nạp lại 99 bài — chấp nhận vì coach không có lý do xoá toàn bộ thư viện.
 
 ### Component Design
 - **Domain** `Coaching.Domain/Exercises/`: `Exercise`, `ExerciseDose`, `ExerciseCategory`, `CategoryKind`, `ExerciseNameKey`, `YouTubeUrl`, `IExerciseRepository`, `IExerciseCategoryRepository`.
@@ -133,7 +133,7 @@ Scenario `@BR-f03-thu-vien-bai-tap-*`: `@api` Reqnroll; `@web` CucumberJS + Play
 | BR-f03-thu-vien-bai-tap-017 bài đang dùng | Integration với `IExerciseUsage` giả trả `true` → 409 |
 | Đua tạo trùng | Integration: 2 request song song → 1 tạo, 1 409 |
 | NFR-f03-thu-vien-bai-tap-002 | Integration: học viên 403; coach khác 404 |
-| NFR-f03-thu-vien-bai-tap-003 | Integration: môi trường Production không nạp bài seed |
+| NFR-f03-thu-vien-bai-tap-003 | Integration: host Production với thư viện trống được nạp 99 bài; khởi động lại không nhân đôi; coach đã có bài thì không nạp |
 | NFR-f03-thu-vien-bai-tap-001 | Manual: 500 bài, đo p95 danh sách/tìm |
 ### Automated verification
 ```bash
@@ -148,7 +148,7 @@ So 2 màn với prototype ở 390/1280 px; đo p95 với 500 bài.
 ## 7. Risks & Mitigations
 | Risk | Khả năng | Ảnh hưởng | Giảm thiểu |
 |---|---|---|---|
-| Gán nhóm cơ cho bài seed sai ý coach | Trung bình | Thấp (chỉ dev) | PO duyệt bảng Phụ lục |
+| Gán nhóm cơ cho bài seed sai ý coach | Trung bình | Trung bình | PO duyệt bảng Phụ lục; coach sửa được từng bài sau khi nạp |
 | F05 quên nối `IExerciseUsage` | Thấp | Cao | Dependencies trong spec F03 + test hợp đồng ở F05 |
 
 ---
@@ -163,7 +163,7 @@ N/A — log mặc định.
 ### Backward Compatibility
 N/A — API mới.
 ### Migration & Rollout
-Liquibase v0.5.0 khi merge `main`; danh mục ban đầu tạo lúc khởi động ở mọi môi trường; bài seed chỉ local.
+Liquibase v0.5.0 khi merge `main`; danh mục ban đầu và 99 bài của coach được nạp lúc khởi động ở mọi môi trường (chỉ khi còn trống).
 
 ---
 

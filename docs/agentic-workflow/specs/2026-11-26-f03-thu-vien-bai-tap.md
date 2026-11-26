@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-26-f03-thu-vien-bai-tap
-status: ready
+status: draft
 ---
 
 # Spec: F03 — Thư viện bài tập
@@ -110,7 +110,7 @@ Giáo án chưa có ở P1, nên quy tắc "chỉ xoá bài chưa được dùng
 ## 4. Design Requirements / NFR + Compliance/Security
 - `NFR-f03-thu-vien-bai-tap-001` (Performance) — Tìm và lọc bài có p95 < 500 ms với 500 bài trong thư viện.
 - `NFR-f03-thu-vien-bai-tap-002` (Security) — Thư viện và danh mục thuộc coach: coach chỉ đọc/sửa dữ liệu của mình, học viên không truy cập được bất kỳ dữ liệu thư viện nào.
-- `NFR-f03-thu-vien-bai-tap-003` (Data) — Khoảng 105 bài từ prototype, đã gán lại theo danh mục ban đầu (bảng gán ở tech-design, PO duyệt), chỉ được nạp làm dữ liệu dev, không nạp ở staging/production.
+- `NFR-f03-thu-vien-bai-tap-003` (Data) — 99 bài trong prototype là thư viện thật của coach, đã gán theo danh mục ban đầu (bảng gán ở tech-design, PO duyệt). Thư viện của coach được nạp sẵn 99 bài này ở mọi môi trường, một lần duy nhất khi thư viện còn trống; không nạp lại, không ghi đè bài coach đã sửa hay đã xoá.
 
 ## 5. Out of Scope
 - "Thêm vào giáo án" và thông tin "Đang dùng trong" (F05).
@@ -129,7 +129,7 @@ Giáo án chưa có ở P1, nên quy tắc "chỉ xoá bài chưa được dùng
 | OQ-04 | Quản lý danh mục tới đâu? | Business | ✅ | PO | Chỉ thêm mới (2026-11-26) |
 | OQ-05 | Hướng dẫn kỹ thuật / lỗi hay gặp / bài thay thế? | Business | ✅ | PO | 2 trường chữ ≤ 2000; bài thay thế để sau (2026-11-26) |
 | OQ-06 | Bài đã ẩn hiện thế nào? | Business | ✅ | PO | Mặc định không hiện, chọn xem bài đã ẩn để bỏ ẩn (2026-11-26) |
-| OQ-07 | Seed và import? | Business | ✅ | PO | Seed chỉ dev; import bài tập làm sau khi coach gửi template (2026-11-26) |
+| OQ-07 | Seed và import? | Business | ✅ | PO | 99 bài prototype là thư viện thật, nạp ở mọi môi trường khi thư viện trống (PO đổi 2026-11-27); import bài tập làm sau khi coach gửi template (2026-11-26) |
 | OQ-08 | Link YouTube dạng nào? | Business | ✅ | PO | Mọi link YouTube (youtube.com, youtu.be) (2026-11-26) |
 
 ## 7. Dependencies
