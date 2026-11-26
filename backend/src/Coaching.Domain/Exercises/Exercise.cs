@@ -110,4 +110,10 @@ public sealed class Exercise : AggregateRoot<Guid>
             throw new DomainException("exercise.notes_too_long", $"{label} tối đa {NotesMaxLength} ký tự.");
         return trimmed;
     }
+
+    // @BR-f03-thu-vien-bai-tap-015: coach ẩn/bỏ ẩn được bất kỳ bài nào của mình; lặp lại không lỗi
+    public void Hide() => IsHidden = true;
+
+    // @BR-f03-thu-vien-bai-tap-015
+    public void Unhide() => IsHidden = false;
 }

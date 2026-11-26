@@ -36,4 +36,8 @@ public static class ExerciseErrors
 
     // @BR-f03-thu-vien-bai-tap-004
     public static readonly Error EquipmentRequired = new("exercise.equipment_required", "Chọn dụng cụ.");
+
+    // @BR-f03-thu-vien-bai-tap-017
+    public static readonly Error InUse =
+        new("exercise.in_use", "Bài đang có trong giáo án, chỉ ẩn được.", ErrorKind.Conflict);
 }

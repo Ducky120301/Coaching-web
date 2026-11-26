@@ -1,3 +1,4 @@
+using Coaching.Application.Exercises;
 using Coaching.Application.Exercises.Commands;
 using Coaching.Application.Exercises.Queries;
 using Coaching.Application.Accounts;
@@ -42,6 +43,11 @@ public static class DependencyInjection
         services.AddScoped<CreateExerciseHandler>(); // @ADR-f03-thu-vien-bai-tap-001
         services.AddScoped<UpdateExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-020
         services.AddScoped<GetExerciseHandler>();
+        services.AddScoped<HideExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-015
+        services.AddScoped<UnhideExerciseHandler>();
+        services.AddScoped<DeleteExerciseHandler>(); // @BR-f03-thu-vien-bai-tap-017
+        // @ADR-f03-thu-vien-bai-tap-004: F05 đăng ký lại IExerciseUsage bằng truy vấn giáo án (đăng ký sau thắng)
+        services.AddScoped<IExerciseUsage, NoExerciseUsage>();
         return services;
     }
 }

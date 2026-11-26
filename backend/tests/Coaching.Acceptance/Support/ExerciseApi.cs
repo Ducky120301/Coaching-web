@@ -3,9 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Coaching.Application.Exercises;
 using Coaching.Application.Exercises.Commands;
-using Coaching.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Acceptance.Support;
 
@@ -84,14 +81,21 @@ public sealed class ExerciseApi(AcceptanceContext ctx, StudentApi coach, Exercis
         return response;
     }
 
-    /// <summary>Đặt bài ở trạng thái đã ẩn (SQL — Task 4 đổi sang gọi API ẩn bài).</summary>
-    public async Task HideAsync(string name)
-    {
-        var id = IdOf(name);
-        await using var scope = ctx.Host.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE [Exercises] SET [IsHidden] = 1 WHERE [Id] = {id}");
-    }
+    // @BR-f03-thu-vien-bai-tap-015
+    public Task<HttpResponseMessage> TryHideAsync(string name) =>
+        ctx.SendJsonAsync(HttpMethod.Post, $"{Url}/{IdOf(name)}/hide", null, coach.AdminToken);
+
+    // @BR-f03-thu-vien-bai-tap-015
+    public Task<HttpResponseMessage> TryUnhideAsync(string name) =>
+        ctx.SendJsonAsync(HttpMethod.Post, $"{Url}/{IdOf(name)}/unhide", null, coach.AdminToken);
+
+    // @BR-f03-thu-vien-bai-tap-017
+    public Task<HttpResponseMessage> TryDeleteAsync(string name) =>
+        ctx.SendJsonAsync(HttpMethod.Delete, $"{Url}/{IdOf(name)}", null, coach.AdminToken);
+
+    /// <summary>Đặt bài ở trạng thái đã ẩn qua API ẩn bài.</summary>
+    public async Task HideAsync(string name) =>
+        Assert.Equal(HttpStatusCode.OK, (await TryHideAsync(name)).StatusCode);
 
     public Task AssertErrorAsync(HttpStatusCode status, string code) => coach.AssertErrorAsync(status, code);
 }

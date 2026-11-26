@@ -32,4 +32,25 @@ public sealed class ExercisesController : AdminControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] SaveExerciseCommand command,
         [FromServices] UpdateExerciseHandler handler, CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, command, cancellationToken)).ToActionResult(this);
+
+    // @BR-f03-thu-vien-bai-tap-015
+    [HttpPost("{id:guid}/hide")]
+    [ProducesResponseType<ExerciseDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Hide(Guid id, [FromServices] HideExerciseHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
+
+    // @BR-f03-thu-vien-bai-tap-015
+    [HttpPost("{id:guid}/unhide")]
+    [ProducesResponseType<ExerciseDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Unhide(Guid id, [FromServices] UnhideExerciseHandler handler, CancellationToken cancellationToken) =>
+        (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
+
+    // @BR-f03-thu-vien-bai-tap-017 @ADR-f03-thu-vien-bai-tap-004
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(Guid id, [FromServices] DeleteExerciseHandler handler, CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(id, cancellationToken);
+        return result.IsSuccess ? NoContent() : result.Error!.ToProblem(this);
+    }
 }
