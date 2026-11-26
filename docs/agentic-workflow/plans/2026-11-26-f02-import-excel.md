@@ -93,7 +93,7 @@ Ghi chú bind step (đã soát `Steps/*.cs`, không bind trùng):
 | `hồ sơ cho biết không còn mục bắt buộc nào thiếu` | có sẵn `NothingMissing` |
 | F02: `coach lưu hồ sơ học viên có link ảnh toàn thân "…"` / `hồ sơ ghi nhận link ảnh toàn thân "…"` | **thay** 2 step "ảnh mặt trước" (text cũ không còn trong living docs) |
 
-- [ ] **Step 1: Viết Domain test cho form theo Google Form + `Validate` gom lỗi**
+- [x] **Step 1: Viết Domain test cho form theo Google Form + `Validate` gom lỗi**
 
 `backend/tests/Coaching.Domain.Tests/Students/RegistrationGoogleFormTests.cs`:
 ```csharp
@@ -307,7 +307,7 @@ public sealed class RegistrationGoogleFormTests
 }
 ```
 
-- [ ] **Step 2: Sửa Domain test F02 hiện có theo mục mới (bỏ mỡ %, 2 mục số trước khi tập, 4 ảnh; 28 → 24 mục bắt buộc)**
+- [x] **Step 2: Sửa Domain test F02 hiện có theo mục mới (bỏ mỡ %, 2 mục số trước khi tập, 4 ảnh; 28 → 24 mục bắt buộc)**
 
 Thay toàn bộ `backend/tests/Coaching.Domain.Tests/Students/RegistrationFormTests.cs`:
 ```csharp
@@ -505,7 +505,7 @@ public sealed class RegistrationFormTests
 }
 ```
 
-- [ ] **Step 3: Sửa fixture `RegistrationSamples` theo khoá mới**
+- [x] **Step 3: Sửa fixture `RegistrationSamples` theo khoá mới**
 
 Thay toàn bộ `backend/tests/Coaching.TestSupport/RegistrationSamples.cs`:
 ```csharp
@@ -562,7 +562,7 @@ public static class RegistrationSamples
 }
 ```
 
-- [ ] **Step 4: Viết integration test — Lịch rảnh/Dụng cụ gửi lên không được ghi nhận (seed ❌ của BR-001)**
+- [x] **Step 4: Viết integration test — Lịch rảnh/Dụng cụ gửi lên không được ghi nhận (seed ❌ của BR-001)**
 
 Trong `backend/tests/Coaching.Api.IntegrationTests/Students/RegistrationValidationTests.cs`, thêm using đầu file:
 ```csharp
@@ -600,12 +600,12 @@ và thêm test cuối class:
     }
 ```
 
-- [ ] **Step 5: Chạy — kỳ vọng FAIL (đỏ)**
+- [x] **Step 5: Chạy — kỳ vọng FAIL (đỏ)**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students.Registration"`
 Expected: FAIL — build error, ví dụ `'RegistrationInput' does not contain a definition for 'BodyFatAndMethod'`, `'RegistrationInput' does not contain a definition for 'BodyPhotoUrl'`, `The type or namespace name 'RegistrationFieldError' could not be found`, `'RegistrationForm' does not contain a definition for 'Validate'`.
 
-- [ ] **Step 6: Domain — `RegistrationFieldError`**
+- [x] **Step 6: Domain — `RegistrationFieldError`**
 
 `backend/src/Coaching.Domain/Students/RegistrationFieldError.cs`:
 ```csharp
@@ -619,7 +619,7 @@ namespace Coaching.Domain.Students;
 public sealed record RegistrationFieldError(string Code, string Message);
 ```
 
-- [ ] **Step 7: Domain — `RegistrationInput` theo câu hỏi Google Form**
+- [x] **Step 7: Domain — `RegistrationInput` theo câu hỏi Google Form**
 
 Thay toàn bộ `backend/src/Coaching.Domain/Students/RegistrationInput.cs`:
 ```csharp
@@ -683,7 +683,7 @@ public sealed record RegistrationInput
 }
 ```
 
-- [ ] **Step 8: Domain — `RegistrationFields` mới (37 mục, 24 bắt buộc)**
+- [x] **Step 8: Domain — `RegistrationFields` mới (37 mục, 24 bắt buộc)**
 
 Thay toàn bộ `backend/src/Coaching.Domain/Students/RegistrationFields.cs`:
 ```csharp
@@ -744,7 +744,7 @@ public static class RegistrationFields
 }
 ```
 
-- [ ] **Step 9: Domain — `RegistrationForm` mới: mục Google Form + `Validate` gom lỗi, `Create` ném lỗi đầu**
+- [x] **Step 9: Domain — `RegistrationForm` mới: mục Google Form + `Validate` gom lỗi, `Create` ném lỗi đầu**
 
 Thay toàn bộ `backend/src/Coaching.Domain/Students/RegistrationForm.cs`:
 ```csharp
@@ -1011,12 +1011,12 @@ public sealed class RegistrationForm
 }
 ```
 
-- [ ] **Step 10: Chạy Domain test — kỳ vọng PASS**
+- [x] **Step 10: Chạy Domain test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Students"`
 Expected: PASS — toàn bộ test trong `Coaching.Domain.Tests.Students` (gồm `RegistrationGoogleFormTests`, `RegistrationFormTests`, `ActivationTests`, `SendCredentialsTests`…) `Passed`, `Failed: 0`.
 
-- [ ] **Step 11: Acceptance — nhãn mục mới trong `RegistrationLabels`**
+- [x] **Step 11: Acceptance — nhãn mục mới trong `RegistrationLabels`**
 
 Thay toàn bộ `backend/tests/Coaching.Acceptance/Support/RegistrationLabels.cs`:
 ```csharp
@@ -1072,7 +1072,7 @@ public static class RegistrationLabels
 }
 ```
 
-- [ ] **Step 12: Acceptance — bind `form-dang-ky.feature` + sửa step F02 bị đổi**
+- [x] **Step 12: Acceptance — bind `form-dang-ky.feature` + sửa step F02 bị đổi**
 
 Thay toàn bộ `backend/tests/Coaching.Acceptance/Steps/StudentRegistrationSteps.cs`:
 ```csharp
@@ -1231,22 +1231,22 @@ public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi a
 }
 ```
 
-- [ ] **Step 13: Chạy acceptance `form-dang-ky.feature` + F02 bị ảnh hưởng — kỳ vọng PASS**
+- [x] **Step 13: Chạy acceptance `form-dang-ky.feature` + F02 bị ảnh hưởng — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "Category=BR-f02-import-excel-001|Category=BR-f02-import-excel-003|Category=BR-f02-import-excel-004|Category=BR-f02-import-excel-005|Category=BR-f02-import-excel-006|Category=BR-f02-import-excel-007|Category=BR-f02-ho-so-hoc-vien-004|Category=BR-f02-ho-so-hoc-vien-008|Category=BR-f02-ho-so-hoc-vien-009|Category=BR-f02-ho-so-hoc-vien-011"`
 Expected: PASS — 11 scenario/example của `form-dang-ky.feature` (BR-001 ×1, BR-003 ×2, BR-004 ×2, BR-005 ×1, BR-006 ×3, BR-007 ×2) và các scenario BR-f02-ho-so-hoc-vien-004/008/009/011 đều `Passed`, `Failed: 0`. (Không có `No matching step definition found`.)
 
-- [ ] **Step 14: Chạy integration test hồ sơ — kỳ vọng PASS**
+- [x] **Step 14: Chạy integration test hồ sơ — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Students|FullyQualifiedName~Coaching.Api.IntegrationTests.Accounts"`
 Expected: PASS — gồm `RegistrationValidationTests.Availability_and_equipment_sent_by_old_clients_are_not_stored` và `Complete_registration_round_trips_through_json_column` (RegistrationSamples mới), `Failed: 0`.
 
-- [ ] **Step 15: Verify tổng backend**
+- [x] **Step 15: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning, TreatWarningsAsErrors). Mọi test Domain/Application/Integration và acceptance F00/F01-P1/F02 + `form-dang-ky.feature` `Passed`. Chỉ được phép fail các scenario `@api` của `features/hoc-vien/ho-so/import-excel.feature` (BR-f02-import-excel-012…034) với lỗi `No matching step definition found` (interim rule — bind ở Task 4/5). Không có lỗi nào khác.
 
-- [ ] **Step 16: Commit**
+- [x] **Step 16: Commit**
 
 ```bash
 git add backend/src/Coaching.Domain/Students/RegistrationFieldError.cs backend/src/Coaching.Domain/Students/RegistrationForm.cs backend/src/Coaching.Domain/Students/RegistrationInput.cs backend/src/Coaching.Domain/Students/RegistrationFields.cs backend/tests/Coaching.TestSupport/RegistrationSamples.cs backend/tests/Coaching.Domain.Tests/Students/RegistrationGoogleFormTests.cs backend/tests/Coaching.Domain.Tests/Students/RegistrationFormTests.cs backend/tests/Coaching.Api.IntegrationTests/Students/RegistrationValidationTests.cs backend/tests/Coaching.Acceptance/Support/RegistrationLabels.cs backend/tests/Coaching.Acceptance/Steps/StudentRegistrationSteps.cs
