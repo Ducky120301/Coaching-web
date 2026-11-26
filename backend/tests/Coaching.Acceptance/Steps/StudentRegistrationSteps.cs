@@ -1,5 +1,8 @@
 using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Coaching.Acceptance.Support;
+using Coaching.Application.Students;
 using Coaching.Domain.Students;
 using Coaching.TestSupport;
 using Reqnroll;
@@ -9,7 +12,16 @@ namespace Coaching.Acceptance.Steps;
 [Binding]
 public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi api)
 {
-    // @BR-f02-ho-so-hoc-vien-004
+    /// <summary>@BR-f02-import-excel-001: mục đã bỏ khỏi form → khoá JSON cũ.</summary>
+    private static readonly IReadOnlyDictionary<string, string> RemovedFields = new Dictionary<string, string>
+    {
+        ["Lịch rảnh"] = "availability",
+        ["Dụng cụ"] = "equipment",
+    };
+
+    private Guid _createdId;
+
+    // @BR-f02-ho-so-hoc-vien-004 @BR-f02-import-excel-007
     [When(@"^coach lưu hồ sơ học viên đủ mọi mục bắt buộc trừ (.+)$")]
     public Task SaveCompleteExcept(string labels)
     {
@@ -22,6 +34,43 @@ public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi a
     [When("coach lưu hồ sơ học viên đủ mọi mục bắt buộc")]
     public Task SaveComplete() =>
         api.TryCreateAsync("Học viên đăng ký", StudentApi.NewEmail(), RegistrationSamples.Complete());
+
+    // @BR-f02-import-excel-007: để trống một mục không bắt buộc
+    [When(@"^coach lưu hồ sơ học viên đủ mọi mục bắt buộc và để trống ""([^""]*)""$")]
+    public Task SaveCompleteWithEmpty(string label) =>
+        api.TryCreateAsync("Học viên đăng ký", StudentApi.NewEmail(),
+            RegistrationLabels.With(RegistrationSamples.Complete(), RegistrationLabels.Codes[label], null));
+
+    // @BR-f02-import-excel-001: gửi kèm Lịch rảnh/Dụng cụ như client cũ (ví dụ ❌ của spec) — phải bị bỏ qua
+    [When("coach tạo hồ sơ học viên đủ mọi mục bắt buộc")]
+    public async Task CreateCompleteWithLegacyFields()
+    {
+        var registration = JsonSerializer.SerializeToNode(RegistrationSamples.Complete(), JsonSerializerOptions.Web)!.AsObject();
+        registration["availability"] = "Tối 2-4-6";
+        registration["equipment"] = "Tạ đơn";
+
+        var response = await ctx.SendJsonAsync(HttpMethod.Post, "/api/admin/students",
+            new { fullName = "Học viên form mới", email = StudentApi.NewEmail(), registration }, api.AdminToken);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        _createdId = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!.Id;
+    }
+
+    // @BR-f02-import-excel-001: đọc lại hồ sơ (JSON thô) — không có khoá của 2 mục đã bỏ
+    [Then(@"^hồ sơ không có mục ""([^""]*)"" và ""([^""]*)""$")]
+    public async Task HasNoFields(string first, string second)
+    {
+        var response = await ctx.GetAsync($"/api/admin/students/{_createdId}", api.AdminToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var registration = json.RootElement.GetProperty("registration");
+
+        foreach (var label in new[] { first, second })
+        {
+            Assert.False(registration.TryGetProperty(RemovedFields[label], out _), $"Hồ sơ vẫn có mục \"{label}\".");
+            Assert.DoesNotContain(RegistrationFields.All, f => f.Label == label);
+        }
+    }
 
     [Then("hồ sơ được lưu")]
     public void Saved() => Assert.Equal(HttpStatusCode.Created, ctx.LastResponse!.StatusCode);
@@ -41,7 +90,8 @@ public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi a
         Assert.Empty(api.LastDetail!.MissingRequired);
     }
 
-    // @BR-f02-ho-so-hoc-vien-008 @BR-f02-ho-so-hoc-vien-009
+    // @BR-f02-ho-so-hoc-vien-008 @BR-f02-ho-so-hoc-vien-009 @BR-f02-import-excel-003 @BR-f02-import-excel-004
+    // @BR-f02-import-excel-005 @BR-f02-import-excel-006
     [When(@"^coach lưu hồ sơ học viên có ""([^""]*)"" là ""([^""]*)""$")]
     public Task SaveWithValue(string label, string value) =>
         api.TryCreateAsync("Học viên số liệu", StudentApi.NewEmail(),
@@ -85,18 +135,19 @@ public sealed class StudentRegistrationSteps(AcceptanceContext ctx, StudentApi a
     public Task TransferDateInFuture() =>
         api.AssertErrorAsync(HttpStatusCode.BadRequest, "student.transferDate.in_future");
 
-    // @BR-f02-ho-so-hoc-vien-011
-    [When(@"^coach lưu hồ sơ học viên có ảnh mặt trước ""([^""]*)""$")]
-    public Task SavePhoto(string url) =>
-        api.TryCreateAsync("Học viên ảnh", StudentApi.NewEmail(), new RegistrationInput { PhotoFrontUrl = url });
+    // @BR-f02-ho-so-hoc-vien-011 @BR-f02-import-excel-006: hồ sơ chỉ còn một "Link ảnh toàn thân"
+    [When(@"^coach lưu hồ sơ học viên có link ảnh toàn thân ""([^""]*)""$")]
+    public Task SaveBodyPhoto(string url) =>
+        api.TryCreateAsync("Học viên ảnh", StudentApi.NewEmail(), new RegistrationInput { BodyPhotoUrl = url });
 
-    [Then(@"^hồ sơ ghi nhận ảnh mặt trước ""([^""]*)""$")]
-    public void PhotoRecorded(string url)
+    [Then(@"^hồ sơ ghi nhận link ảnh toàn thân ""([^""]*)""$")]
+    public void BodyPhotoRecorded(string url)
     {
         Assert.Equal(HttpStatusCode.Created, ctx.LastResponse!.StatusCode);
-        Assert.Equal(url, api.LastDetail!.Registration.PhotoFrontUrl);
+        Assert.Equal(url, api.LastDetail!.Registration.BodyPhotoUrl);
     }
 
+    // @BR-f02-ho-so-hoc-vien-011 @BR-f02-import-excel-006
     [Then("hồ sơ không được lưu vì link ảnh không hợp lệ")]
-    public Task PhotoInvalid() => api.AssertErrorAsync(HttpStatusCode.BadRequest, "student.photoFrontUrl.invalid_url");
+    public Task PhotoInvalid() => api.AssertErrorAsync(HttpStatusCode.BadRequest, "student.bodyPhotoUrl.invalid_url");
 }

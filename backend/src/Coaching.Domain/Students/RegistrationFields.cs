@@ -2,7 +2,12 @@ namespace Coaching.Domain.Students;
 
 public sealed record RegistrationField(string Code, string Label, bool Required);
 
-/// <summary>Mục của form theo thứ tự hiển thị; Required = bắt buộc trước khi gửi tài khoản (F01-P1 kiểm).</summary>
+/// <summary>
+/// Mục của form theo thứ tự hiển thị; Required = bắt buộc trước khi gửi tài khoản (F01-P1 kiểm).
+/// @ADR-f02-import-excel-001 @BR-f02-import-excel-001: không có Lịch rảnh, Dụng cụ.
+/// @BR-f02-import-excel-007: Số năm tập luyện, Cân nặng và chiều cao trước khi tập tạ, Link ảnh toàn thân bắt buộc;
+/// Mỡ cơ thể và cách đo không bắt buộc.
+/// </summary>
 public static class RegistrationFields
 {
     public static readonly IReadOnlyList<RegistrationField> All =
@@ -22,17 +27,13 @@ public static class RegistrationFields
         new("leftArmCm", "Tay trái (gồng biceps)", false),
         new("rightThighCm", "Đùi phải (chỗ to nhất)", false),
         new("leftThighCm", "Đùi trái (chỗ to nhất)", false),
-        new("bodyFatPercent", "Mỡ cơ thể", false),
-        new("bodyFatMethod", "Cách đo mỡ", false),
-        new("trainingYears", "Số năm tập luyện", true),
+        new("bodyFatAndMethod", "Mỡ cơ thể và cách đo", false), // @BR-f02-import-excel-004
+        new("trainingYears", "Số năm tập luyện", true), // @BR-f02-import-excel-003
         new("weeklyTrainingTime", "Thời gian dành cho tập mỗi tuần", true),
-        new("weightBeforeLiftingKg", "Cân nặng trước khi tập tạ", true),
-        new("heightThenCm", "Chiều cao khi đó", true),
+        new("weightHeightBeforeLifting", "Cân nặng và chiều cao trước khi tập tạ", true), // @BR-f02-import-excel-005
         new("trainingGoal", "Mục tiêu tập luyện", true),
         new("currentTraining", "Chế độ tập hiện tại", false),
         new("medicalHistory", "Tiền sử bệnh lý và chấn thương", true),
-        new("availability", "Lịch rảnh", false),
-        new("equipment", "Dụng cụ", false),
         new("foodBudgetReadiness", "Sẵn sàng đầu tư cho thực phẩm chất lượng", true),
         new("occupation", "Nghề nghiệp", false),
         new("activityLevel", "Mức độ hoạt động", true),
@@ -44,10 +45,7 @@ public static class RegistrationFields
         new("mealAndTrainingTimes", "Giờ có thể ăn và giờ đi tập", true),
         new("sessionsPerWeek", "Số buổi tập mỗi tuần", true),
         new("programStyle", "Phong cách giáo án muốn theo", true),
-        new("photoFrontUrl", "Ảnh mặt trước", true),
-        new("photoBackUrl", "Ảnh mặt sau", true),
-        new("photoLeftUrl", "Ảnh bên trái", true),
-        new("photoRightUrl", "Ảnh bên phải", true),
+        new("bodyPhotoUrl", "Link ảnh toàn thân", true), // @BR-f02-import-excel-006
         new("expectations", "Mong đợi gì từ coach", true),
         new("previousCoaching", "Từng theo coach / online coaching chưa, trải nghiệm ra sao", true),
         new("investmentReason", "Điều gì khiến bạn quyết định đầu tư vào bản thân lúc này", true),

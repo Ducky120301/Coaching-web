@@ -18,16 +18,16 @@ public sealed class RegistrationFormTests
     public void Complete_form_has_no_missing_required() =>
         Assert.Empty(Create(RegistrationSamples.Complete()).MissingRequired());
 
-    // @BR-f02-ho-so-hoc-vien-004
+    // @BR-f02-ho-so-hoc-vien-004 @BR-f02-import-excel-007
     [Fact]
     public void Missing_required_lists_exactly_the_empty_required_fields_in_form_order()
     {
         var input = RegistrationSamples.Complete() with
         {
-            Pack = null, TrainingGoal = "", PhotoBackUrl = null, Availability = null, // Lịch rảnh không bắt buộc
+            Pack = null, TrainingGoal = "", BodyPhotoUrl = null, BodyFatAndMethod = null, // Mỡ cơ thể và cách đo không bắt buộc
         };
 
-        Assert.Equal(new[] { "pack", "trainingGoal", "photoBackUrl" }, Create(input).MissingRequired());
+        Assert.Equal(new[] { "pack", "trainingGoal", "bodyPhotoUrl" }, Create(input).MissingRequired());
     }
 
     // @BR-f02-ho-so-hoc-vien-004 (seed loại khỏi living doc): mục chỉ chứa khoảng trắng tính là thiếu
@@ -40,10 +40,10 @@ public sealed class RegistrationFormTests
         Assert.Equal(new[] { "trainingGoal" }, form.MissingRequired());
     }
 
-    // @BR-f02-ho-so-hoc-vien-004
+    // @BR-f02-ho-so-hoc-vien-004 @BR-f02-import-excel-007
     [Fact]
-    public void Empty_form_misses_all_28_required_fields() =>
-        Assert.Equal(28, RegistrationForm.CreateEmpty().MissingRequired().Count);
+    public void Empty_form_misses_all_24_required_fields() =>
+        Assert.Equal(24, RegistrationForm.CreateEmpty().MissingRequired().Count);
 
     // @BR-f02-ho-so-hoc-vien-008
     [Theory]
@@ -60,21 +60,6 @@ public sealed class RegistrationFormTests
     [InlineData(720)]
     public void Weight_outside_range_is_rejected(double kg) =>
         Assert.Equal("student.weightKg.out_of_range", ErrorOf(new RegistrationInput { WeightKg = (decimal)kg }));
-
-    // @BR-f02-ho-so-hoc-vien-008
-    [Theory]
-    [InlineData(3, true)]
-    [InlineData(70, true)]
-    [InlineData(2.9, false)]
-    [InlineData(70.1, false)]
-    public void Body_fat_must_be_between_3_and_70(double percent, bool valid)
-    {
-        var input = new RegistrationInput { BodyFatPercent = (decimal)percent };
-        if (valid)
-            Assert.Equal((decimal)percent, Create(input).BodyFatPercent);
-        else
-            Assert.Equal("student.bodyFatPercent.out_of_range", ErrorOf(input));
-    }
 
     // @BR-f02-ho-so-hoc-vien-008
     [Theory]
@@ -108,16 +93,14 @@ public sealed class RegistrationFormTests
 
     // @BR-f02-ho-so-hoc-vien-008
     [Fact]
-    public void Girths_and_pre_lifting_measurements_use_their_ranges()
+    public void Girths_use_their_range()
     {
-        var form = Create(new RegistrationInput { ChestCm = 10m, LeftThighCm = 250m, WeightBeforeLiftingKg = 20m, HeightThenCm = 250m });
+        var form = Create(new RegistrationInput { ChestCm = 10m, LeftThighCm = 250m });
         Assert.Equal(10m, form.ChestCm);
         Assert.Equal(250m, form.LeftThighCm);
 
         Assert.Equal("student.waistCm.out_of_range", ErrorOf(new RegistrationInput { WaistCm = 9.9m }));
         Assert.Equal("student.hipCm.out_of_range", ErrorOf(new RegistrationInput { HipCm = 250.1m }));
-        Assert.Equal("student.weightBeforeLiftingKg.out_of_range", ErrorOf(new RegistrationInput { WeightBeforeLiftingKg = 19m }));
-        Assert.Equal("student.heightThenCm.out_of_range", ErrorOf(new RegistrationInput { HeightThenCm = 251m }));
     }
 
     // @BR-f02-ho-so-hoc-vien-008
@@ -154,7 +137,7 @@ public sealed class RegistrationFormTests
     [InlineData("https://drive.google.com/open?id=abc")]
     [InlineData("http://example.com/anh.jpg")]
     public void Http_and_https_photo_links_are_kept(string url) =>
-        Assert.Equal(url, Create(new RegistrationInput { PhotoFrontUrl = url }).PhotoFrontUrl);
+        Assert.Equal(url, Create(new RegistrationInput { BodyPhotoUrl = url }).BodyPhotoUrl);
 
     // @BR-f02-ho-so-hoc-vien-011 (seed "javascript:" loại khỏi living doc)
     [Theory]
@@ -162,7 +145,7 @@ public sealed class RegistrationFormTests
     [InlineData("drive.google.com/abc")]
     [InlineData("ftp://example.com/anh.jpg")]
     public void Non_web_photo_links_are_rejected(string url) =>
-        Assert.Equal("student.photoFrontUrl.invalid_url", ErrorOf(new RegistrationInput { PhotoFrontUrl = url }));
+        Assert.Equal("student.bodyPhotoUrl.invalid_url", ErrorOf(new RegistrationInput { BodyPhotoUrl = url }));
 
     // @ADR-f02-ho-so-hoc-vien-009
     [Fact]
@@ -172,8 +155,8 @@ public sealed class RegistrationFormTests
         Assert.Equal("student.address.too_long", ErrorOf(new RegistrationInput { Address = new string('a', 201) }));
         Assert.Equal(2000, Create(new RegistrationInput { TrainingGoal = new string('a', 2000) }).TrainingGoal!.Length);
         Assert.Equal("student.trainingGoal.too_long", ErrorOf(new RegistrationInput { TrainingGoal = new string('a', 2001) }));
-        Assert.Equal("student.photoFrontUrl.too_long",
-            ErrorOf(new RegistrationInput { PhotoFrontUrl = "https://x.vn/" + new string('a', 2048) }));
+        Assert.Equal("student.bodyPhotoUrl.too_long",
+            ErrorOf(new RegistrationInput { BodyPhotoUrl = "https://x.vn/" + new string('a', 2048) }));
     }
 
     // @ADR-f02-ho-so-hoc-vien-002
@@ -188,7 +171,7 @@ public sealed class RegistrationFormTests
         var at = new DateTimeOffset(2026, 11, 25, 2, 0, 0, TimeSpan.Zero);
         var email = Email.Create("lan@gmail.com");
 
-        Assert.Equal(28, Student.Create(Guid.NewGuid(), Guid.NewGuid(), "Lan", email, at).MissingRequiredFields.Count);
+        Assert.Equal(24, Student.Create(Guid.NewGuid(), Guid.NewGuid(), "Lan", email, at).MissingRequiredFields.Count);
         Assert.Empty(Student.Create(Guid.NewGuid(), Guid.NewGuid(), "Lan", email, at,
             Create(RegistrationSamples.Complete())).MissingRequiredFields);
     }

@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using Coaching.Application.Students;
+using Coaching.Infrastructure.Persistence;
 using Coaching.TestSupport;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Coaching.Api.IntegrationTests.Students;
 
@@ -52,5 +55,32 @@ public sealed class RegistrationValidationTests(ApiFactory factory)
         var detail = (await admin.GetFromJsonAsync<StudentDetailDto>($"{StudentRequests.Url}/{id}"))!;
         Assert.Equal(input, detail.Registration);
         Assert.Empty(detail.MissingRequired);
+    }
+
+    // @BR-f02-import-excel-001 (seed ❌ loại khỏi living doc): client cũ gửi Lịch rảnh/Dụng cụ → bỏ qua, không lưu vào cột JSON
+    [Fact]
+    public async Task Availability_and_equipment_sent_by_old_clients_are_not_stored()
+    {
+        var admin = await factory.AdminClientAsync();
+        var registration = new Dictionary<string, object?>
+        {
+            ["availability"] = "Tối 2-4-6",
+            ["equipment"] = "Tạ đơn",
+            ["trainingYears"] = "1",
+        };
+
+        var response = await admin.PostAsJsonAsync(StudentRequests.Url,
+            new { fullName = "Lan", email = StudentRequests.NewEmail(), registration });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var id = (await response.Content.ReadFromJsonAsync<StudentDetailDto>())!.Id;
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var raw = await db.Database
+            .SqlQuery<string>($"SELECT [Registration] AS [Value] FROM [Students] WHERE [Id] = {id}")
+            .SingleAsync();
+        Assert.DoesNotContain("Availability", raw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Equipment", raw, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TrainingYears", raw, StringComparison.OrdinalIgnoreCase);
     }
 }

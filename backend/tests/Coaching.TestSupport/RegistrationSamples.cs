@@ -2,7 +2,10 @@ using Coaching.Domain.Students;
 
 namespace Coaching.TestSupport;
 
-/// <summary>Form đăng ký hợp lệ, đủ mọi mục (ngày chuyển khoản 01/11/2026 ≤ "hôm nay" của mọi test).</summary>
+/// <summary>
+/// Form đăng ký hợp lệ, đủ mọi mục (ngày chuyển khoản 01/11/2026 ≤ "hôm nay" của mọi test).
+/// @ADR-f02-import-excel-001: mục theo câu hỏi Google Form.
+/// </summary>
 public static class RegistrationSamples
 {
     public static RegistrationInput Complete() => new()
@@ -22,17 +25,13 @@ public static class RegistrationSamples
         LeftArmCm = 33.5m,
         RightThighCm = 56m,
         LeftThighCm = 55.5m,
-        BodyFatPercent = 18m,
-        BodyFatMethod = "InBody",
+        BodyFatAndMethod = "18 % – InBody",
         TrainingYears = "1–2 năm",
         WeeklyTrainingTime = "5 buổi, mỗi buổi 75 phút",
-        WeightBeforeLiftingKg = 68m,
-        HeightThenCm = 171m,
+        WeightHeightBeforeLifting = "68 kg, 171 cm",
         TrainingGoal = "Giảm mỡ, giữ cơ",
         CurrentTraining = "Push / Pull / Legs, mỗi bài 3 set",
         MedicalHistory = "Không",
-        Availability = "T3–T7 buổi tối, CN buổi sáng",
-        Equipment = "Phòng gym đầy đủ",
         FoodBudgetReadiness = "Sẵn sàng",
         Occupation = "Nhân viên văn phòng",
         ActivityLevel = "Nhẹ",
@@ -44,10 +43,7 @@ public static class RegistrationSamples
         MealAndTrainingTimes = "Ăn 7h, 12h, 19h. Tập 17h30–19h.",
         SessionsPerWeek = "5 buổi",
         ProgramStyle = "Upper / Lower",
-        PhotoFrontUrl = "https://drive.google.com/open?id=front",
-        PhotoBackUrl = "https://drive.google.com/open?id=back",
-        PhotoLeftUrl = "https://drive.google.com/open?id=left",
-        PhotoRightUrl = "https://drive.google.com/open?id=right",
+        BodyPhotoUrl = "https://drive.google.com/open?id=front",
         Expectations = "Có lộ trình rõ ràng",
         PreviousCoaching = "Chưa từng theo coach",
         InvestmentReason = "Muốn khỏe hơn trước Tết",

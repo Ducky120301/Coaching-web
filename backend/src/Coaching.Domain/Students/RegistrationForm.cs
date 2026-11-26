@@ -5,7 +5,10 @@ namespace Coaching.Domain.Students;
 /// <summary>
 /// Câu trả lời form đăng ký đã kiểm.
 /// @ADR-f02-ho-so-hoc-vien-002: owned value object lưu một cột JSON.
-/// @ADR-f02-ho-so-hoc-vien-006: một nguồn luật kiểm cho tạo, sửa và import sau này; lỗi đầu tiên → DomainException → 400.
+/// @ADR-f02-ho-so-hoc-vien-006: một nguồn luật kiểm cho tạo, sửa và import.
+/// @ADR-f02-import-excel-001: mục theo câu hỏi Google Form (không Lịch rảnh/Dụng cụ; mỡ + cách đo, cân nặng + chiều cao
+/// trước khi tập, 4 ảnh → 1 link là mục gộp; Số năm tập luyện là chữ tự do).
+/// @ADR-f02-import-excel-003: <see cref="Validate"/> gom MỌI lỗi (import báo từng ô); <see cref="Create"/> ném lỗi đầu tiên như cũ.
 /// Văn bản đã trim; chuỗi chỉ có khoảng trắng coi là trống (null).
 /// </summary>
 public sealed class RegistrationForm
@@ -30,17 +33,13 @@ public sealed class RegistrationForm
     public decimal? LeftArmCm { get; private set; }
     public decimal? RightThighCm { get; private set; }
     public decimal? LeftThighCm { get; private set; }
-    public decimal? BodyFatPercent { get; private set; }
-    public string? BodyFatMethod { get; private set; }
+    public string? BodyFatAndMethod { get; private set; }
     public string? TrainingYears { get; private set; }
     public string? WeeklyTrainingTime { get; private set; }
-    public decimal? WeightBeforeLiftingKg { get; private set; }
-    public decimal? HeightThenCm { get; private set; }
+    public string? WeightHeightBeforeLifting { get; private set; }
     public string? TrainingGoal { get; private set; }
     public string? CurrentTraining { get; private set; }
     public string? MedicalHistory { get; private set; }
-    public string? Availability { get; private set; }
-    public string? Equipment { get; private set; }
     public string? FoodBudgetReadiness { get; private set; }
     public string? Occupation { get; private set; }
     public string? ActivityLevel { get; private set; }
@@ -52,10 +51,7 @@ public sealed class RegistrationForm
     public string? MealAndTrainingTimes { get; private set; }
     public string? SessionsPerWeek { get; private set; }
     public string? ProgramStyle { get; private set; }
-    public string? PhotoFrontUrl { get; private set; }
-    public string? PhotoBackUrl { get; private set; }
-    public string? PhotoLeftUrl { get; private set; }
-    public string? PhotoRightUrl { get; private set; }
+    public string? BodyPhotoUrl { get; private set; }
     public string? Expectations { get; private set; }
     public string? PreviousCoaching { get; private set; }
     public string? InvestmentReason { get; private set; }
@@ -65,59 +61,72 @@ public sealed class RegistrationForm
     /// <summary>Form trống (mỗi lần một instance mới — owned entity không dùng chung giữa các hồ sơ).</summary>
     public static RegistrationForm CreateEmpty() => new();
 
-    public static RegistrationForm Create(RegistrationInput input, DateOnly today)
+    /// <summary>
+    /// @ADR-f02-import-excel-003: kiểm mọi mục, gom MỌI lỗi theo thứ tự form. <c>Form</c> = null khi có ít nhất 1 lỗi.
+    /// </summary>
+    public static (RegistrationForm? Form, IReadOnlyList<RegistrationFieldError> Errors) Validate(
+        RegistrationInput input, DateOnly today)
     {
-        ArgumentNullException.ThrowIfNull(input);
-        return new RegistrationForm
-        {
-            Pack = Option("pack", input.Pack, RegistrationOptions.Packs),
-            Price = PriceOf(input.Price),
-            TransferDate = TransferDateOf(input.TransferDate, today),
-            Address = Line("address", input.Address),
-            Age = AgeOf(input.Age),
-            HeightCm = Range("heightCm", input.HeightCm, 100, 250),
-            WeightKg = Range("weightKg", input.WeightKg, 20, 300),
-            ChestCm = Range("chestCm", input.ChestCm, 10, 250),
-            BellyCm = Range("bellyCm", input.BellyCm, 10, 250),
-            WaistCm = Range("waistCm", input.WaistCm, 10, 250),
-            HipCm = Range("hipCm", input.HipCm, 10, 250),
-            RightArmCm = Range("rightArmCm", input.RightArmCm, 10, 250),
-            LeftArmCm = Range("leftArmCm", input.LeftArmCm, 10, 250),
-            RightThighCm = Range("rightThighCm", input.RightThighCm, 10, 250),
-            LeftThighCm = Range("leftThighCm", input.LeftThighCm, 10, 250),
-            BodyFatPercent = Range("bodyFatPercent", input.BodyFatPercent, 3, 70),
-            BodyFatMethod = Option("bodyFatMethod", input.BodyFatMethod, RegistrationOptions.BodyFatMethods),
-            TrainingYears = Option("trainingYears", input.TrainingYears, RegistrationOptions.TrainingYears),
-            WeeklyTrainingTime = Line("weeklyTrainingTime", input.WeeklyTrainingTime),
-            WeightBeforeLiftingKg = Range("weightBeforeLiftingKg", input.WeightBeforeLiftingKg, 20, 300),
-            HeightThenCm = Range("heightThenCm", input.HeightThenCm, 100, 250),
-            TrainingGoal = Paragraph("trainingGoal", input.TrainingGoal),
-            CurrentTraining = Paragraph("currentTraining", input.CurrentTraining),
-            MedicalHistory = Paragraph("medicalHistory", input.MedicalHistory),
-            Availability = Paragraph("availability", input.Availability),
-            Equipment = Paragraph("equipment", input.Equipment),
-            FoodBudgetReadiness = Option("foodBudgetReadiness", input.FoodBudgetReadiness, RegistrationOptions.FoodBudgetReadiness),
-            Occupation = Line("occupation", input.Occupation),
-            ActivityLevel = Option("activityLevel", input.ActivityLevel, RegistrationOptions.ActivityLevels),
-            StressLevel = Option("stressLevel", input.StressLevel, RegistrationOptions.StressLevels),
-            SleepDuration = Option("sleepDuration", input.SleepDuration, RegistrationOptions.SleepDurations),
-            Caffeine = Line("caffeine", input.Caffeine),
-            Supplements = Paragraph("supplements", input.Supplements),
-            CurrentDiet = Paragraph("currentDiet", input.CurrentDiet),
-            MealAndTrainingTimes = Paragraph("mealAndTrainingTimes", input.MealAndTrainingTimes),
-            SessionsPerWeek = Option("sessionsPerWeek", input.SessionsPerWeek, RegistrationOptions.SessionsPerWeek),
-            ProgramStyle = Option("programStyle", input.ProgramStyle, RegistrationOptions.ProgramStyles),
-            PhotoFrontUrl = Url("photoFrontUrl", input.PhotoFrontUrl),
-            PhotoBackUrl = Url("photoBackUrl", input.PhotoBackUrl),
-            PhotoLeftUrl = Url("photoLeftUrl", input.PhotoLeftUrl),
-            PhotoRightUrl = Url("photoRightUrl", input.PhotoRightUrl),
-            Expectations = Paragraph("expectations", input.Expectations),
-            PreviousCoaching = Paragraph("previousCoaching", input.PreviousCoaching),
-            InvestmentReason = Paragraph("investmentReason", input.InvestmentReason),
-        };
+        var (form, failures) = Check(input, today);
+        return (form, failures.Select(f => f.ToFieldError()).ToList());
     }
 
-    /// <summary>@BR-f02-ho-so-hoc-vien-004: mã các mục bắt buộc còn trống, theo thứ tự form.</summary>
+    /// <summary>@ADR-f02-ho-so-hoc-vien-006: lỗi đầu tiên → DomainException (mã + câu chữ không đổi) → 400.</summary>
+    public static RegistrationForm Create(RegistrationInput input, DateOnly today)
+    {
+        var (form, failures) = Check(input, today);
+        return failures.Count == 0 ? form! : throw failures[0].ToException();
+    }
+
+    private static (RegistrationForm? Form, List<Failure> Failures) Check(RegistrationInput input, DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        var check = new Checker();
+        // Object initializer chạy theo thứ tự viết = thứ tự form → lỗi đầu tiên giống bản trước
+        var form = new RegistrationForm
+        {
+            Pack = check.Option("pack", input.Pack, RegistrationOptions.Packs),
+            Price = check.PriceOf(input.Price),
+            TransferDate = check.TransferDateOf(input.TransferDate, today),
+            Address = check.Line("address", input.Address),
+            Age = check.AgeOf(input.Age),
+            HeightCm = check.Range("heightCm", input.HeightCm, 100, 250),
+            WeightKg = check.Range("weightKg", input.WeightKg, 20, 300),
+            ChestCm = check.Range("chestCm", input.ChestCm, 10, 250),
+            BellyCm = check.Range("bellyCm", input.BellyCm, 10, 250),
+            WaistCm = check.Range("waistCm", input.WaistCm, 10, 250),
+            HipCm = check.Range("hipCm", input.HipCm, 10, 250),
+            RightArmCm = check.Range("rightArmCm", input.RightArmCm, 10, 250),
+            LeftArmCm = check.Range("leftArmCm", input.LeftArmCm, 10, 250),
+            RightThighCm = check.Range("rightThighCm", input.RightThighCm, 10, 250),
+            LeftThighCm = check.Range("leftThighCm", input.LeftThighCm, 10, 250),
+            BodyFatAndMethod = check.Line("bodyFatAndMethod", input.BodyFatAndMethod), // @BR-f02-import-excel-004
+            TrainingYears = check.Line("trainingYears", input.TrainingYears), // @BR-f02-import-excel-003
+            WeeklyTrainingTime = check.Line("weeklyTrainingTime", input.WeeklyTrainingTime),
+            WeightHeightBeforeLifting = check.Paragraph("weightHeightBeforeLifting", input.WeightHeightBeforeLifting), // @BR-f02-import-excel-005
+            TrainingGoal = check.Paragraph("trainingGoal", input.TrainingGoal),
+            CurrentTraining = check.Paragraph("currentTraining", input.CurrentTraining),
+            MedicalHistory = check.Paragraph("medicalHistory", input.MedicalHistory),
+            FoodBudgetReadiness = check.Option("foodBudgetReadiness", input.FoodBudgetReadiness, RegistrationOptions.FoodBudgetReadiness),
+            Occupation = check.Line("occupation", input.Occupation),
+            ActivityLevel = check.Option("activityLevel", input.ActivityLevel, RegistrationOptions.ActivityLevels),
+            StressLevel = check.Option("stressLevel", input.StressLevel, RegistrationOptions.StressLevels),
+            SleepDuration = check.Option("sleepDuration", input.SleepDuration, RegistrationOptions.SleepDurations),
+            Caffeine = check.Line("caffeine", input.Caffeine),
+            Supplements = check.Paragraph("supplements", input.Supplements),
+            CurrentDiet = check.Paragraph("currentDiet", input.CurrentDiet),
+            MealAndTrainingTimes = check.Paragraph("mealAndTrainingTimes", input.MealAndTrainingTimes),
+            SessionsPerWeek = check.Option("sessionsPerWeek", input.SessionsPerWeek, RegistrationOptions.SessionsPerWeek),
+            ProgramStyle = check.Option("programStyle", input.ProgramStyle, RegistrationOptions.ProgramStyles),
+            BodyPhotoUrl = check.Url("bodyPhotoUrl", input.BodyPhotoUrl), // @BR-f02-import-excel-006
+            Expectations = check.Paragraph("expectations", input.Expectations),
+            PreviousCoaching = check.Paragraph("previousCoaching", input.PreviousCoaching),
+            InvestmentReason = check.Paragraph("investmentReason", input.InvestmentReason),
+        };
+        return (check.Failures.Count == 0 ? form : null, check.Failures);
+    }
+
+    /// <summary>@BR-f02-ho-so-hoc-vien-004 @BR-f02-import-excel-007: mã các mục bắt buộc còn trống, theo thứ tự form.</summary>
     public IReadOnlyList<string> MissingRequired()
     {
         var values = ValuesByCode();
@@ -129,15 +138,12 @@ public sealed class RegistrationForm
         Pack = Pack, Price = Price, TransferDate = TransferDate, Address = Address, Age = Age, HeightCm = HeightCm,
         WeightKg = WeightKg, ChestCm = ChestCm, BellyCm = BellyCm, WaistCm = WaistCm, HipCm = HipCm,
         RightArmCm = RightArmCm, LeftArmCm = LeftArmCm, RightThighCm = RightThighCm, LeftThighCm = LeftThighCm,
-        BodyFatPercent = BodyFatPercent, BodyFatMethod = BodyFatMethod,
-        TrainingYears = TrainingYears, WeeklyTrainingTime = WeeklyTrainingTime, WeightBeforeLiftingKg = WeightBeforeLiftingKg,
-        HeightThenCm = HeightThenCm, TrainingGoal = TrainingGoal, CurrentTraining = CurrentTraining,
-        MedicalHistory = MedicalHistory, Availability = Availability, Equipment = Equipment,
-        FoodBudgetReadiness = FoodBudgetReadiness, Occupation = Occupation, ActivityLevel = ActivityLevel,
-        StressLevel = StressLevel, SleepDuration = SleepDuration, Caffeine = Caffeine, Supplements = Supplements,
-        CurrentDiet = CurrentDiet, MealAndTrainingTimes = MealAndTrainingTimes,
-        SessionsPerWeek = SessionsPerWeek, ProgramStyle = ProgramStyle,
-        PhotoFrontUrl = PhotoFrontUrl, PhotoBackUrl = PhotoBackUrl, PhotoLeftUrl = PhotoLeftUrl, PhotoRightUrl = PhotoRightUrl,
+        BodyFatAndMethod = BodyFatAndMethod, TrainingYears = TrainingYears, WeeklyTrainingTime = WeeklyTrainingTime,
+        WeightHeightBeforeLifting = WeightHeightBeforeLifting, TrainingGoal = TrainingGoal, CurrentTraining = CurrentTraining,
+        MedicalHistory = MedicalHistory, FoodBudgetReadiness = FoodBudgetReadiness, Occupation = Occupation,
+        ActivityLevel = ActivityLevel, StressLevel = StressLevel, SleepDuration = SleepDuration, Caffeine = Caffeine,
+        Supplements = Supplements, CurrentDiet = CurrentDiet, MealAndTrainingTimes = MealAndTrainingTimes,
+        SessionsPerWeek = SessionsPerWeek, ProgramStyle = ProgramStyle, BodyPhotoUrl = BodyPhotoUrl,
         Expectations = Expectations, PreviousCoaching = PreviousCoaching, InvestmentReason = InvestmentReason,
     };
 
@@ -146,83 +152,110 @@ public sealed class RegistrationForm
         ["pack"] = Pack, ["price"] = Price, ["transferDate"] = TransferDate, ["address"] = Address, ["age"] = Age,
         ["heightCm"] = HeightCm, ["weightKg"] = WeightKg, ["chestCm"] = ChestCm, ["bellyCm"] = BellyCm,
         ["waistCm"] = WaistCm, ["hipCm"] = HipCm, ["rightArmCm"] = RightArmCm, ["leftArmCm"] = LeftArmCm,
-        ["rightThighCm"] = RightThighCm, ["leftThighCm"] = LeftThighCm, ["bodyFatPercent"] = BodyFatPercent,
-        ["bodyFatMethod"] = BodyFatMethod, ["trainingYears"] = TrainingYears, ["weeklyTrainingTime"] = WeeklyTrainingTime,
-        ["weightBeforeLiftingKg"] = WeightBeforeLiftingKg, ["heightThenCm"] = HeightThenCm,
-        ["trainingGoal"] = TrainingGoal, ["currentTraining"] = CurrentTraining, ["medicalHistory"] = MedicalHistory,
-        ["availability"] = Availability, ["equipment"] = Equipment, ["foodBudgetReadiness"] = FoodBudgetReadiness,
-        ["occupation"] = Occupation, ["activityLevel"] = ActivityLevel, ["stressLevel"] = StressLevel,
-        ["sleepDuration"] = SleepDuration, ["caffeine"] = Caffeine, ["supplements"] = Supplements,
-        ["currentDiet"] = CurrentDiet, ["mealAndTrainingTimes"] = MealAndTrainingTimes,
-        ["sessionsPerWeek"] = SessionsPerWeek, ["programStyle"] = ProgramStyle,
-        ["photoFrontUrl"] = PhotoFrontUrl, ["photoBackUrl"] = PhotoBackUrl, ["photoLeftUrl"] = PhotoLeftUrl,
-        ["photoRightUrl"] = PhotoRightUrl, ["expectations"] = Expectations, ["previousCoaching"] = PreviousCoaching,
-        ["investmentReason"] = InvestmentReason,
+        ["rightThighCm"] = RightThighCm, ["leftThighCm"] = LeftThighCm, ["bodyFatAndMethod"] = BodyFatAndMethod,
+        ["trainingYears"] = TrainingYears, ["weeklyTrainingTime"] = WeeklyTrainingTime,
+        ["weightHeightBeforeLifting"] = WeightHeightBeforeLifting, ["trainingGoal"] = TrainingGoal,
+        ["currentTraining"] = CurrentTraining, ["medicalHistory"] = MedicalHistory,
+        ["foodBudgetReadiness"] = FoodBudgetReadiness, ["occupation"] = Occupation, ["activityLevel"] = ActivityLevel,
+        ["stressLevel"] = StressLevel, ["sleepDuration"] = SleepDuration, ["caffeine"] = Caffeine,
+        ["supplements"] = Supplements, ["currentDiet"] = CurrentDiet, ["mealAndTrainingTimes"] = MealAndTrainingTimes,
+        ["sessionsPerWeek"] = SessionsPerWeek, ["programStyle"] = ProgramStyle, ["bodyPhotoUrl"] = BodyPhotoUrl,
+        ["expectations"] = Expectations, ["previousCoaching"] = PreviousCoaching, ["investmentReason"] = InvestmentReason,
     };
 
-    // @ADR-f02-ho-so-hoc-vien-009
-    private static string? Text(string code, string? raw, int maxLength)
+    /// <summary>Một lỗi: <c>Reason</c> cho import (không kèm tên mục), <c>Message</c> cho DomainException (giữ câu cũ).</summary>
+    private sealed record Failure(string Field, string Error, string Reason, string Message)
     {
-        var value = raw?.Trim();
-        if (string.IsNullOrEmpty(value))
-            return null; // @BR-f02-ho-so-hoc-vien-004: chỉ khoảng trắng = trống
-        if (value.Length > maxLength)
-            throw Invalid(code, "too_long", $"{RegistrationFields.LabelOf(code)} tối đa {maxLength} ký tự.");
-        return value;
+        public RegistrationFieldError ToFieldError() => new(Field, Reason);
+
+        public DomainException ToException() => new($"student.{Field}.{Error}", Message);
     }
 
-    private static string? Line(string code, string? raw) => Text(code, raw, LineMaxLength);
-
-    private static string? Paragraph(string code, string? raw) => Text(code, raw, ParagraphMaxLength);
-
-    // @BR-f02-ho-so-hoc-vien-009
-    private static string? Option(string code, string? raw, IReadOnlyList<string> options)
+    /// <summary>@ADR-f02-import-excel-003: các luật kiểm của F02, ghi lỗi thay vì ném để gom đủ.</summary>
+    private sealed class Checker
     {
-        var value = raw?.Trim();
-        if (string.IsNullOrEmpty(value))
+        public List<Failure> Failures { get; } = [];
+
+        private void Fail(string field, string error, string reason, string? message = null) =>
+            Failures.Add(new Failure(field, error, reason, message ?? $"{RegistrationFields.LabelOf(field)} {reason}."));
+
+        // @ADR-f02-ho-so-hoc-vien-009
+        private string? Text(string code, string? raw, int maxLength)
+        {
+            var value = raw?.Trim();
+            if (string.IsNullOrEmpty(value))
+                return null; // @BR-f02-ho-so-hoc-vien-004: chỉ khoảng trắng = trống
+            if (value.Length <= maxLength)
+                return value;
+            Fail(code, "too_long", $"tối đa {maxLength} ký tự");
             return null;
-        if (!options.Contains(value))
-            throw Invalid(code, "invalid_option", $"{RegistrationFields.LabelOf(code)} không có lựa chọn \"{value}\".");
-        return value;
-    }
+        }
 
-    // @BR-f02-ho-so-hoc-vien-008
-    private static decimal? Range(string code, decimal? value, decimal min, decimal max)
-    {
-        if (value is { } number && (number < min || number > max))
-            throw Invalid(code, "out_of_range", $"{RegistrationFields.LabelOf(code)} phải từ {min} đến {max}.");
-        return value;
-    }
+        public string? Line(string code, string? raw) => Text(code, raw, LineMaxLength);
 
-    // @BR-f02-ho-so-hoc-vien-008: tuổi là số nguyên 10–100
-    private static int? AgeOf(int? value) =>
-        value is null or (>= 10 and <= 100)
-            ? value
-            : throw Invalid("age", "out_of_range", "Tuổi phải từ 10 đến 100.");
+        public string? Paragraph(string code, string? raw) => Text(code, raw, ParagraphMaxLength);
 
-    // @BR-f02-ho-so-hoc-vien-008: giá là số nguyên từ 0 đồng
-    private static long? PriceOf(long? value) =>
-        value is null or >= 0 ? value : throw Invalid("price", "out_of_range", "Giá phải từ 0 đồng.");
-
-    // @BR-f02-ho-so-hoc-vien-010: today = IClock.Today (giờ Việt Nam)
-    private static DateOnly? TransferDateOf(DateOnly? value, DateOnly today) =>
-        value is { } date && date > today
-            ? throw Invalid("transferDate", "in_future", "Ngày chuyển khoản không được sau ngày hôm nay.")
-            : value;
-
-    // @BR-f02-ho-so-hoc-vien-011
-    private static string? Url(string code, string? raw)
-    {
-        var value = Text(code, raw, UrlMaxLength);
-        if (value is null)
+        // @BR-f02-ho-so-hoc-vien-009
+        public string? Option(string code, string? raw, IReadOnlyList<string> options)
+        {
+            var value = raw?.Trim();
+            if (string.IsNullOrEmpty(value))
+                return null;
+            if (options.Contains(value))
+                return value;
+            Fail(code, "invalid_option", "không thuộc danh sách",
+                $"{RegistrationFields.LabelOf(code)} không có lựa chọn \"{value}\".");
             return null;
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)
-            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-            throw Invalid(code, "invalid_url",
+        }
+
+        // @BR-f02-ho-so-hoc-vien-008
+        public decimal? Range(string code, decimal? value, decimal min, decimal max)
+        {
+            if (value is not { } number || (number >= min && number <= max))
+                return value;
+            Fail(code, "out_of_range", $"phải từ {min} đến {max}");
+            return null;
+        }
+
+        // @BR-f02-ho-so-hoc-vien-008: tuổi là số nguyên 10–100
+        public int? AgeOf(int? value)
+        {
+            if (value is null or (>= 10 and <= 100))
+                return value;
+            Fail("age", "out_of_range", "phải từ 10 đến 100");
+            return null;
+        }
+
+        // @BR-f02-ho-so-hoc-vien-008: giá là số nguyên từ 0 đồng
+        public long? PriceOf(long? value)
+        {
+            if (value is null or >= 0)
+                return value;
+            Fail("price", "out_of_range", "phải từ 0 đồng");
+            return null;
+        }
+
+        // @BR-f02-ho-so-hoc-vien-010: today = IClock.Today (giờ Việt Nam)
+        public DateOnly? TransferDateOf(DateOnly? value, DateOnly today)
+        {
+            if (value is not { } date || date <= today)
+                return value;
+            Fail("transferDate", "in_future", "không được sau hôm nay", "Ngày chuyển khoản không được sau ngày hôm nay.");
+            return null;
+        }
+
+        // @BR-f02-ho-so-hoc-vien-011 @BR-f02-import-excel-006
+        public string? Url(string code, string? raw)
+        {
+            var value = Text(code, raw, UrlMaxLength);
+            if (value is null)
+                return null;
+            if (Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                return value;
+            Fail(code, "invalid_url", "link ảnh không hợp lệ",
                 $"{RegistrationFields.LabelOf(code)} phải là địa chỉ web bắt đầu bằng http:// hoặc https://.");
-        return value;
+            return null;
+        }
     }
-
-    private static DomainException Invalid(string code, string error, string message) =>
-        new($"student.{code}.{error}", message);
 }

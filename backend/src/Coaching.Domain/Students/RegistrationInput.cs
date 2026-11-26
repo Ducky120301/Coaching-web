@@ -1,6 +1,10 @@
 namespace Coaching.Domain.Students;
 
-/// <summary>Câu trả lời form đăng ký thô (chưa kiểm) — cũng là hình dạng JSON `registration` của API.</summary>
+/// <summary>
+/// Câu trả lời form đăng ký thô (chưa kiểm) — cũng là hình dạng JSON `registration` của API.
+/// @ADR-f02-import-excel-001: theo câu hỏi Google Form; khoá cũ (availability, equipment, bodyFatPercent, bodyFatMethod,
+/// weightBeforeLiftingKg, heightThenCm, photo*Url) gửi lên bị bỏ qua.
+/// </summary>
 public sealed record RegistrationInput
 {
     // 1. Tài khoản và gói
@@ -21,19 +25,15 @@ public sealed record RegistrationInput
     public decimal? LeftArmCm { get; init; }
     public decimal? RightThighCm { get; init; }
     public decimal? LeftThighCm { get; init; }
-    public decimal? BodyFatPercent { get; init; }
-    public string? BodyFatMethod { get; init; }
+    public string? BodyFatAndMethod { get; init; } // @BR-f02-import-excel-004
 
     // 3. Tập luyện hiện tại
-    public string? TrainingYears { get; init; }
+    public string? TrainingYears { get; init; } // @BR-f02-import-excel-003
     public string? WeeklyTrainingTime { get; init; }
-    public decimal? WeightBeforeLiftingKg { get; init; }
-    public decimal? HeightThenCm { get; init; }
+    public string? WeightHeightBeforeLifting { get; init; } // @BR-f02-import-excel-005
     public string? TrainingGoal { get; init; }
     public string? CurrentTraining { get; init; }
     public string? MedicalHistory { get; init; }
-    public string? Availability { get; init; }
-    public string? Equipment { get; init; }
 
     // 4. Ăn uống, sinh hoạt
     public string? FoodBudgetReadiness { get; init; }
@@ -49,10 +49,7 @@ public sealed record RegistrationInput
     // 5. Chương trình tập sắp tới
     public string? SessionsPerWeek { get; init; }
     public string? ProgramStyle { get; init; }
-    public string? PhotoFrontUrl { get; init; }
-    public string? PhotoBackUrl { get; init; }
-    public string? PhotoLeftUrl { get; init; }
-    public string? PhotoRightUrl { get; init; }
+    public string? BodyPhotoUrl { get; init; } // @BR-f02-import-excel-006
 
     // 6. Kỳ vọng
     public string? Expectations { get; init; }
