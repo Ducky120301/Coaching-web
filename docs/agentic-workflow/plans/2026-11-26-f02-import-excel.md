@@ -5200,7 +5200,7 @@ Câu chữ không có trong tech-design (đặt theo giọng prototype, ghi lạ
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec cho card import và vị trí card trên trang Tạo hồ sơ**
+- [x] **Step 1: Viết spec cho card import và vị trí card trên trang Tạo hồ sơ**
 
 `frontend/projects/admin/src/app/students/import-card.component.spec.ts`:
 ```ts
@@ -5387,12 +5387,12 @@ describe('ImportCardComponent', () => {
   });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './import-card.component'` (spec card); `StudentFormComponent › shows the Excel import card above the form on create only` (`card` là `null`).
 
-- [ ] **Step 3: Model kết quả import, `StudentsApi.importStudents`, `ImportCardComponent`**
+- [x] **Step 3: Model kết quả import, `StudentsApi.importStudents`, `ImportCardComponent`**
 
 `frontend/projects/admin/src/app/students/student.models.ts` — thêm cuối file:
 ```ts
@@ -5608,7 +5608,7 @@ bằng (card nằm trong luồng `:host` gap 22px, ngay dưới h1, trên form +
   client_max_body_size 6m; # @BR-f02-import-excel-015: để API tự từ chối file > 5 MB bằng import.file_too_large
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS — `ImportCardComponent` 6 test, `StudentFormComponent` thêm 1 test; không test nào failed.
@@ -5624,7 +5624,7 @@ Kiểm tay trên `http://localhost:4200/hoc-vien/moi` (API Task 4/5) ở **390px
 - File .csv đổi đuôi .xlsx → hộp vàng "File phải là Excel .xlsx đọc được."; file 6 MB → "File vượt giới hạn 5 MB.".
 - `/hoc-vien/:id/sua` không có card.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add frontend/projects/admin/src/app/students frontend/nginx/coaching-common.inc
 git commit -F - <<'EOF'
