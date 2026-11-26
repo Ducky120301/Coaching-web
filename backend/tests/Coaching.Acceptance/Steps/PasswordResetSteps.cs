@@ -169,7 +169,8 @@ public sealed class PasswordResetSteps(AcceptanceContext ctx, StudentApi api, Ac
     [Then(@"^không email nào được gửi tới ""([^""]*)""$")]
     public async Task NoMailTo(string email)
     {
-        Assert.Equal(HttpStatusCode.Accepted, ctx.LastResponse!.StatusCode);
+        // 202 = Quên mật khẩu (F01-P1); 200 = import Excel (import-excel.feature) — request đã được xử lý
+        Assert.Contains(ctx.LastResponse!.StatusCode, new[] { HttpStatusCode.Accepted, HttpStatusCode.OK });
         await Task.Delay(AccountApi.QueueSettle);
         Assert.DoesNotContain(account.Outbox.All, m => string.Equals(m.To, email.Trim(), StringComparison.OrdinalIgnoreCase));
     }

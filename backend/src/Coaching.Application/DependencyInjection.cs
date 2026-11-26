@@ -3,6 +3,7 @@ using Coaching.Application.Accounts.Commands;
 using Coaching.Application.Coaches;
 using Coaching.Application.Students;
 using Coaching.Application.Students.Commands;
+using Coaching.Application.Students.Import;
 using Coaching.Application.Students.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<SendPasswordResetLinkHandler>();
         services.AddScoped<RequestPasswordResetHandler>();
         services.AddScoped<ResetPasswordHandler>();
+        services.AddScoped<ImportStudentsHandler>(); // @ADR-f02-import-excel-007
         return services;
     }
 }

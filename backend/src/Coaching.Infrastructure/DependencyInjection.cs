@@ -2,12 +2,14 @@ using Coaching.Application.Abstractions;
 using Coaching.Application.Accounts;
 using Coaching.Application.Auth;
 using Coaching.Application.Students;
+using Coaching.Application.Students.Import;
 using Coaching.Domain.Coaches;
 using Coaching.Domain.Students;
 using Coaching.Infrastructure.Persistence.Repositories;
 using Coaching.Infrastructure.Audit;
 using Coaching.Infrastructure.Emailing;
 using Coaching.Infrastructure.Identity;
+using Coaching.Infrastructure.Import;
 using Coaching.Infrastructure.Persistence;
 using Coaching.Infrastructure.Seeding;
 using Coaching.Infrastructure.Time;
@@ -66,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<SessionRevoker>();
         services.AddScoped<ISessionRevoker>(sp => sp.GetRequiredService<SessionRevoker>());
         services.AddScoped<IAccountTokens, AccountTokenStore>(); // @ADR-f01-p1-tai-khoan-hoc-vien-003
+        services.AddSingleton<IWorkbookReader, ClosedXmlWorkbookReader>(); // @ADR-f02-import-excel-004
 
         AddEmail(services, configuration, environment);
 

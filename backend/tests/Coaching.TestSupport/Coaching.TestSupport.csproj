@@ -6,6 +6,12 @@
   <ItemGroup>
     <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <!-- Test acceptance + integration dựng file .xlsx trong bộ nhớ (ImportWorkbook) -->
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- @BR-f02-import-excel-014: .xlsx đặt mật khẩu thật — ClosedXML không tạo được, sinh bằng Fixtures/make-encrypted-xlsx.ps1 (Excel) -->
+    <EmbeddedResource Include="Fixtures\encrypted.xlsx" LogicalName="Coaching.TestSupport.Fixtures.encrypted.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Coaching.Domain\Coaching.Domain.csproj" />

@@ -1,6 +1,7 @@
 using Coaching.Api.Common;
 using Coaching.Application.Students;
 using Coaching.Application.Students.Commands;
+using Coaching.Application.Students.Import;
 using Coaching.Application.Students.Queries;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,9 @@ namespace Coaching.Api.Controllers.Admin;
 /// <summary>Hồ sơ học viên của coach đang đăng nhập. Không có endpoint xóa.</summary>
 public sealed class StudentsController : AdminControllerBase
 {
+    /// <summary>Phần multipart ngoài nội dung file (ranh giới, tiêu đề phần).</summary>
+    private const long ImportOverheadBytes = 64 * 1024;
+
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<StudentListItemDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] string? q, [FromServices] ListStudentsHandler handler,
@@ -71,4 +75,44 @@ public sealed class StudentsController : AdminControllerBase
     public async Task<IActionResult> SendPasswordResetLink(Guid id, [FromServices] SendPasswordResetLinkHandler handler,
         CancellationToken cancellationToken) =>
         (await handler.HandleAsync(id, cancellationToken)).ToActionResult(this);
+
+    // @BR-f02-import-excel-012 @BR-f02-import-excel-013: AdminOnly như cả controller; hồ sơ gắn coach đang đăng nhập.
+    // @ADR-f02-import-excel-007: xử lý đồng bộ; file giữ trong bộ nhớ (MemoryBufferThreshold ≥ giới hạn) — không ghi đĩa.
+    [HttpPost("import")]
+    [Consumes("multipart/form-data")]
+    [DisableFormValueModelBinding]
+    [RequestSizeLimit(ImportStudentsHandler.MaxBytes + ImportOverheadBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = ImportStudentsHandler.MaxBytes + ImportOverheadBytes,
+        MemoryBufferThreshold = (int)(ImportStudentsHandler.MaxBytes + ImportOverheadBytes))]
+    [ProducesResponseType<ImportResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Import([FromServices] ImportStudentsHandler handler,
+        [FromServices] ILogger<StudentsController> logger, CancellationToken cancellationToken)
+    {
+        // @BR-f02-import-excel-015: từ chối theo Content-Length trước khi đọc body (không để 413 thô của Kestrel)
+        if (Request.ContentLength > ImportStudentsHandler.MaxBytes + ImportOverheadBytes)
+            return ImportErrors.FileTooLarge.ToProblem(this);
+
+        IFormFile? file;
+        try
+        {
+            file = (await Request.ReadFormAsync(cancellationToken)).Files.GetFile("file");
+        }
+        catch (BadHttpRequestException ex) when (ex.StatusCode == StatusCodes.Status413PayloadTooLarge)
+        {
+            return ImportErrors.FileTooLarge.ToProblem(this);
+        }
+        catch (InvalidDataException)
+        {
+            return ImportErrors.FileInvalid.ToProblem(this);
+        }
+
+        if (file is null)
+            return ImportErrors.FileInvalid.ToProblem(this); // @BR-f02-import-excel-014
+
+        await using var stream = file.OpenReadStream();
+        var result = await handler.HandleAsync(stream, file.Length, cancellationToken);
+        if (result.IsSuccess) // Monitoring: chỉ số dòng, không log nội dung ô
+            logger.LogInformation("Import hồ sơ học viên: tạo {Created}, bỏ qua {Skipped}", result.Value.Created, result.Value.Skipped);
+        return result.ToActionResult(this);
+    }
 }

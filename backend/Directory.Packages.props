@@ -13,6 +13,8 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(AspNetVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(AspNetVersion)" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+    <!-- @ADR-f02-import-excel-004: đọc .xlsx — ClosedXML (MIT, NFR-f02-import-excel-003), phát hành 25/07/2026 -->
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.17.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
