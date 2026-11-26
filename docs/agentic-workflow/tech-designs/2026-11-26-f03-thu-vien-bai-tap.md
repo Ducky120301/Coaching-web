@@ -70,7 +70,7 @@ N/A — gói trong API + web admin hiện có; YouTube chỉ là link, nhúng �
   - **Trade-off:** Phân tích chữ nằm ở FE (và step test), không ở API.
 - `ADR-f03-thu-vien-bai-tap-007` — 99 bài prototype (đã gán theo Phụ lục) là file JSON nhúng trong Infrastructure (`Seeding/exercises.seed.json`); `ExerciseLibrarySeeder` được `DatabaseInitializer` gọi ở mọi môi trường và chỉ nạp cho coach có thư viện trống; mỗi coach được ghi vào bảng đánh dấu `ExerciseLibrarySeeds` (CoachId, SeededAt, ExercisesAdded) nên coach đã xoá hết bài cũng không bị nạp lại. Cấu hình `Seed:ExerciseLibrary=false` tắt bước này cho host test.
   - **Lý do:** NFR-f03-thu-vien-bai-tap-003 (thư viện thật của coach, PO đổi 2026-11-27); điều kiện "thư viện trống" đảm bảo không nạp lại, không ghi đè.
-  - **Trade-off:** Coach xoá hết bài thì lần khởi động sau sẽ nạp lại 99 bài — chấp nhận vì coach không có lý do xoá toàn bộ thư viện.
+  - **Trade-off:** Thêm 1 bảng đánh dấu nhỏ; coach tạo mới khi API đang chạy chỉ được nạp ở lần khởi động sau (MVP chỉ có 1 coach được seed).
 
 ### Component Design
 - **Domain** `Coaching.Domain/Exercises/`: `Exercise`, `ExerciseDose`, `ExerciseCategory`, `CategoryKind`, `ExerciseNameKey`, `YouTubeUrl`, `IExerciseRepository`, `IExerciseCategoryRepository`.
