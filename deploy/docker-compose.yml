@@ -39,7 +39,7 @@ services:
   api:
     build: { context: ../backend }
     environment:
-      ASPNETCORE_ENVIRONMENT: Local
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Local}
       ConnectionStrings__Default: "Server=db,1433;Database=Coaching;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
       Jwt__SigningKey: ${JWT_SIGNING_KEY}
       AdminSeed__Email: ${ADMIN_EMAIL}
