@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-26-f03-thu-vien-bai-tap
-status: draft
+status: ready
 ---
 
 # Technical Design: F03 — Thư viện bài tập
@@ -170,7 +170,7 @@ Liquibase v0.5.0 khi merge `main`; danh mục ban đầu tạo lúc khởi độ
 ## 9. Open Questions
 | # | Câu hỏi | Chặn? | Owner | Trạng thái |
 |---|---|---|---|---|
-| OQ-01 | Duyệt bảng gán nhóm cơ cho bài seed (Phụ lục), nhất là "Butterfly Raise" → Vai sau, "Hip Adduction" → Đùi trước | ❌ | PO | Chờ duyệt cùng tech-design |
+| OQ-01 | Duyệt bảng gán nhóm cơ cho bài seed (Phụ lục), nhất là "Butterfly Raise" → Vai sau, "Hip Adduction" → Đùi trước | ❌ | PO | PO duyệt toàn bộ bảng gán và các đề xuất UI (2026-11-26) |
 
 ---
 
