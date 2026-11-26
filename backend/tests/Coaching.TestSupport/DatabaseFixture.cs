@@ -87,7 +87,8 @@ public sealed class DatabaseFixture : IAsyncDisposable
         }
     }
 
-    private static string FindChangelogDirectory()
+    /// <summary>Thư mục `database/changelog` của repo (tìm ngược từ thư mục chạy test).</summary>
+    public static string FindChangelogDirectory()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {

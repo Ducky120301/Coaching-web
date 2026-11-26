@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+  <!-- @ADR-f02-import-excel-002: chuyển dữ liệu Registration cũ sang mục Google Form; chỉ chạm dòng còn khoá cũ -->
+  <changeSet id="v0.4.0-0001-registration-google-form" author="duc.hm4@kiotviet.com">
+    <comment>F02 import Excel: Registration theo Google Form (BodyFatAndMethod, WeightHeightBeforeLifting, BodyPhotoUrl; xoá Availability, Equipment, khoá cũ; link ảnh thừa vào InternalNote)</comment>
+    <sqlFile path="scripts/0001-registration-google-form.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO" stripComments="false"/>
+    <rollback>
+      <sqlFile path="rollback/0001-registration-google-form.rollback.sql" relativeToChangelogFile="true" splitStatements="true" endDelimiter="\nGO"/>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>
