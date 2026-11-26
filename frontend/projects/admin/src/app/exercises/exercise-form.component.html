@@ -1,0 +1,168 @@
+<nav aria-label="Đường dẫn" class="crumbs">
+  <a routerLink="/thu-vien/bai-tap">Thư viện bài tập</a><span aria-hidden="true">/</span>
+  <span class="here">{{ title() }}</span>
+</nav>
+<h1>{{ title() }}</h1>
+
+@if (loadFailed()) {
+  <p class="msg" role="status">Không tải được bài tập. Vui lòng tải lại trang.</p>
+} @else {
+  <form novalidate (submit)="submit($event)">
+    <p class="intro">Mục có dấu <span class="star">*</span> là bắt buộc. Mỗi bài là duy nhất theo tên và dụng cụ.</p>
+
+    <section class="card" aria-labelledby="sec-info">
+      <h2 id="sec-info">Thông tin bài</h2>
+      <div class="grid">
+        <div class="field wide">
+          <label for="ex-name">Tên bài<span aria-hidden="true" class="req"> *</span></label>
+          <input class="ctl" id="ex-name" type="text" placeholder="VD: Lateral Raise" [value]="values().name"
+                 [class.err]="!!errors().name" [attr.aria-invalid]="!!errors().name"
+                 (input)="setValue('name', $any($event.target).value)" />
+          @if (errors().name; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="ex-muscle">Nhóm cơ<span aria-hidden="true" class="req"> *</span></label>
+          <select class="ctl" id="ex-muscle" [class.err]="!!errors().muscleGroupId" [attr.aria-invalid]="!!errors().muscleGroupId"
+                  (change)="setValue('muscleGroupId', $any($event.target).value)">
+            <option value="">Chọn…</option>
+            @for (g of categories()?.muscleGroups ?? []; track g.id) {
+              <option [value]="g.id" [selected]="values().muscleGroupId === g.id">{{ g.name }}</option>
+            }
+          </select>
+          @if (errors().muscleGroupId; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+          @if (adding() === 'MuscleGroup') {
+            <div class="add-row">
+              <label for="new-MuscleGroup" class="sr-only">Tên nhóm cơ mới</label>
+              <input class="ctl" id="new-MuscleGroup" type="text" placeholder="VD: Cẳng tay" [value]="newCategory()"
+                     (input)="newCategory.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); addCategory()" />
+              <button type="button" class="small-btn" (click)="addCategory()">Thêm</button>
+              <button type="button" class="link" (click)="cancelAdd()">Huỷ</button>
+            </div>
+            @if (categoryError(); as e) {
+              <span class="field-err">{{ e }}</span>
+            }
+          } @else {
+            <button type="button" class="add-link" (click)="openAdd('MuscleGroup')">+ Thêm nhóm cơ</button>
+          }
+        </div>
+
+        <div class="field">
+          <label for="ex-equipment">Dụng cụ<span aria-hidden="true" class="req"> *</span></label>
+          <select class="ctl" id="ex-equipment" [class.err]="!!errors().equipmentId" [attr.aria-invalid]="!!errors().equipmentId"
+                  (change)="setValue('equipmentId', $any($event.target).value)">
+            <option value="">Chọn…</option>
+            @for (q of categories()?.equipment ?? []; track q.id) {
+              <option [value]="q.id" [selected]="values().equipmentId === q.id">{{ q.name }}</option>
+            }
+          </select>
+          @if (errors().equipmentId; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+          @if (adding() === 'Equipment') {
+            <div class="add-row">
+              <label for="new-Equipment" class="sr-only">Tên dụng cụ mới</label>
+              <input class="ctl" id="new-Equipment" type="text" placeholder="VD: Resistance Band" [value]="newCategory()"
+                     (input)="newCategory.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); addCategory()" />
+              <button type="button" class="small-btn" (click)="addCategory()">Thêm</button>
+              <button type="button" class="link" (click)="cancelAdd()">Huỷ</button>
+            </div>
+            @if (categoryError(); as e) {
+              <span class="field-err">{{ e }}</span>
+            }
+          } @else {
+            <button type="button" class="add-link" (click)="openAdd('Equipment')">+ Thêm dụng cụ</button>
+          }
+        </div>
+
+        <div class="field wide">
+          <label for="ex-video">Link video YouTube</label>
+          <input class="ctl" id="ex-video" type="text" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" [value]="values().videoUrl"
+                 [class.err]="!!errors().videoUrl" [attr.aria-invalid]="!!errors().videoUrl"
+                 (input)="setValue('videoUrl', $any($event.target).value)" />
+          <span class="note">Link youtube.com hoặc youtu.be. Để trống nếu chưa có video.</span>
+          @if (errors().videoUrl; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="sec-dose">
+      <h2 id="sec-dose">Liều mặc định</h2>
+      <p class="hint">Gợi ý khi thêm bài vào giáo án, sửa được theo từng học viên. Để trống nếu chưa có.</p>
+      <div class="grid">
+        <div class="field">
+          <label for="ex-sets">Sets</label>
+          <input class="ctl" id="ex-sets" type="text" inputmode="numeric" placeholder="VD: 3" [value]="values().sets"
+                 [class.err]="!!errors().sets" [attr.aria-invalid]="!!errors().sets"
+                 (input)="setValue('sets', $any($event.target).value)" />
+          @if (errors().sets; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="ex-reps">Reps</label>
+          <input class="ctl" id="ex-reps" type="text" placeholder="VD: 10–12" [value]="values().reps"
+                 [class.err]="!!errors().reps" [attr.aria-invalid]="!!errors().reps"
+                 (input)="setValue('reps', $any($event.target).value)" />
+          @if (errors().reps; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="ex-rir">RIR</label>
+          <input class="ctl" id="ex-rir" type="text" placeholder="VD: 1–2" [value]="values().rir"
+                 [class.err]="!!errors().rir" [attr.aria-invalid]="!!errors().rir"
+                 (input)="setValue('rir', $any($event.target).value)" />
+          @if (errors().rir; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="ex-rest">Nghỉ</label>
+          <div class="with-unit">
+            <input class="ctl" id="ex-rest" type="text" inputmode="numeric" placeholder="VD: 90" [value]="values().rest"
+                   [class.err]="!!errors().rest" [attr.aria-invalid]="!!errors().rest"
+                   (input)="setValue('rest', $any($event.target).value)" />
+            <span class="unit">giây</span>
+          </div>
+          @if (errors().rest; as e) {
+            <span class="field-err">{{ e }}</span>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="sec-guide">
+      <h2 id="sec-guide">Hướng dẫn</h2>
+      <div class="grid">
+        <div class="field wide">
+          <label for="ex-technique">Hướng dẫn kỹ thuật</label>
+          <textarea class="ctl" id="ex-technique" rows="4" placeholder="VD: Giữ khuỷu hơi cong, kéo bằng vai" [value]="values().techniqueNotes"
+                    (input)="setValue('techniqueNotes', $any($event.target).value)"></textarea>
+        </div>
+        <div class="field wide">
+          <label for="ex-mistakes">Lỗi hay gặp</label>
+          <textarea class="ctl" id="ex-mistakes" rows="3" placeholder="VD: Nhún vai khi kéo" [value]="values().commonMistakes"
+                    (input)="setValue('commonMistakes', $any($event.target).value)"></textarea>
+        </div>
+      </div>
+    </section>
+
+    @if (conflict()) {
+      <p class="msg" role="status">{{ versionConflict }}<button type="button" class="reload" (click)="reload()">Tải lại</button></p>
+    } @else if (message(); as m) {
+      <p class="msg" role="status">{{ m }}@if (hiddenDuplicateId()) {<button type="button" class="reload" [disabled]="saving()" (click)="unhideDuplicate()">Bỏ ẩn bài đó</button>}</p>
+    }
+
+    <div class="actions">
+      <button type="submit" class="primary" [disabled]="saving()">Lưu bài</button>
+      <a class="cancel" routerLink="/thu-vien/bai-tap" [queryParams]="cancelQuery()">Huỷ</a>
+    </div>
+  </form>
+}

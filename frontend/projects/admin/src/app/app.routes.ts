@@ -40,6 +40,18 @@ export const routes: Routes = [
         loadComponent: () => import('./exercises/exercise-library.component').then((m) => m.ExerciseLibraryComponent),
         title: 'Thư viện bài tập — Khu vực coach',
       },
+      {
+        path: 'thu-vien/bai-tap/moi',
+        loadComponent: () => import('./exercises/exercise-form.component').then((m) => m.ExerciseFormComponent),
+        data: { mode: 'create' },
+        title: 'Thêm bài mới — Khu vực coach',
+      },
+      {
+        path: 'thu-vien/bai-tap/:id/sua',
+        loadComponent: () => import('./exercises/exercise-form.component').then((m) => m.ExerciseFormComponent),
+        data: { mode: 'edit' },
+        title: 'Sửa bài — Khu vực coach',
+      },
     ],
   },
   { path: '**', redirectTo: '' },

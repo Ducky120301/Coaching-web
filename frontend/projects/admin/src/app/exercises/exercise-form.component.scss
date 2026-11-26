@@ -1,0 +1,45 @@
+// Kiểu form AdTaoHoSo (giá trị nguyên văn như student-form.component.scss); prototype chưa có màn Thêm/Sửa bài
+:host { display: flex; flex-direction: column; gap: 22px; box-sizing: border-box; padding: 28px clamp(16px, 3vw, 44px) 48px; }
+.crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 8px; }
+.crumbs a { color: var(--muted); }
+.crumbs .here { color: var(--ink); }
+h1 { margin: 0; font-family: var(--font-head); font-weight: 800; font-size: 46px; line-height: 1.05; }
+form { max-width: 760px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.intro { margin: 0; font-size: 14px; color: var(--muted); }
+.star { color: var(--primary); font-weight: 700; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.card h2 { margin: 0; font-family: var(--font-head); font-weight: 700; font-size: 26px; line-height: 1.1; }
+.hint { margin: -6px 0 0; font-size: 13px; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+label { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.req { color: var(--primary); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.ctl { box-sizing: border-box; width: 100%; border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; border: 1px solid var(--field); }
+.ctl.err { border-color: var(--alert); }
+input.ctl, select.ctl { height: 46px; padding: 0 12px; }
+input.ctl { padding: 0 14px; }
+textarea.ctl { padding: 12px 14px; line-height: 1.5; resize: vertical; }
+.with-unit { display: flex; align-items: center; gap: 8px; }
+.unit { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.note { font-size: 12px; color: var(--muted); }
+.field-err { font-size: 12px; color: var(--alert); font-weight: 600; }
+// Link "+ Thêm nhóm cơ" / "+ Thêm dụng cụ" (suy ra): chữ link của prototype ("Mở trên YouTube": 13px 600 --primary)
+.add-link { align-self: flex-start; background: none; border: 0; padding: 2px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; }
+.add-link:hover { color: var(--navInk); }
+.add-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.add-row .ctl { flex: 1 1 160px; width: auto; }
+.small-btn, .reload { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--field); background: var(--surface);
+  color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+.reload { margin-left: 8px; }
+.link { height: 36px; padding: 0 6px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.msg { margin: 0; border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 600; background: var(--warnBg); color: var(--warn); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.primary, .cancel { box-sizing: border-box; height: 50px; border-radius: 999px; cursor: pointer; }
+.primary:disabled { opacity: .6; cursor: default; }
+.primary { padding: 0 26px; border: 0; background: var(--primary); color: var(--onPrimary); font-family: var(--font-head); font-weight: 700; font-size: 20px; }
+.cancel { display: inline-flex; align-items: center; padding: 0 22px; border: 1px solid var(--field); background: var(--surface); color: var(--ink);
+  font-weight: 600; font-size: 15px; text-decoration: none; }
+.cancel:hover { color: var(--ink); }
+@media (max-width: 879.98px) { h1 { font-size: 38px; } }
