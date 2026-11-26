@@ -24,7 +24,7 @@ Chưa có thư viện bài tập; F05 (Soạn giáo án) cần nguồn bài đ�
 
 ### Goals
 - Aggregate `Exercise` + danh mục nhóm cơ/dụng cụ theo coach; API `/api/admin/exercises*`, `/api/admin/exercise-categories` cho BR-f03-thu-vien-bai-tap-001…021.
-- Màn Thư viện (danh sách + chi tiết), Thêm/Sửa bài, thêm danh mục; seed ~99 bài prototype ở môi trường dev.
+- Màn Thư viện (danh sách + chi tiết), Thêm/Sửa bài, thêm danh mục; nạp 99 bài prototype (thư viện thật của coach) ở mọi môi trường, một lần.
 - Điểm cắm "bài đang được dùng" để F05 nối vào.
 
 ### Non-Goals
@@ -75,7 +75,7 @@ N/A — gói trong API + web admin hiện có; YouTube chỉ là link, nhúng �
 ### Component Design
 - **Domain** `Coaching.Domain/Exercises/`: `Exercise`, `ExerciseDose`, `ExerciseCategory`, `CategoryKind`, `ExerciseNameKey`, `YouTubeUrl`, `IExerciseRepository`, `IExerciseCategoryRepository`.
 - **Application** `Coaching.Application/Exercises/`: `Commands/{CreateExercise, UpdateExercise, HideExercise, UnhideExercise, DeleteExercise, AddCategory}`, `Queries/{ListExercises, GetExercise, ListCategories}`, `ExerciseDtos`, `ExerciseErrors`, `IExerciseUsage` + `NoExerciseUsage`.
-- **Infrastructure**: configuration + repository (mẫu `StudentRepository`), `Seeding/ExerciseCatalogSeeder` (danh mục mọi môi trường), `Seeding/DevExerciseSeeder` + `Seeding/exercises.dev.json`.
+- **Infrastructure**: configuration + repository (mẫu `StudentRepository`), `Seeding/ExerciseCatalogSeeder` (danh mục mọi môi trường), `Seeding/ExerciseLibrarySeeder` + `Seeding/exercises.seed.json`.
 - **Api**: `Controllers/Admin/ExercisesController.cs`, `ExerciseCategoriesController.cs` (AdminOnly; học viên 403 — NFR-f03-thu-vien-bai-tap-002).
 
 ### API Contracts
@@ -115,7 +115,7 @@ Liquibase `database/changelog/v0.5.0/`: bảng `ExerciseCategories` và `Exercis
 | 2 | C `Coaching.Domain/Exercises/**` + tests | Aggregate, liều, tên, video, danh mục | BR-001–004, 007–014, 021; ADR-001, 002, 005 |
 | 3 | C `Coaching.Infrastructure/Persistence/Configurations/{Exercise,ExerciseCategory}Configuration.cs`, `Repositories/Exercise*Repository.cs`, `Seeding/ExerciseCatalogSeeder.cs`; M `AppDbContext`, DI, `DatabaseInitializer` | Persist + danh mục ban đầu | BR-005; ADR-003 |
 | 4 | C `Coaching.Application/Exercises/**`, `Coaching.Api/Controllers/Admin/Exercise*Controller.cs` | Use case + API | BR-001, 006, 015–020; ADR-004, 006 |
-| 5 | C `Seeding/DevExerciseSeeder.cs`, `Seeding/exercises.dev.json` | Seed dev | NFR-003; ADR-007 |
+| 5 | C `Seeding/ExerciseLibrarySeeder.cs`, `Seeding/exercises.seed.json`, changeset `v0.5.0-0002` | Nạp thư viện 99 bài | NFR-003; ADR-007 |
 | 6 | C `frontend/projects/admin/src/app/exercises/**`; M `app.routes.ts`, `admin-shell.component.ts` | 2 màn + rail | ADR-005, 006 (FE) |
 | 7 | C `frontend/e2e/steps/exercise-library.steps.ts`; M `CLAUDE.md` (route) | `@web` | — |
 

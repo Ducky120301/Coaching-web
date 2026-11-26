@@ -28,6 +28,7 @@ status: draft
 - Bài đã ẩn: không có trong danh sách/tìm mặc định; xem được khi chọn bài đã ẩn. Xoá bài đang được dùng (qua `IExerciseUsage`) → 409 `exercise.in_use`.
 - Mã lỗi và câu chữ theo bảng API Contracts của tech-design, nguyên văn.
 - 99 bài prototype (gán theo Phụ lục tech-design) là thư viện thật của coach: nạp ở mọi môi trường, chỉ khi thư viện của coach trống (không nạp lại, không ghi đè); host test tắt bằng `Seed:ExerciseLibrary=false`.
+- `NFR-f03-thu-vien-bai-tap-001`: danh sách/tìm/lọc p95 < 500 ms với 500 bài (kiểm tay ở Task 8).
 - Route admin tiếng Việt: `/thu-vien/bai-tap`, `/thu-vien/bai-tap/moi`, `/thu-vien/bai-tap/:id/sua`; rail có mục "Thư viện bài tập".
 - FE bám **chính xác** prototype `docs/duobexiuuu-coaching-design.html` page `AdThuVien` (H1 46px); breakpoint 880px; không hard-code màu; kiểm ở 390px và 1280px. Phần UI suy ra theo mục "Thiết kế giao diện (UI)" của tech-design (PO đã duyệt).
 - Living doc `features/thu-vien/bai-tap/thu-vien-bai-tap.feature` đã chốt — KHÔNG sửa. `@api` chạy Reqnroll, `@web` chạy CucumberJS, `@manual` không chạy.
@@ -5880,7 +5881,7 @@ Expected: PASS — `ExerciseLibraryComponent` 10 test, `AdminShellComponent` 3 t
 Run: `cd frontend && npx ng build admin`
 Expected: build thành công, có lazy chunk `exercise-library-component`.
 
-Kiểm tay (compose chạy Task 1–5 với `ASPNETCORE_ENVIRONMENT=Local` → có ~99 bài seed): `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait`, mở `http://localhost:4200/thu-vien/bai-tap` ở **390px** và **1280px**, đặt cạnh `docs/duobexiuuu-coaching-design.html#AdThuVien` cùng độ rộng:
+Kiểm tay (compose chạy Task 1–5 → thư viện coach có sẵn 99 bài nạp lúc khởi động, `Seed:ExerciseLibrary` mặc định true): `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait`, mở `http://localhost:4200/thu-vien/bai-tap` ở **390px** và **1280px**, đặt cạnh `docs/duobexiuuu-coaching-design.html#AdThuVien` cùng độ rộng:
 - Rail: mục "Thư viện bài tập" (icon tạ 18px) dưới "Tạo hồ sơ học viên", active nền `rgba(255,92,157,.16)` + vạch trái `#FF5C9D`, `aria-current="page"`.
 - 1280px: H1 46px Barlow 800, dòng tóm tắt 14px `--ink2`; nút "Thêm bài mới" 50px góc phải, chữ Barlow 700 20px; ô tìm 48px radius 14 full width; chip nhóm cơ 40px (bật: nền `--primary` chữ trắng 600, không viền) với 11 nhóm theo thứ tự Ngực, Vai, Tay sau, Tay trước, Lưng, Vai sau, Đùi trước, Đùi sau, Mông, Bắp chân, Bụng + "Đã ẩn" cuối; hàng "Dụng cụ" chip 34px/13px sát dưới (margin -10px); bảng và aside nằm cạnh nhau, gap 22px, aside rộng tối đa 420px; dòng chọn nền `--soft`; nhãn "Xem video"/"Thiếu video" 12px 600 bo 999.
 - Aside: bài shorts (vd "45° Incline Chest Fly") khung 9:16 rộng 260px giữa; bài watch (vd "Barbell Bench Press") khung 16:9 full width; 4 ô Sets/Reps/RIR/Nghỉ nền `--bg` (vd "3", "10–12", "1", "90s"); không có khối "Đang dùng trong" hay nút "Thêm vào giáo án"; nút "Sửa bài", "Ẩn bài" 44px viền `--field`, "Xoá bài" chữ `--alert` gạch chân.
@@ -6754,7 +6755,7 @@ EOF
 
 Bind 2 scenario `@web` của `features/thu-vien/bai-tap/thu-vien-bai-tap.feature`: **BR-f03-thu-vien-bai-tap-001** "Cùng tên khác dụng cụ là hai bài khác nhau" và outline **BR-f03-thu-vien-bai-tap-018** "Tìm theo một phần tên, không dấu" (2 dòng Examples). Background `coach "Coach Duobexiuuu" đã đăng nhập` đã có ở `student-profile.steps.ts` — dùng lại, không định nghĩa lại. Step texts mới không trùng step cũ (`kết quả có {string}` không khớp `kết quả có hồ sơ {string}` vì Cucumber Expression neo đầu/cuối; `coach tìm bài với từ khoá {string}` ≠ `coach tìm học viên với từ khóa {string}`). Các step cùng chữ trong scenario `@api` được Reqnroll bind ở Task 2/5 — CucumberJS chỉ chạy `@web and not @manual` nên không đụng.
 
-DB của compose giữ dữ liệu giữa các lần chạy và compose chạy `ASPNETCORE_ENVIRONMENT=Local` nên đã có ~99 bài seed (có sẵn "Lateral Raise" + Cable, "45° Incline Chest Fly") → mỗi tên bài viết trong feature được gắn hậu tố ` e2e<timestamp><rand>` cố định trong scenario (cùng cách hậu tố email của F01/F02), để BR-f03-thu-vien-bai-tap-001 không chặn lần chạy sau. Hậu tố không đổi ý nghĩa: "incline"/"ep nguc" vẫn là một phần tên. Bài tạo sẵn (Given) đi qua API; bước coach thao tác (When/Then) đi qua UI.
+DB của compose giữ dữ liệu giữa các lần chạy và API nạp sẵn 99 bài cho coach ở mọi môi trường (Task 5, `Seed:ExerciseLibrary` mặc định true — e2e KHÔNG tắt cờ này) (có sẵn "Lateral Raise" + Cable, "45° Incline Chest Fly") → mỗi tên bài viết trong feature được gắn hậu tố ` e2e<timestamp><rand>` cố định trong scenario (cùng cách hậu tố email của F01/F02), để BR-f03-thu-vien-bai-tap-001 không chặn lần chạy sau. Hậu tố không đổi ý nghĩa: "incline"/"ep nguc" vẫn là một phần tên. Bài tạo sẵn (Given) đi qua API; bước coach thao tác (When/Then) đi qua UI. Mỗi lần chạy e2e để lại 4 bài có hậu tố trong thư viện coach của compose (giống email hậu tố của F01/F02).
 
 Cập nhật `CLAUDE.md`: bảng page key `AdThuVien` → route thật `/thu-vien/bai-tap`, câu route web admin liệt kê thêm 3 route thư viện.
 
@@ -6782,7 +6783,7 @@ Expected: FAIL — `3 scenarios (3 undefined)`; Background `coach "Coach Duobexi
 
 `frontend/e2e/support/world.ts` — thêm field trong `E2EWorld`, sau `importResult`:
 ```ts
-  /** F03: hậu tố " e2e…" gắn vào mọi tên bài trong scenario (DB compose giữ dữ liệu + có bài seed dev). */
+  /** F03: hậu tố " e2e…" gắn vào mọi tên bài trong scenario (DB compose giữ dữ liệu + có 99 bài nạp sẵn). */
   exerciseSuffix = '';
 ```
 
@@ -6797,7 +6798,7 @@ interface Category { id: string; name: string; }
 interface Categories { muscleGroups: Category[]; equipment: Category[]; }
 
 /**
- * DB của compose giữ dữ liệu giữa các lần chạy và có ~99 bài seed dev ("Lateral Raise" + Cable, "45° Incline Chest Fly"…)
+ * DB của compose giữ dữ liệu giữa các lần chạy và có 99 bài nạp sẵn ("Lateral Raise" + Cable, "45° Incline Chest Fly"…)
  * → mỗi tên bài viết trong feature được gắn một hậu tố cố định trong scenario để không bị chặn trùng (BR-f03-thu-vien-bai-tap-001).
  */
 function realName(world: E2EWorld, written: string): string {
@@ -6921,7 +6922,7 @@ Expected: PASS; build thành công.
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: PASS (Task 8 không đổi backend; 2 scenario `@web` bị lọc khỏi Reqnroll).
 
-Kiểm tay lần cuối (manual verification của tech-design §6): so màn Thư viện và Thêm/Sửa bài với prototype ở **390px** và **1280px** (`AdThuVien`, kiểu form `AdTaoHoSo`) theo checklist Step 8 Task 6 và Step 4 Task 7; rail active đúng mục ở cả 3 route thư viện.
+Kiểm tay lần cuối (manual verification của tech-design §6): so màn Thư viện và Thêm/Sửa bài với prototype ở **390px** và **1280px** (`AdThuVien`, kiểu form `AdTaoHoSo`) theo checklist Step 8 Task 6 và Step 4 Task 7; rail active đúng mục ở cả 3 route thư viện. Đo p95 (NFR-f03-thu-vien-bai-tap-001): thêm bài qua API cho đủ 500 bài trong thư viện coach của compose, gọi `GET /api/admin/exercises` (không lọc, có `q`, có `muscleGroupId`) mỗi kiểu 50 lần bằng `curl -w '%{time_total}'`; p95 phải < 0,5 s.
 
 - [ ] **Step 4: Commit**
 ```bash
