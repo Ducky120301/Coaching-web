@@ -78,6 +78,21 @@ describe('StudentFormComponent', () => {
     expect(el.querySelector('.receive h2')?.textContent?.trim()).toBe('Học viên sẽ nhận gì');
   });
 
+  // tech-design UI (PO chốt 2026-11-26): card "Import từ Excel" ở đầu trang Tạo hồ sơ, trên form; không có ở Sửa hồ sơ
+  it('shows the Excel import card above the form on create only', async () => {
+    const { el } = setup('create');
+    const card = el.querySelector('app-import-card');
+    expect(card?.querySelector('h2')?.textContent?.trim()).toBe('Import từ Excel');
+    expect(card!.compareDocumentPosition(el.querySelector('form')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    TestBed.resetTestingModule();
+    const edit = setup('edit', 's1');
+    edit.http.expectOne('/api/admin/students/s1').flush(detail());
+    await settle();
+    edit.fixture.detectChanges();
+    expect(edit.el.querySelector('app-import-card')).toBeNull();
+  });
+
   // @BR-f02-ho-so-hoc-vien-003 + NFR-f02-ho-so-hoc-vien-004: "Chỉ lưu hồ sơ" → xóa bản nháp, mở hồ sơ
   it('"Chỉ lưu hồ sơ" saves a profile with only name and email, clears the draft and opens the profile', async () => {
     const { http, el, navigate } = setup('create');

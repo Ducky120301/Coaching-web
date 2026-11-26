@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '@coaching/shared';
 import { Observable } from 'rxjs';
-import { CoachingStatus, CreateStudentBody, StudentDetail, StudentListItem, UpdateStudentBody } from './student.models';
+import { CoachingStatus, CreateStudentBody, ImportResult, StudentDetail, StudentListItem, UpdateStudentBody } from './student.models';
 
 @Injectable({ providedIn: 'root' })
 export class StudentsApi {
@@ -51,5 +51,12 @@ export class StudentsApi {
   /** F01-P1: gửi link đặt lại mật khẩu cho tài khoản Đã kích hoạt. */
   sendResetLink(id: string): Observable<StudentDetail> {
     return this.http.post<StudentDetail>(this.url(`/${id}/password-reset-link`), {});
+  }
+
+  /** F02 import Excel: multipart field `file` (Content-Type do trình duyệt đặt, kèm boundary). */
+  importStudents(file: File): Observable<ImportResult> {
+    const body = new FormData();
+    body.append('file', file, file.name);
+    return this.http.post<ImportResult>(this.url('/import'), body);
   }
 }

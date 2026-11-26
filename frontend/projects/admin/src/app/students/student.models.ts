@@ -77,3 +77,27 @@ export interface UpdateStudentBody {
   registration: Registration;
   version: string;
 }
+
+/** POST /api/admin/students/import (ImportResultDto) — chỉ dòng có dữ liệu, `row` = số dòng Excel (tiêu đề = 1). */
+export type ImportRowStatus = 'Created' | 'Skipped';
+
+/** `column` = tiêu đề cột trong file (dòng đầu), `reason` = lý do tiếng Việt (@BR-f02-import-excel-023). */
+export interface ImportCellError {
+  column: string;
+  reason: string;
+}
+
+export interface ImportRow {
+  row: number;
+  email: string | null;
+  status: ImportRowStatus;
+  studentId: string | null;
+  errors: ImportCellError[];
+}
+
+/** @BR-f02-import-excel-034: số dòng đã tạo, số dòng bỏ qua, lý do từng dòng. */
+export interface ImportResult {
+  created: number;
+  skipped: number;
+  rows: ImportRow[];
+}

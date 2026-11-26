@@ -7,6 +7,9 @@
 @if (loadFailed()) {
   <p class="msg" role="status">Không tải được hồ sơ. Vui lòng tải lại trang.</p>
 } @else {
+  @if (!isEdit()) {
+    <app-import-card />
+  }
   <div class="layout">
     <form novalidate (submit)="submit($event)">
       <p class="intro">Điền theo câu trả lời của học viên trong form đăng ký. Mục có dấu <span class="star">*</span> là bắt buộc trước khi gửi tài khoản.@if (!isEdit()) { Hồ sơ tự lưu trên máy này.}</p>

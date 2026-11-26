@@ -7,6 +7,7 @@ import { FORM_SECTIONS, FieldDef, FormPayload, FormValues, toFormValues, toPaylo
 import { ACCOUNT_STATUS_LABEL } from './student-status';
 import { StudentDetail } from './student.models';
 import { StudentsApi } from './students.api';
+import { ImportCardComponent } from './import-card.component';
 import { ReceiveCardComponent } from './receive-card.component';
 
 /** @ADR-f02-ho-so-hoc-vien-008 / NFR-f02-ho-so-hoc-vien-004: bản nháp chỉ ở chế độ tạo, chỉ trên trình duyệt này. */
@@ -25,7 +26,7 @@ type Tone = 'ok' | 'warn';
  */
 @Component({
   selector: 'app-student-form',
-  imports: [RouterLink, ReceiveCardComponent],
+  imports: [RouterLink, ReceiveCardComponent, ImportCardComponent],
   templateUrl: './student-form.component.html',
   styleUrl: './student-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
