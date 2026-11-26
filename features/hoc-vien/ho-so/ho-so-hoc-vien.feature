@@ -55,9 +55,9 @@ Feature: Hồ sơ học viên và trạng thái coaching
   Rule: Hồ sơ luôn cho biết danh sách mục bắt buộc còn thiếu; mục chỉ chứa khoảng trắng tính là thiếu
 
     Scenario: Hồ sơ còn thiếu mục bắt buộc vẫn lưu được và cho biết các mục thiếu
-      When coach lưu hồ sơ học viên đủ mọi mục bắt buộc trừ "Gói đã mua", "Mục tiêu tập luyện" và "Ảnh mặt sau"
+      When coach lưu hồ sơ học viên đủ mọi mục bắt buộc trừ "Gói đã mua", "Mục tiêu tập luyện" và "Link ảnh toàn thân"
       Then hồ sơ được lưu
-      And hồ sơ cho biết còn thiếu đúng 3 mục: "Gói đã mua", "Mục tiêu tập luyện", "Ảnh mặt sau"
+      And hồ sơ cho biết còn thiếu đúng 3 mục: "Gói đã mua", "Mục tiêu tập luyện", "Link ảnh toàn thân"
 
     Scenario: Hồ sơ đủ mọi mục bắt buộc thì không còn mục thiếu
       When coach lưu hồ sơ học viên đủ mọi mục bắt buộc
@@ -85,7 +85,7 @@ Feature: Hồ sơ học viên và trạng thái coaching
       Then hồ sơ của "Lan" thuộc coach "Coach Duobexiuuu"
 
   @BR-f02-ho-so-hoc-vien-008
-  Rule: Số liệu của hồ sơ khi có nhập phải nằm trong khoảng cho phép (tuổi 10–100, chiều cao 100–250 cm, cân nặng 20–300 kg, mỡ cơ thể 3–70 %, vòng đo 10–250 cm, giá từ 0 đồng)
+  Rule: Số liệu của hồ sơ khi có nhập phải nằm trong khoảng cho phép (tuổi 10–100, chiều cao 100–250 cm, cân nặng 20–300 kg, vòng đo 10–250 cm, giá từ 0 đồng)
 
     Scenario Outline: Số liệu trong khoảng cho phép được ghi nhận
       When coach lưu hồ sơ học viên có "<muc>" là "<gia_tri>"
@@ -94,8 +94,6 @@ Feature: Hồ sơ học viên và trạng thái coaching
       Examples:
         | muc        | gia_tri |
         | Cân nặng   | 72,5    |
-        | Mỡ cơ thể  | 3       |
-        | Mỡ cơ thể  | 70      |
         | Giá        | 0       |
 
     Scenario Outline: Số liệu ngoài khoảng cho phép bị từ chối
@@ -139,11 +137,11 @@ Feature: Hồ sơ học viên và trạng thái coaching
   Rule: Link ảnh của hồ sơ phải là địa chỉ web http hoặc https
 
     Scenario: Link ảnh là địa chỉ web được ghi nhận
-      When coach lưu hồ sơ học viên có ảnh mặt trước "https://drive.google.com/open?id=abc"
-      Then hồ sơ ghi nhận ảnh mặt trước "https://drive.google.com/open?id=abc"
+      When coach lưu hồ sơ học viên có link ảnh toàn thân "https://drive.google.com/open?id=abc"
+      Then hồ sơ ghi nhận link ảnh toàn thân "https://drive.google.com/open?id=abc"
 
     Scenario: Link ảnh không phải địa chỉ web bị từ chối
-      When coach lưu hồ sơ học viên có ảnh mặt trước "drive.google.com/abc"
+      When coach lưu hồ sơ học viên có link ảnh toàn thân "drive.google.com/abc"
       Then hồ sơ không được lưu vì link ảnh không hợp lệ
 
   @BR-f02-ho-so-hoc-vien-012
