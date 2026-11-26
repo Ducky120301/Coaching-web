@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-26-f02-import-excel
-status: draft
+status: ready
 ---
 
 # Import hồ sơ học viên từ Excel + form theo Google Form: Implementation Plan
