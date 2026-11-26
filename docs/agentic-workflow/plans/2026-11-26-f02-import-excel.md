@@ -5652,7 +5652,7 @@ Bind 2 scenario `@web` của `features/hoc-vien/ho-so/import-excel.feature`: **B
 
 **Owns:** —
 
-- [ ] **Step 1: Thêm `fflate`; chạy e2e import — kỳ vọng FAIL (undefined)**
+- [x] **Step 1: Thêm `fflate`; chạy e2e import — kỳ vọng FAIL (undefined)**
 
 Run: `cd frontend && npm install --save-dev --save-exact fflate@0.8.2`
 Expected: `frontend/package.json` `devDependencies` có `"fflate": "0.8.2"`; `package-lock.json` thêm đúng 1 package `node_modules/fflate` (license MIT); `npm ls fflate` → `fflate@0.8.2`.
@@ -5662,7 +5662,7 @@ Run (compose chạy Task 1–7, `deploy/.env` có `AUTH_PERMIT_PER_MINUTE=1000`,
 Run: `cd frontend && npm run e2e -- --tags "@web and (@BR-f02-import-excel-012 or @BR-f02-import-excel-034)"`
 Expected: FAIL — `2 scenarios (2 undefined)` (`một file Excel theo mẫu Google Form có 2 dòng học viên hợp lệ`, `coach import file đó`, `một file Excel có 5 dòng học viên: 3 dòng hợp lệ, 1 dòng trùng email đã có, 1 dòng tuổi sai`, …).
 
-- [ ] **Step 2: Bộ ghi .xlsx tối thiểu**
+- [x] **Step 2: Bộ ghi .xlsx tối thiểu**
 
 `frontend/e2e/support/xlsx.ts`:
 ```ts
@@ -5754,7 +5754,7 @@ Kiểm nhanh file sinh ra mở được (chỉ là zip hợp lệ có đủ part
 Run: `cd frontend && node --import tsx -e "import('./e2e/support/xlsx.ts').then(({buildXlsx})=>{const p=require('node:path').join(require('node:os').tmpdir(),'e2e-import.xlsx');const b=buildXlsx([['Địa chỉ email','Tuổi (Age)'],['lan@gmail.com',28]]);require('node:fs').writeFileSync(p,b);console.log(p,b.length,b.subarray(0,2).toString())})"`
 Expected: in ra đường dẫn, số byte > 500 và `PK`; mở file đó bằng Excel/LibreOffice thấy 2 cột, ô `B2` = 28 (số). Xoá file sau khi xem.
 
-- [ ] **Step 3: World giữ file import; step defs `@web`; F01-P1 dùng khoá mới**
+- [x] **Step 3: World giữ file import; step defs `@web`; F01-P1 dùng khoá mới**
 
 `frontend/e2e/support/world.ts` — thêm import đầu file:
 ```ts
@@ -5917,7 +5917,7 @@ const FULL_REGISTRATION = {
 
 (`world.ts` chỉ `import type` từ `import.steps.ts` — bị xoá khi `tsx` biên dịch nên không tạo vòng import lúc chạy. e2e không có bước `tsc` riêng; lỗi cú pháp/kiểu lộ ra ở lần chạy Step 4.)
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait` (build lại `api` Task 1–5 và `web` Task 6–7)
 Run: `cd frontend && npm run e2e -- --tags "@web and (@BR-f02-import-excel-012 or @BR-f02-import-excel-034)"`
@@ -5929,7 +5929,7 @@ Expected: PASS, build thành công.
 
 Kiểm tay sau khi e2e xanh, ở **390px** và **1280px** trên `http://localhost:4200/hoc-vien/moi`: import lại đúng file đã import (dùng file mẫu của PO `docs/FORM hồ sơ excel để import.xlsx`, chạy 2 lần) → lần 2 hộp vàng "Đã tạo 0, bỏ qua {n}", bảng mỗi dòng "Địa chỉ email" / "email đã có hồ sơ" (@BR-f02-import-excel-025); trang Dashboard thấy các hồ sơ mới ở "Chờ kích hoạt", hộp thư `http://localhost:8080/api/test/emails?to=<email>` trả `[]` (@BR-f02-import-excel-029).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add frontend/package.json frontend/package-lock.json frontend/e2e/support/xlsx.ts frontend/e2e/support/world.ts frontend/e2e/steps/import.steps.ts frontend/e2e/steps/account.steps.ts
 git commit -F - <<'EOF'
