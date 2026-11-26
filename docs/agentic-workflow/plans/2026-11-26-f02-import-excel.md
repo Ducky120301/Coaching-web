@@ -3421,7 +3421,7 @@ EOF
 >
 > **"Hôm nay" trong scenario ngày chuyển khoản hợp lệ (BR-f02-import-excel-031):** đồng hồ acceptance bắt đầu 01/11/2026, còn ví dụ dùng 12/11 và 25/11/2026. Step dựng file tự tua "hôm nay" tới đúng ngày đó (09:00 giờ VN) nếu đồng hồ còn sớm hơn — để ngày không bị coi là sau hôm nay (BR-f02-ho-so-hoc-vien-010).
 
-- [ ] **Step 1: Viết Domain test `RegistrationOptions.Match` — kỳ vọng FAIL**
+- [x] **Step 1: Viết Domain test `RegistrationOptions.Match` — kỳ vọng FAIL**
 
 `backend/tests/Coaching.Domain.Tests/Students/RegistrationOptionsMatchTests.cs`:
 ```csharp
@@ -3503,7 +3503,7 @@ public sealed class RegistrationOptionsMatchTests
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~RegistrationOptionsMatchTests"`
 Expected: FAIL — build error `CS0117: 'RegistrationOptions' does not contain a definition for 'Match'` (và `'KnownSpellings'`).
 
-- [ ] **Step 2: Domain — `Match` + `KnownSpellings`, bỏ hai danh sách không còn dùng**
+- [x] **Step 2: Domain — `Match` + `KnownSpellings`, bỏ hai danh sách không còn dùng**
 
 `backend/src/Coaching.Domain/Students/RegistrationOptions.cs` — thay toàn bộ nội dung:
 ```csharp
@@ -3619,7 +3619,7 @@ Expected: không có dòng nào (Task 1 đã đổi Số năm tập sang ô ch�
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests`
 Expected: `Failed: 0`.
 
-- [ ] **Step 3: Viết unit test đọc ô số / ngày / giá — kỳ vọng FAIL**
+- [x] **Step 3: Viết unit test đọc ô số / ngày / giá — kỳ vọng FAIL**
 
 `backend/tests/Coaching.Application.Tests/Students/Import/ImportCellParserTests.cs`:
 ```csharp
@@ -3775,7 +3775,7 @@ public sealed class ImportCellParserTests
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~ImportCellParserTests"`
 Expected: FAIL — build error `CS0103: The name 'ImportCellParser' does not exist in the current context`.
 
-- [ ] **Step 4: Application — `ImportCellParser`**
+- [x] **Step 4: Application — `ImportCellParser`**
 
 `backend/src/Coaching.Application/Students/Import/ImportCellParser.cs`:
 ```csharp
@@ -3907,7 +3907,7 @@ public static partial class ImportCellParser
 Run: `cd backend && dotnet test tests/Coaching.Application.Tests --filter "FullyQualifiedName~ImportCellParserTests"`
 Expected: `Passed: 27`, `Failed: 0`.
 
-- [ ] **Step 5: Viết test mức dòng — acceptance (bind scenario BR-023…033) + integration (BR-033, BR-034) — kỳ vọng FAIL**
+- [x] **Step 5: Viết test mức dòng — acceptance (bind scenario BR-023…033) + integration (BR-033, BR-034) — kỳ vọng FAIL**
 
 `backend/tests/Coaching.Acceptance/Support/ImportApi.cs` — sửa 3 chỗ:
 
@@ -4404,7 +4404,7 @@ Expected: FAIL với lỗi assertion (không còn `MissingStepDefinition`/`Ambig
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ImportResultTests|FullyQualifiedName~ImportMidFileFailureTests"`
 Expected: `ImportResultTests` FAIL (`Expected: 3, Actual: 4` — dòng tuổi sai được tạo); `ImportMidFileFailureTests` PASS (hành vi có từ Task 4, test chốt BR-f02-import-excel-033).
 
-- [ ] **Step 6: Handler bản cuối — lỗi từng ô, trùng email, giá trị chọn, ngày/giá, kết quả**
+- [x] **Step 6: Handler bản cuối — lỗi từng ô, trùng email, giá trị chọn, ngày/giá, kết quả**
 
 `backend/src/Coaching.Application/Students/Import/ImportStudentsHandler.cs` — thay toàn bộ nội dung:
 ```csharp
@@ -4692,7 +4692,7 @@ public sealed class ImportStudentsHandler(
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng PASS**
+- [x] **Step 7: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f02-import-excel-023|Category=BR-f02-import-excel-024|Category=BR-f02-import-excel-025|Category=BR-f02-import-excel-026|Category=BR-f02-import-excel-027|Category=BR-f02-import-excel-028|Category=BR-f02-import-excel-029|Category=BR-f02-import-excel-030|Category=BR-f02-import-excel-031|Category=BR-f02-import-excel-032|Category=BR-f02-import-excel-033)&Category!=web"`
 Expected: `Passed: 29`, `Failed: 0`.
@@ -4703,7 +4703,7 @@ Expected: `Failed: 0` (step `email … đã thuộc về …` mở rộng và `k
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: không Failed — mọi scenario `@api` của `import-excel.feature` (44) và toàn bộ test F00/F01/F02 xanh.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 ```bash
 git add backend/src/Coaching.Domain/Students/RegistrationOptions.cs backend/src/Coaching.Application/Students/Import backend/tests/Coaching.Domain.Tests/Students/RegistrationOptionsMatchTests.cs backend/tests/Coaching.Application.Tests/Students/Import/ImportCellParserTests.cs backend/tests/Coaching.Api.IntegrationTests/Students/ImportResultTests.cs backend/tests/Coaching.Api.IntegrationTests/Students/ImportMidFileFailureTests.cs backend/tests/Coaching.Acceptance/Support/ImportApi.cs backend/tests/Coaching.Acceptance/Steps/ImportRowSteps.cs backend/tests/Coaching.Acceptance/Steps/StudentCreateSteps.cs backend/tests/Coaching.Acceptance/Steps/PasswordResetSteps.cs
 git commit -F - <<'EOF'
