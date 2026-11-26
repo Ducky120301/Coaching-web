@@ -155,6 +155,16 @@ public sealed class ExerciseCategoryTests(ApiFactory factory)
         Assert.Equal("category.duplicate", await StudentRequests.ErrorCodeAsync(response));
     }
 
+    // Route riêng không được đăng ký đôi với route kế thừa [controller] của AdminControllerBase
+    [Fact]
+    public async Task Categories_are_served_only_at_the_kebab_case_route()
+    {
+        var admin = await factory.AdminClientAsync();
+
+        Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync(ExerciseRequests.CategoriesUrl)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.GetAsync("/api/admin/ExerciseCategories")).StatusCode);
+    }
+
     // NFR-f03-thu-vien-bai-tap-002: học viên không truy cập được danh mục
     [Fact]
     public async Task Student_cannot_read_or_add_categories()

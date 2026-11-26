@@ -95,6 +95,11 @@ describe('ExerciseFormComponent', () => {
       'Tên bài', 'Nhóm cơ', 'Dụng cụ', 'Link video YouTube', 'Sets', 'Reps', 'RIR', 'Nghỉ', 'Hướng dẫn kỹ thuật', 'Lỗi hay gặp',
     ]);
 
+    // @BR-f03-thu-vien-bai-tap-002 @BR-f03-thu-vien-bai-tap-013 @BR-f03-thu-vien-bai-tap-014: giới hạn độ dài trên ô nhập
+    expect(el.querySelector('#ex-name')?.getAttribute('maxlength')).toBe('100');
+    expect(el.querySelector('#ex-technique')?.getAttribute('maxlength')).toBe('2000');
+    expect(el.querySelector('#ex-mistakes')?.getAttribute('maxlength')).toBe('2000');
+
     fill('#ex-name', '  Lateral Raise ');
     fill('#ex-muscle', 'g1');
     fill('#ex-equipment', 'e2');

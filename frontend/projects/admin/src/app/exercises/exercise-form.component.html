@@ -15,7 +15,7 @@
       <div class="grid">
         <div class="field wide">
           <label for="ex-name">Tên bài<span aria-hidden="true" class="req"> *</span></label>
-          <input class="ctl" id="ex-name" type="text" placeholder="VD: Lateral Raise" [value]="values().name"
+          <input class="ctl" id="ex-name" type="text" maxlength="100" placeholder="VD: Lateral Raise" [value]="values().name"
                  [class.err]="!!errors().name" [attr.aria-invalid]="!!errors().name"
                  (input)="setValue('name', $any($event.target).value)" />
           @if (errors().name; as e) {
@@ -143,12 +143,12 @@
       <div class="grid">
         <div class="field wide">
           <label for="ex-technique">Hướng dẫn kỹ thuật</label>
-          <textarea class="ctl" id="ex-technique" rows="4" placeholder="VD: Giữ khuỷu hơi cong, kéo bằng vai" [value]="values().techniqueNotes"
+          <textarea class="ctl" id="ex-technique" rows="4" maxlength="2000" placeholder="VD: Giữ khuỷu hơi cong, kéo bằng vai" [value]="values().techniqueNotes"
                     (input)="setValue('techniqueNotes', $any($event.target).value)"></textarea>
         </div>
         <div class="field wide">
           <label for="ex-mistakes">Lỗi hay gặp</label>
-          <textarea class="ctl" id="ex-mistakes" rows="3" placeholder="VD: Nhún vai khi kéo" [value]="values().commonMistakes"
+          <textarea class="ctl" id="ex-mistakes" rows="3" maxlength="2000" placeholder="VD: Nhún vai khi kéo" [value]="values().commonMistakes"
                     (input)="setValue('commonMistakes', $any($event.target).value)"></textarea>
         </div>
       </div>

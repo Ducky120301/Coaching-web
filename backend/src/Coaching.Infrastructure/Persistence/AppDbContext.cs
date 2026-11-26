@@ -72,11 +72,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         catch (DbUpdateConcurrencyException ex)
         {
             throw new ConcurrencyConflictException(ex);
-            }
-            catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
-            {
-                // @BR-f03-thu-vien-bai-tap-006: hai request đua nhau qua bước kiểm trùng → use case trả 409 thay vì 500
-                throw new UniqueConstraintException(ex);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            // @BR-f03-thu-vien-bai-tap-006: hai request đua nhau qua bước kiểm trùng → use case trả 409 thay vì 500
+            throw new UniqueConstraintException(ex);
         }
     }
 
