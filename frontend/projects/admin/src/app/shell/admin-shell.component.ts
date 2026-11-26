@@ -43,7 +43,8 @@ interface CoachProfile { id: string; displayName: string; email: string; }
     nav { display: flex; flex-direction: column; gap: 2px; }
     nav a { text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; font-size: 15px; font-weight: 600; }
     .user-block { margin-top: auto; }
-    main { flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px clamp(16px, 3vw, 48px) 48px; display: flex; flex-direction: column; gap: 24px; }
+    /* Khung thôi: padding + gap do từng trang đặt theo đúng page trong prototype (router-outlet là phần tử con, không được là flex item có gap). */
+    main { flex: 999 1 560px; min-width: 0; box-sizing: border-box; }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

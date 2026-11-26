@@ -73,7 +73,8 @@ import { StudentsApi } from './students.api';
     </div>
   `,
   styles: `
-    :host { display: flex; flex-direction: column; gap: 24px; }
+    /* Admin-Dashboard: main padding 32px clamp(16px, 3vw, 48px) 48px, gap 24px */
+    :host { display: flex; flex-direction: column; gap: 24px; box-sizing: border-box; padding: 32px clamp(16px, 3vw, 48px) 48px; }
     .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
     .date { margin: 0; font-size: 14px; color: var(--muted); }
     h1 { margin: 4px 0 0; font-family: var(--font-head); font-weight: 800; font-size: 48px; line-height: 1.05; }

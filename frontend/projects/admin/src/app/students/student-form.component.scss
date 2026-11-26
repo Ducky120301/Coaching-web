@@ -1,4 +1,4 @@
-:host { display: flex; flex-direction: column; gap: 22px; }
+:host { display: flex; flex-direction: column; gap: 22px; box-sizing: border-box; padding: 28px clamp(16px, 3vw, 44px) 48px; } // AdTaoHoSo/AdHoSo main
 .crumbs { font-size: 14px; color: var(--muted); display: flex; gap: 8px; }
 .crumbs a { color: var(--muted); }
 .crumbs .here { color: var(--ink); }
