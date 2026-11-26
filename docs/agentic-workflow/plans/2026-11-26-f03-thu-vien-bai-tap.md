@@ -98,7 +98,7 @@ Ghi chú bind step (đã soát mọi `[Given|When|Then]` trong `backend/tests/Co
 | `nhóm cơ không được thêm vì đã có "…"` | **mới** `MuscleGroupDuplicate` |
 | `coach thêm bài "…" dụng cụ "…" nhóm cơ "…"` / `thư viện có bài "…" dụng cụ "…"` (scenario "Thêm dụng cụ mới rồi dùng ngay cho bài mới") | bind ở **Task 2** (`ExerciseSteps`) — tới lúc đó scenario này fail `No matching step definition found` (interim rule) |
 
-- [ ] **Step 1: Viết Domain test cho danh mục ban đầu, khoá tên và `ExerciseCategory`**
+- [x] **Step 1: Viết Domain test cho danh mục ban đầu, khoá tên và `ExerciseCategory`**
 
 `backend/tests/Coaching.Domain.Tests/Exercises/ExerciseCatalogTests.cs`:
 ```csharp
@@ -185,12 +185,12 @@ public sealed class ExerciseCatalogTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL (đỏ)**
+- [x] **Step 2: Chạy — kỳ vọng FAIL (đỏ)**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"`
 Expected: FAIL — build error `CS0234: The type or namespace name 'Exercises' does not exist in the namespace 'Coaching.Domain'`.
 
-- [ ] **Step 3: Domain — `CategoryKind`, `ExerciseNameKey`, `DefaultCatalog`, `ExerciseCategory`, `IExerciseCategoryRepository`**
+- [x] **Step 3: Domain — `CategoryKind`, `ExerciseNameKey`, `DefaultCatalog`, `ExerciseCategory`, `IExerciseCategoryRepository`**
 
 `backend/src/Coaching.Domain/Exercises/CategoryKind.cs`:
 ```csharp
@@ -333,12 +333,12 @@ public interface IExerciseCategoryRepository
 }
 ```
 
-- [ ] **Step 4: Chạy Domain test — kỳ vọng PASS**
+- [x] **Step 4: Chạy Domain test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"`
 Expected: PASS — `ExerciseCatalogTests` `Passed: 21` (1 + 11 + 3 + 1 + 1 + 3 + 1), `Failed: 0`.
 
-- [ ] **Step 5: Liquibase v0.5.0 — 2 bảng thư viện bài tập, rollback, changelog, master**
+- [x] **Step 5: Liquibase v0.5.0 — 2 bảng thư viện bài tập, rollback, changelog, master**
 
 `database/changelog/v0.5.0/scripts/0001-exercise-library.sql`:
 ```sql
@@ -446,7 +446,7 @@ GO
 </databaseChangeLog>
 ```
 
-- [ ] **Step 6: Helper integration test dùng chung `ExerciseRequests` + test schema/API danh mục**
+- [x] **Step 6: Helper integration test dùng chung `ExerciseRequests` + test schema/API danh mục**
 
 `backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseRequests.cs`:
 ```csharp
@@ -795,12 +795,12 @@ public sealed class ExerciseCategoryTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 7: Chạy — kỳ vọng FAIL**
+- [x] **Step 7: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises"`
 Expected: FAIL — build error `CS0234: The type or namespace name 'Exercises' does not exist in the namespace 'Coaching.Application'` (và `'ExerciseCatalogSeeder' could not be found`, `'AppDbContext' does not contain a definition for 'ExerciseCategories'`).
 
-- [ ] **Step 8: Application — `UniqueConstraintException`, lỗi danh mục, xem/thêm danh mục**
+- [x] **Step 8: Application — `UniqueConstraintException`, lỗi danh mục, xem/thêm danh mục**
 
 `backend/src/Coaching.Application/Common/UniqueConstraintException.cs`:
 ```csharp
@@ -931,7 +931,7 @@ using Coaching.Application.Exercises.Queries;
         return services;
 ```
 
-- [ ] **Step 9: Infrastructure — cấu hình EF, repository, `UniqueConstraintException`, seeder danh mục, DI, initializer**
+- [x] **Step 9: Infrastructure — cấu hình EF, repository, `UniqueConstraintException`, seeder danh mục, DI, initializer**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/ExerciseCategoryConfiguration.cs`:
 ```csharp
@@ -1069,7 +1069,7 @@ using Coaching.Domain.Exercises;
         // @ADR-f02-ho-so-hoc-vien-003: hồ sơ tạo trước khi có SearchKey (cột mặc định '') được tính lại một lần
 ```
 
-- [ ] **Step 10: Api — `ExerciseCategoriesController`**
+- [x] **Step 10: Api — `ExerciseCategoriesController`**
 
 `backend/src/Coaching.Api/Controllers/Admin/ExerciseCategoriesController.cs`:
 ```csharp
@@ -1105,12 +1105,12 @@ public sealed class ExerciseCategoriesController : AdminControllerBase
 }
 ```
 
-- [ ] **Step 11: Chạy integration test — kỳ vọng PASS**
+- [x] **Step 11: Chạy integration test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises"`
 Expected: PASS — `ExerciseSchemaTests` (1) và `ExerciseCategoryTests` (1 + 1 + 1 + 5 + 1 + 2 + 1 + 3 + 1 + 1 + 1 = 18) `Passed`, `Failed: 0`. (Nếu `InitializeAsync` lỗi `Liquibase update lỗi (exit …)`: đọc log trong exception, sửa SQL v0.5.0 rồi chạy lại.)
 
-- [ ] **Step 12: Acceptance — `ExerciseCatalogApi` + bind Rule BR-005, BR-006**
+- [x] **Step 12: Acceptance — `ExerciseCatalogApi` + bind Rule BR-005, BR-006**
 
 `backend/tests/Coaching.Acceptance/Support/ExerciseCatalogApi.cs`:
 ```csharp
@@ -1199,17 +1199,17 @@ public sealed class ExerciseCategorySteps(AcceptanceContext ctx, ExerciseCatalog
 }
 ```
 
-- [ ] **Step 13: Chạy acceptance Rule BR-005, BR-006 — kỳ vọng 2 PASS, 1 chờ Task 2**
+- [x] **Step 13: Chạy acceptance Rule BR-005, BR-006 — kỳ vọng 2 PASS, 1 chờ Task 2**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f03-thu-vien-bai-tap-005|Category=BR-f03-thu-vien-bai-tap-006)&Category!=web&Category!=manual"`
 Expected: `Passed: 2` (`Coach có sẵn danh mục ban đầu`, `Nhóm cơ trùng tên không được thêm`), `Failed: 1` — `Thêm dụng cụ mới rồi dùng ngay cho bài mới` với `No matching step definition found` cho `coach thêm bài "Band Pull Apart" dụng cụ "Resistance Band" nhóm cơ "Vai sau"` (interim rule — bind ở Task 2). Không có lỗi nào khác.
 
-- [ ] **Step 14: Verify tổng backend**
+- [x] **Step 14: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning, TreatWarningsAsErrors). Mọi test Domain/Application/Integration (gồm toàn bộ test F00/F01-P1/F02 — `IUnitOfWork` mới chỉ thêm nhánh 2601/2627) và acceptance F00/F01-P1/F02 `Passed`. Chỉ được phép fail các scenario `@api` của `features/thu-vien/bai-tap/thu-vien-bai-tap.feature` thuộc BR-f03-thu-vien-bai-tap-001…004, 006 (scenario "Thêm dụng cụ mới…"), 007…021 với `No matching step definition found` (interim rule). Không có lỗi nào khác.
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 
 ```bash
 git add database/changelog/db.changelog-master.xml database/changelog/v0.5.0 backend/src/Coaching.Domain/Exercises backend/src/Coaching.Application/Common/UniqueConstraintException.cs backend/src/Coaching.Application/Exercises backend/src/Coaching.Application/DependencyInjection.cs backend/src/Coaching.Infrastructure/Persistence/Configurations/ExerciseCategoryConfiguration.cs backend/src/Coaching.Infrastructure/Persistence/Repositories/ExerciseCategoryRepository.cs backend/src/Coaching.Infrastructure/Seeding/ExerciseCatalogSeeder.cs backend/src/Coaching.Infrastructure/Persistence/AppDbContext.cs backend/src/Coaching.Infrastructure/DependencyInjection.cs backend/src/Coaching.Infrastructure/Seeding/DatabaseInitializer.cs backend/src/Coaching.Api/Controllers/Admin/ExerciseCategoriesController.cs backend/tests/Coaching.Domain.Tests/Exercises/ExerciseCatalogTests.cs backend/tests/Coaching.Api.IntegrationTests/Exercises backend/tests/Coaching.Acceptance/Support/ExerciseCatalogApi.cs backend/tests/Coaching.Acceptance/Steps/ExerciseCategorySteps.cs
@@ -1270,7 +1270,7 @@ Ghi chú bind step (đã soát `Steps/*.cs` gồm `ExerciseCategorySteps` của 
 | `@web` scenario "Cùng tên khác dụng cụ là hai bài khác nhau" (step `thư viện có cả …`) | không chạy ở Reqnroll (`Category!=web`) — bind Playwright ở Task 8 |
 | Rule BR-021 scenario `@api` (hướng dẫn kỹ thuật "Cũ"/"Mới") | step bind ở **Task 3** (cần hướng dẫn kỹ thuật — BR-013); tới lúc đó fail `No matching step definition found` (interim rule) |
 
-- [ ] **Step 1: Viết Domain test cho `Exercise`**
+- [x] **Step 1: Viết Domain test cho `Exercise`**
 
 `backend/tests/Coaching.Domain.Tests/Exercises/ExerciseTests.cs`:
 ```csharp
@@ -1397,12 +1397,12 @@ public sealed class ExerciseTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises.ExerciseTests"`
 Expected: FAIL — build error `CS0246: The type or namespace name 'Exercise' could not be found` và `'ExerciseDose' could not be found`.
 
-- [ ] **Step 3: Domain — `ExerciseDose` (khung), `Exercise`, `IExerciseRepository`**
+- [x] **Step 3: Domain — `ExerciseDose` (khung), `Exercise`, `IExerciseRepository`**
 
 `backend/src/Coaching.Domain/Exercises/ExerciseDose.cs`:
 ```csharp
@@ -1530,12 +1530,12 @@ public interface IExerciseRepository
 }
 ```
 
-- [ ] **Step 4: Chạy Domain test — kỳ vọng PASS**
+- [x] **Step 4: Chạy Domain test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"`
 Expected: PASS — `ExerciseTests` 14 test (1 + 3 + 1 + 1 + 1 + 3 + 1 + 1 + 1 + 1) và `ExerciseCatalogTests` 21 test `Passed`, `Failed: 0`.
 
-- [ ] **Step 5: Viết integration test — lỗi mang `hiddenExerciseId`, thêm/xem/sửa, trùng, version, phân quyền**
+- [x] **Step 5: Viết integration test — lỗi mang `hiddenExerciseId`, thêm/xem/sửa, trùng, version, phân quyền**
 
 `backend/tests/Coaching.Api.IntegrationTests/Common/ResultExtensionsTests.cs` — thêm `using Coaching.Application.Exercises;` và test sau vào class (trước `StubController`):
 ```csharp
@@ -1873,12 +1873,12 @@ public sealed class ExerciseCrudTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises|FullyQualifiedName~ResultExtensionsTests"`
 Expected: FAIL — build error `CS0117: 'ExerciseErrors' does not contain a definition for 'Duplicate'`, `CS0246: The type or namespace name 'SaveExerciseCommand' could not be found`, `'ExerciseDetailDto' could not be found`, `'AppDbContext' does not contain a definition for 'Exercises'`.
 
-- [ ] **Step 7: Application — `Error.Extensions`, lỗi bài tập, DTO, lệnh lưu, kiểm danh mục**
+- [x] **Step 7: Application — `Error.Extensions`, lỗi bài tập, DTO, lệnh lưu, kiểm danh mục**
 
 `backend/src/Coaching.Application/Common/Result.cs` — thay khai báo `Error`:
 ```csharp
@@ -2018,7 +2018,7 @@ internal static class ExerciseCategoryCheck
 }
 ```
 
-- [ ] **Step 8: Application — thêm, sửa, xem bài + DI**
+- [x] **Step 8: Application — thêm, sửa, xem bài + DI**
 
 `backend/src/Coaching.Application/Exercises/Commands/CreateExercise.cs`:
 ```csharp
@@ -2161,7 +2161,7 @@ public sealed class GetExerciseHandler(
         services.AddScoped<GetExerciseHandler>();
 ```
 
-- [ ] **Step 9: Infrastructure — cấu hình EF `Exercise`, repository, DbSet, DI**
+- [x] **Step 9: Infrastructure — cấu hình EF `Exercise`, repository, DbSet, DI**
 
 `backend/src/Coaching.Infrastructure/Persistence/Configurations/ExerciseConfiguration.cs`:
 ```csharp
@@ -2255,7 +2255,7 @@ internal sealed class ExerciseRepository(AppDbContext db) : IExerciseRepository
         services.AddScoped<IExerciseRepository, ExerciseRepository>(); // @ADR-f03-thu-vien-bai-tap-001
 ```
 
-- [ ] **Step 10: Api — `ProblemDetails` mang extension + `ExercisesController`**
+- [x] **Step 10: Api — `ProblemDetails` mang extension + `ExercisesController`**
 
 `backend/src/Coaching.Api/Common/ResultExtensions.cs` — trong `ToProblem`, sau `problem.Extensions["code"] = error.Code;`:
 ```csharp
@@ -2306,12 +2306,12 @@ public sealed class ExercisesController : AdminControllerBase
 }
 ```
 
-- [ ] **Step 11: Chạy integration test — kỳ vọng PASS**
+- [x] **Step 11: Chạy integration test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises|FullyQualifiedName~ResultExtensionsTests"`
 Expected: PASS — `ExerciseCrudTests` 16 test (gồm `BR001_Create_losing_the_unique_race_returns_409`, `BR020_Stale_version_is_rejected_and_keeps_the_previous_save`, `Coach_cannot_read_or_change_another_coachs_exercise`), `ExerciseCategoryTests` 18, `ExerciseSchemaTests` 1, `ResultExtensionsTests` 2 `Passed`, `Failed: 0`.
 
-- [ ] **Step 12: Acceptance — `ExerciseApi` + bind Rule BR-001…004, BR-020 và scenario còn lại của BR-006**
+- [x] **Step 12: Acceptance — `ExerciseApi` + bind Rule BR-001…004, BR-020 và scenario còn lại của BR-006**
 
 `backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs`:
 ```csharp
@@ -2547,17 +2547,17 @@ public sealed class ExerciseSteps(AcceptanceContext ctx, ExerciseApi exercises, 
 }
 ```
 
-- [ ] **Step 13: Chạy acceptance — kỳ vọng PASS cho Rule BR-001…004, 006, 020**
+- [x] **Step 13: Chạy acceptance — kỳ vọng PASS cho Rule BR-001…004, 006, 020**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f03-thu-vien-bai-tap-001|Category=BR-f03-thu-vien-bai-tap-002|Category=BR-f03-thu-vien-bai-tap-003|Category=BR-f03-thu-vien-bai-tap-004|Category=BR-f03-thu-vien-bai-tap-005|Category=BR-f03-thu-vien-bai-tap-006|Category=BR-f03-thu-vien-bai-tap-020)&Category!=web&Category!=manual"`
 Expected: PASS — 16 scenario/example `Passed` (BR-001 ×6, BR-002 ×2, BR-003 ×2, BR-004 ×2, BR-005 ×1, BR-006 ×2, BR-020 ×1), `Failed: 0`. Không có `No matching step definition found`.
 
-- [ ] **Step 14: Verify tổng backend**
+- [x] **Step 14: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning). Mọi test `Passed` trừ scenario `@api` của `thu-vien-bai-tap.feature` thuộc BR-f03-thu-vien-bai-tap-007…019 và BR-021 fail `No matching step definition found` (interim rule — bind ở Task 3/4/5). `ResultExtensionsTests.Unavailable_error_maps_to_503_problem_with_code` vẫn pass (`Error` thêm tham số tuỳ chọn). Không lỗi khác.
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 
 ```bash
 git add backend/src/Coaching.Domain/Exercises/Exercise.cs backend/src/Coaching.Domain/Exercises/ExerciseDose.cs backend/src/Coaching.Domain/Exercises/IExerciseRepository.cs backend/src/Coaching.Application/Common/Result.cs backend/src/Coaching.Application/Exercises backend/src/Coaching.Application/DependencyInjection.cs backend/src/Coaching.Infrastructure/Persistence/Configurations/ExerciseConfiguration.cs backend/src/Coaching.Infrastructure/Persistence/Repositories/ExerciseRepository.cs backend/src/Coaching.Infrastructure/Persistence/AppDbContext.cs backend/src/Coaching.Infrastructure/DependencyInjection.cs backend/src/Coaching.Api/Common/ResultExtensions.cs backend/src/Coaching.Api/Controllers/Admin/ExercisesController.cs backend/tests/Coaching.Domain.Tests/Exercises/ExerciseTests.cs backend/tests/Coaching.Api.IntegrationTests/Common/ResultExtensionsTests.cs backend/tests/Coaching.Api.IntegrationTests/Exercises backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs backend/tests/Coaching.Acceptance/Steps/ExerciseSteps.cs
@@ -2609,7 +2609,7 @@ Ghi chú bind step (đã soát `Steps/*.cs` gồm `ExerciseSteps`/`ExerciseCateg
 | `coach cập nhật bài "…" với lỗi hay gặp "…"` / `bài "…" có lỗi hay gặp "…"` | **mới** `UpdateMistakes` / `HasMistakes` |
 | `thư viện có bài "…" với hướng dẫn kỹ thuật "…"` (BR-021) | **mới** `LibraryHasWithTechnique` |
 
-- [ ] **Step 1: Viết Domain test cho liều, link YouTube, video/hướng dẫn của bài**
+- [x] **Step 1: Viết Domain test cho liều, link YouTube, video/hướng dẫn của bài**
 
 `backend/tests/Coaching.Domain.Tests/Exercises/ExerciseDoseTests.cs`:
 ```csharp
@@ -2843,12 +2843,12 @@ public sealed class ExerciseDetailTests
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"`
 Expected: FAIL — build error `CS0117: 'ExerciseDose' does not contain a definition for 'Create'`, `CS0103: The name 'YouTubeUrl' does not exist in the current context`, `CS1061: 'Exercise' does not contain a definition for 'SetVideo'` (và `SetDose`, `SetNotes`).
 
-- [ ] **Step 3: Domain — `YouTubeUrl`, `ExerciseDose.Create`, `Exercise.SetVideo/SetDose/SetNotes`**
+- [x] **Step 3: Domain — `YouTubeUrl`, `ExerciseDose.Create`, `Exercise.SetVideo/SetDose/SetNotes`**
 
 `backend/src/Coaching.Domain/Exercises/YouTubeUrl.cs`:
 ```csharp
@@ -2975,12 +2975,12 @@ public sealed record ExerciseDose(int? Sets, int? RepsMin, int? RepsMax, int? Ri
     }
 ```
 
-- [ ] **Step 4: Chạy Domain test — kỳ vọng PASS**
+- [x] **Step 4: Chạy Domain test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"`
 Expected: PASS — `ExerciseDoseTests` 29, `YouTubeUrlTests` 19, `ExerciseDetailTests` 6, cùng `ExerciseTests` 14 và `ExerciseCatalogTests` 21 `Passed`, `Failed: 0`.
 
-- [ ] **Step 5: Viết integration test — POST/PUT ghi đủ chi tiết, seed LOẠI qua API**
+- [x] **Step 5: Viết integration test — POST/PUT ghi đủ chi tiết, seed LOẠI qua API**
 
 `backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseDetailApiTests.cs`:
 ```csharp
@@ -3100,12 +3100,12 @@ public sealed class ExerciseDetailApiTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseDetailApiTests"`
 Expected: FAIL — `Create_and_update_store_video_dose_and_notes` (`Assert.Equal() Failure` — `VideoUrl` null vì handler chưa ghi), `BR007_Non_YouTube_link_is_rejected` ×4, `BR009_BR012_Dose_out_of_range_is_rejected`, `BR013_BR014_Notes_of_2001_characters_are_rejected` (`Expected: BadRequest, Actual: Created`). `BR009_Sets_that_is_not_a_number_is_rejected` PASS (model binding có sẵn).
 
-- [ ] **Step 7: Application — `ExerciseDetails.Apply` và gọi ở thêm/sửa**
+- [x] **Step 7: Application — `ExerciseDetails.Apply` và gọi ở thêm/sửa**
 
 `backend/src/Coaching.Application/Exercises/ExerciseDetails.cs`:
 ```csharp
@@ -3143,12 +3143,12 @@ internal static class ExerciseDetails
         ExerciseDetails.Apply(exercise, command); // @BR-f03-thu-vien-bai-tap-007…014
 ```
 
-- [ ] **Step 8: Chạy integration test — kỳ vọng PASS**
+- [x] **Step 8: Chạy integration test — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises"`
 Expected: PASS — `ExerciseDetailApiTests` 8 test, `ExerciseCrudTests` 16, `ExerciseCategoryTests` 18, `ExerciseSchemaTests` 1 `Passed`, `Failed: 0`.
 
-- [ ] **Step 9: Acceptance — `DoseText` + bind Rule BR-007…014 và BR-021**
+- [x] **Step 9: Acceptance — `DoseText` + bind Rule BR-007…014 và BR-021**
 
 `backend/tests/Coaching.Acceptance/Support/DoseText.cs`:
 ```csharp
@@ -3319,17 +3319,17 @@ public sealed class ExerciseDetailSteps(AcceptanceContext ctx, ExerciseApi exerc
 }
 ```
 
-- [ ] **Step 10: Chạy acceptance Rule BR-007…014, BR-021 — kỳ vọng PASS**
+- [x] **Step 10: Chạy acceptance Rule BR-007…014, BR-021 — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f03-thu-vien-bai-tap-007|Category=BR-f03-thu-vien-bai-tap-008|Category=BR-f03-thu-vien-bai-tap-009|Category=BR-f03-thu-vien-bai-tap-010|Category=BR-f03-thu-vien-bai-tap-011|Category=BR-f03-thu-vien-bai-tap-012|Category=BR-f03-thu-vien-bai-tap-013|Category=BR-f03-thu-vien-bai-tap-014|Category=BR-f03-thu-vien-bai-tap-021)&Category!=web&Category!=manual"`
 Expected: PASS — 31 scenario/example `Passed` (BR-007 ×9, BR-008 ×2, BR-009 ×4, BR-010 ×6, BR-011 ×4, BR-012 ×3, BR-013 ×1, BR-014 ×1, BR-021 ×1), `Failed: 0`.
 
-- [ ] **Step 11: Verify tổng backend**
+- [x] **Step 11: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning). Mọi test `Passed` trừ scenario `@api` của `thu-vien-bai-tap.feature` thuộc BR-f03-thu-vien-bai-tap-015…019 fail `No matching step definition found` (interim rule — Task 4/5). Không lỗi khác.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add backend/src/Coaching.Domain/Exercises/YouTubeUrl.cs backend/src/Coaching.Domain/Exercises/ExerciseDose.cs backend/src/Coaching.Domain/Exercises/Exercise.cs backend/src/Coaching.Application/Exercises/ExerciseDetails.cs backend/src/Coaching.Application/Exercises/Commands/CreateExercise.cs backend/src/Coaching.Application/Exercises/Commands/UpdateExercise.cs backend/tests/Coaching.Domain.Tests/Exercises/ExerciseDoseTests.cs backend/tests/Coaching.Domain.Tests/Exercises/YouTubeUrlTests.cs backend/tests/Coaching.Domain.Tests/Exercises/ExerciseDetailTests.cs backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseDetailApiTests.cs backend/tests/Coaching.Acceptance/Support/DoseText.cs backend/tests/Coaching.Acceptance/Steps/ExerciseDetailSteps.cs
@@ -3377,7 +3377,7 @@ Ghi chú bind step (đã soát `Steps/*.cs` gồm `Exercise*Steps` của Task 1�
 | `thư viện không còn bài "…" dụng cụ "…"` | **mới** `LibraryNoLongerHas` |
 | `coach thêm bài "Chest Dip" dụng cụ "Bodyweight" nhóm cơ "Ngực"` / `thư viện có bài "…" dụng cụ "…"` (Then) | có sẵn `ExerciseSteps.Add` / `LibraryContains` |
 
-- [ ] **Step 1: Viết Domain test cho ẩn/bỏ ẩn**
+- [x] **Step 1: Viết Domain test cho ẩn/bỏ ẩn**
 
 `backend/tests/Coaching.Domain.Tests/Exercises/ExerciseVisibilityTests.cs`:
 ```csharp
@@ -3405,7 +3405,7 @@ public sealed class ExerciseVisibilityTests
 }
 ```
 
-- [ ] **Step 2: Viết integration test — ẩn/bỏ ẩn/xoá qua API, điểm cắm "đang được dùng", phân quyền**
+- [x] **Step 2: Viết integration test — ẩn/bỏ ẩn/xoá qua API, điểm cắm "đang được dùng", phân quyền**
 
 `backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseHideDeleteTests.cs`:
 ```csharp
@@ -3543,12 +3543,12 @@ public sealed class ExerciseHideDeleteTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng FAIL**
+- [x] **Step 3: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~ExerciseVisibilityTests"` và `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseHideDeleteTests"`
 Expected: FAIL — build error `CS1061: 'Exercise' does not contain a definition for 'Hide'` (và `'Unhide'`), `CS0246: The type or namespace name 'IExerciseUsage' could not be found`, `'NoExerciseUsage' could not be found`.
 
-- [ ] **Step 4: Domain — `Hide`, `Unhide`**
+- [x] **Step 4: Domain — `Hide`, `Unhide`**
 
 `backend/src/Coaching.Domain/Exercises/Exercise.cs` — thêm vào cuối class:
 ```csharp
@@ -3559,7 +3559,7 @@ Expected: FAIL — build error `CS1061: 'Exercise' does not contain a definition
     public void Unhide() => IsHidden = false;
 ```
 
-- [ ] **Step 5: Application — `IExerciseUsage`, `InUse`, ẩn/bỏ ẩn/xoá, DI**
+- [x] **Step 5: Application — `IExerciseUsage`, `InUse`, ẩn/bỏ ẩn/xoá, DI**
 
 `backend/src/Coaching.Application/Exercises/IExerciseUsage.cs`:
 ```csharp
@@ -3698,7 +3698,7 @@ public sealed class DeleteExerciseHandler(
 ```
 và thêm `using Coaching.Application.Exercises;` ở đầu file.
 
-- [ ] **Step 6: Api — hide, unhide, delete**
+- [x] **Step 6: Api — hide, unhide, delete**
 
 `backend/src/Coaching.Api/Controllers/Admin/ExercisesController.cs` — thêm vào class (sau `Update`):
 ```csharp
@@ -3724,12 +3724,12 @@ và thêm `using Coaching.Application.Exercises;` ở đầu file.
     }
 ```
 
-- [ ] **Step 7: Chạy Domain + integration — kỳ vọng PASS**
+- [x] **Step 7: Chạy Domain + integration — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Domain.Tests --filter "FullyQualifiedName~Coaching.Domain.Tests.Exercises"` và `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~Coaching.Api.IntegrationTests.Exercises"`
 Expected: PASS — Domain: `ExerciseVisibilityTests` 1 + toàn bộ test Exercises trước đó, `Failed: 0`. Integration: `ExerciseHideDeleteTests` 7 (gồm `BR017_Exercise_in_use_cannot_be_deleted_only_hidden`, `ADR004_Default_usage_is_never_used`) + `ExerciseDetailApiTests` 8 + `ExerciseCrudTests` 16 + `ExerciseCategoryTests` 18 + `ExerciseSchemaTests` 1 `Passed`, `Failed: 0`.
 
-- [ ] **Step 8: Acceptance — `ExerciseApi` ẩn/xoá qua API + bind Rule BR-015, BR-017**
+- [x] **Step 8: Acceptance — `ExerciseApi` ẩn/xoá qua API + bind Rule BR-015, BR-017**
 
 `backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs` — thay method `HideAsync` (SQL) bằng các method gọi API, và xoá 3 dòng using không còn dùng (`Coaching.Infrastructure.Persistence`, `Microsoft.EntityFrameworkCore`, `Microsoft.Extensions.DependencyInjection`):
 ```csharp
@@ -3819,17 +3819,17 @@ public sealed class ExerciseVisibilitySteps(AcceptanceContext ctx, ExerciseApi e
 }
 ```
 
-- [ ] **Step 9: Chạy acceptance — kỳ vọng PASS (gồm BR-001 vì "đang ẩn" nay đi qua API)**
+- [x] **Step 9: Chạy acceptance — kỳ vọng PASS (gồm BR-001 vì "đang ẩn" nay đi qua API)**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f03-thu-vien-bai-tap-001|Category=BR-f03-thu-vien-bai-tap-015|Category=BR-f03-thu-vien-bai-tap-017)&Category!=web&Category!=manual"`
 Expected: PASS — 10 scenario/example `Passed` (BR-001 ×6, BR-015 ×2, BR-017 ×2), `Failed: 0`. Scenario `@manual` "Bài đang có trong một phase không xoá được" không chạy.
 
-- [ ] **Step 10: Verify tổng backend**
+- [x] **Step 10: Verify tổng backend**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning). Mọi test `Passed` trừ scenario `@api` của BR-f03-thu-vien-bai-tap-016, 018, 019 fail `No matching step definition found` (interim rule — Task 5). Không lỗi khác.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add backend/src/Coaching.Domain/Exercises/Exercise.cs backend/src/Coaching.Application/Exercises/IExerciseUsage.cs backend/src/Coaching.Application/Exercises/ExerciseErrors.cs backend/src/Coaching.Application/Exercises/Commands/HideExercise.cs backend/src/Coaching.Application/Exercises/Commands/DeleteExercise.cs backend/src/Coaching.Application/DependencyInjection.cs backend/src/Coaching.Api/Controllers/Admin/ExercisesController.cs backend/tests/Coaching.Domain.Tests/Exercises/ExerciseVisibilityTests.cs backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseHideDeleteTests.cs backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs backend/tests/Coaching.Acceptance/Steps/ExerciseVisibilitySteps.cs
@@ -3886,7 +3886,7 @@ Ghi chú bind step (đã soát `Steps/*.cs` gồm `Exercise*Steps` của Task 1�
 | `kết quả tìm rỗng` / `kết quả chỉ có "…"` / `kết quả có "…" và "…", không có "…"` | **mới** `ResultsEmpty` / `ResultsOnly` / `ResultsHaveNot` |
 | `@web` outline "Tìm theo một phần tên, không dấu" (`kết quả có "…"`) | không chạy ở Reqnroll (`Category!=web`) — Task 8 |
 
-- [ ] **Step 1: Viết integration test danh sách/tìm/lọc/bài đã ẩn**
+- [x] **Step 1: Viết integration test danh sách/tìm/lọc/bài đã ẩn**
 
 `backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseListTests.cs`:
 ```csharp
@@ -3997,12 +3997,12 @@ public sealed class ExerciseListTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseListTests"`
 Expected: FAIL — build error `CS0246: The type or namespace name 'ExerciseListItemDto' could not be found`.
 
-- [ ] **Step 3: Domain + Application + Infrastructure + Api — danh sách có lọc**
+- [x] **Step 3: Domain + Application + Infrastructure + Api — danh sách có lọc**
 
 `backend/src/Coaching.Domain/Exercises/ExerciseFilter.cs`:
 ```csharp
@@ -4101,12 +4101,12 @@ public sealed class ListExercisesHandler(
         (await handler.HandleAsync(new ListExercisesQuery(q, muscleGroupId, equipmentId, hidden), cancellationToken)).ToActionResult(this);
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseListTests"`
 Expected: PASS — 5 test `Passed`, `Failed: 0`.
 
-- [ ] **Step 5: Tắt nạp thư viện ban đầu ở host test + viết integration test nạp 99 bài**
+- [x] **Step 5: Tắt nạp thư viện ban đầu ở host test + viết integration test nạp 99 bài**
 
 `backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs` — trong `ConfigureWebHost`, sau dòng `RateLimiting:AuthPermitPerMinute`:
 ```csharp
@@ -4234,12 +4234,12 @@ public sealed class ExerciseLibrarySeedTests(ApiFactory factory)
 }
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseLibrarySeedTests"`
 Expected: FAIL — build error `CS0103: The name 'ExerciseLibrarySeeder' does not exist in the current context`, `CS0246: The type or namespace name 'ExerciseLibrarySeed' could not be found`.
 
-- [ ] **Step 7: Liquibase `v0.5.0-0002` — bảng đánh dấu đã nạp thư viện ban đầu**
+- [x] **Step 7: Liquibase `v0.5.0-0002` — bảng đánh dấu đã nạp thư viện ban đầu**
 
 `database/changelog/v0.5.0/scripts/0002-exercise-library-seeds.sql`:
 ```sql
@@ -4286,7 +4286,7 @@ GO
   <include file="0002-exercise-library-seeds.xml" relativeToChangelogFile="true"/>
 ```
 
-- [ ] **Step 8: Infrastructure — `ExerciseLibrarySeed`, `ExerciseLibrarySeeder`, file `exercises.seed.json` nhúng, initializer, cấu hình**
+- [x] **Step 8: Infrastructure — `ExerciseLibrarySeed`, `ExerciseLibrarySeeder`, file `exercises.seed.json` nhúng, initializer, cấu hình**
 
 `backend/src/Coaching.Infrastructure/Seeding/ExerciseLibrarySeed.cs`:
 ```csharp
@@ -4527,12 +4527,12 @@ public static class ExerciseLibrarySeeder
 ]
 ```
 
-- [ ] **Step 9: Chạy integration test nạp thư viện — kỳ vọng PASS**
+- [x] **Step 9: Chạy integration test nạp thư viện — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Api.IntegrationTests --filter "FullyQualifiedName~ExerciseLibrarySeedTests|FullyQualifiedName~ExerciseSchemaTests"`
 Expected: PASS — `ADR007_Seed_file_has_99_exercises_mapped_to_the_default_catalog`, `ADR007_Empty_library_gets_99_exercises_once_in_every_environment`, `ADR007_Seed_is_skipped_when_disabled_by_configuration`, `Changelog_v0_5_0_creates_exercise_library_tables` `Passed`, `Failed: 0`. (Lỗi `KeyNotFoundException` ở `SeedCoachAsync` = tên nhóm cơ/dụng cụ trong JSON lệch `DefaultCatalog` — sửa JSON.)
 
-- [ ] **Step 10: Acceptance — `ExerciseApi.ListAsync` + bind Rule BR-016, 018, 019**
+- [x] **Step 10: Acceptance — `ExerciseApi.ListAsync` + bind Rule BR-016, 018, 019**
 
 `backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs` — thêm `using Coaching.Application.Exercises.Queries;` và method:
 ```csharp
@@ -4652,12 +4652,12 @@ public sealed class ExerciseListSteps(ExerciseApi exercises)
 }
 ```
 
-- [ ] **Step 11: Chạy acceptance Rule BR-016, 018, 019 — kỳ vọng PASS**
+- [x] **Step 11: Chạy acceptance Rule BR-016, 018, 019 — kỳ vọng PASS**
 
 Run: `cd backend && dotnet test tests/Coaching.Acceptance --filter "(Category=BR-f03-thu-vien-bai-tap-016|Category=BR-f03-thu-vien-bai-tap-018|Category=BR-f03-thu-vien-bai-tap-019)&Category!=web&Category!=manual"`
 Expected: PASS — 5 scenario `Passed` (BR-016 ×2, BR-018 ×1 "Từ khoá không khớp bài nào", BR-019 ×2), `Failed: 0`. Thư viện mỗi scenario bắt đầu trống (`Seed:ExerciseLibrary=false`) nên "kết quả chỉ có "Dumbbell Fly"" không lẫn bài nạp sẵn.
 
-- [ ] **Step 12: Verify tổng backend — toàn bộ living doc F03 `@api` xanh**
+- [x] **Step 12: Verify tổng backend — toàn bộ living doc F03 `@api` xanh**
 
 Run: `cd backend && dotnet test Coaching.slnx --filter "Category!=web&Category!=manual"`
 Expected: Build thành công (0 warning, TreatWarningsAsErrors). MỌI test `Passed`, `Failed: 0` — gồm 56 scenario/example `@api` của `features/thu-vien/bai-tap/thu-vien-bai-tap.feature` (BR-001…021, không còn `No matching step definition found`), Domain `Coaching.Domain.Tests.Exercises.*`, integration `Coaching.Api.IntegrationTests.Exercises.*` và toàn bộ test F00/F01-P1/F02.
@@ -4665,7 +4665,7 @@ Expected: Build thành công (0 warning, TreatWarningsAsErrors). MỌI test `Pas
 Run (thử nhanh local, tuỳ chọn): `docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build --wait` rồi đăng nhập admin, `GET http://localhost:8080/api/admin/exercises` (Bearer token admin)
 Expected: 99 bài (khi DB local mới; thư viện admin trống lần khởi động đầu). Khởi động lại container API → vẫn 99.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 ```bash
 git add backend/src/Coaching.Domain/Exercises/ExerciseFilter.cs backend/src/Coaching.Domain/Exercises/IExerciseRepository.cs backend/src/Coaching.Application/Exercises/Queries/ListExercises.cs backend/src/Coaching.Application/DependencyInjection.cs backend/src/Coaching.Infrastructure/Persistence/Repositories/ExerciseRepository.cs backend/src/Coaching.Infrastructure/Seeding/ExerciseLibrarySeeder.cs backend/src/Coaching.Infrastructure/Seeding/ExerciseLibrarySeed.cs backend/src/Coaching.Infrastructure/Seeding/exercises.seed.json backend/src/Coaching.Infrastructure/Persistence/Configurations/ExerciseLibrarySeedConfiguration.cs backend/src/Coaching.Infrastructure/Coaching.Infrastructure.csproj backend/src/Coaching.Infrastructure/Seeding/DatabaseInitializer.cs backend/src/Coaching.Api/Controllers/Admin/ExercisesController.cs backend/src/Coaching.Api/appsettings.json database/changelog/v0.5.0 backend/tests/Coaching.Api.IntegrationTests/ApiFactory.cs backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseListTests.cs backend/tests/Coaching.Api.IntegrationTests/Exercises/ExerciseLibrarySeedTests.cs backend/tests/Coaching.Acceptance/Support/AcceptanceContext.cs backend/tests/Coaching.Acceptance/Support/ExerciseApi.cs backend/tests/Coaching.Acceptance/Steps/ExerciseListSteps.cs
@@ -4704,7 +4704,7 @@ Tạo luôn các helper dùng chung cho Task 7: `exercise.models.ts`, `exercises
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec cho helper (liều, YouTube, API)**
+- [x] **Step 1: Viết spec cho helper (liều, YouTube, API)**
 
 `frontend/projects/admin/src/app/exercises/dose-format.spec.ts`:
 ```ts
@@ -4860,12 +4860,12 @@ describe('ExercisesApi', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — build lỗi `Cannot find module './dose-format'`, `'./youtube'`, `'./exercises.api'`.
 
-- [ ] **Step 3: Viết models, API, helper liều và YouTube**
+- [x] **Step 3: Viết models, API, helper liều và YouTube**
 
 `frontend/projects/admin/src/app/exercises/exercise.models.ts`:
 ```ts
@@ -5087,12 +5087,12 @@ export function embedUrl(id: string): string {
 }
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS (helper)**
+- [x] **Step 4: Chạy — kỳ vọng PASS (helper)**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: PASS — `dose-format`, `youtube`, `ExercisesApi` xanh; các spec cũ của admin vẫn xanh.
 
-- [ ] **Step 5: Viết spec màn Thư viện và mục rail**
+- [x] **Step 5: Viết spec màn Thư viện và mục rail**
 
 `frontend/projects/admin/src/app/exercises/exercise-library.component.spec.ts`:
 ```ts
@@ -5407,12 +5407,12 @@ describe('ExerciseLibraryComponent', () => {
   });
 ```
 
-- [ ] **Step 6: Chạy — kỳ vọng FAIL**
+- [x] **Step 6: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './exercise-library.component'`; sau khi tạm bỏ file spec đó, `AdminShellComponent > lists the library in the rail…` fail (chỉ có 2 link).
 
-- [ ] **Step 7: Viết màn Thư viện, icon, rail, route**
+- [x] **Step 7: Viết màn Thư viện, icon, rail, route**
 
 `frontend/projects/shared/src/lib/ui/icons.ts` — thêm khoá cuối object `ICONS` (path nguyên văn rail `AdThuVien`):
 ```ts
@@ -5874,7 +5874,7 @@ export class ExerciseLibraryComponent implements OnInit {
 }
 ```
 
-- [ ] **Step 8: Chạy — kỳ vọng PASS**
+- [x] **Step 8: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS — `ExerciseLibraryComponent` 10 test, `AdminShellComponent` 3 test, `dose-format`/`youtube`/`ExercisesApi` xanh; shared/client không đổi; không test nào failed.
@@ -5889,7 +5889,7 @@ Kiểm tay (compose chạy Task 1–5 → thư viện coach có sẵn 99 bài n�
 - Gõ "ep nguc"/"incline" + Enter → lọc từ server; chọn "Ngực" + "Dumbbell" → chỉ bài khớp cả hai, dòng tóm tắt thêm "Đang hiện {k} bài."; "Ẩn bài" → bài biến khỏi danh sách, aside giữ bài với nhãn "Đã ẩn" + nút "Bỏ ẩn"; chip "Đã ẩn" thấy bài đó; "Xoá bài" → hộp xác nhận, xoá xong chọn bài đầu.
 - Tab qua chip/nút: viền focus 2px `--primary` offset 2px.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 ```bash
 git add frontend/projects/admin/src/app/exercises frontend/projects/admin/src/app/shell frontend/projects/admin/src/app/app.routes.ts frontend/projects/shared/src/lib/ui/icons.ts
 git commit -F - <<'EOF'
@@ -5920,7 +5920,7 @@ Lưu xong (tạo/sửa/bỏ ẩn bài trùng) → `/thu-vien/bai-tap?bai=<id>` (
 
 **Owns:** —
 
-- [ ] **Step 1: Viết spec form**
+- [x] **Step 1: Viết spec form**
 
 `frontend/projects/admin/src/app/exercises/exercise-form.component.spec.ts`:
 ```ts
@@ -6220,12 +6220,12 @@ describe('ExerciseFormComponent', () => {
 });
 ```
 
-- [ ] **Step 2: Chạy — kỳ vọng FAIL**
+- [x] **Step 2: Chạy — kỳ vọng FAIL**
 
 Run: `cd frontend && npx ng test admin --watch=false`
 Expected: FAIL — `Cannot find module './exercise-form.component'`.
 
-- [ ] **Step 3: Viết form + route**
+- [x] **Step 3: Viết form + route**
 
 `frontend/projects/admin/src/app/exercises/exercise-form.component.ts`:
 ```ts
@@ -6722,7 +6722,7 @@ textarea.ctl { padding: 12px 14px; line-height: 1.5; resize: vertical; }
       },
 ```
 
-- [ ] **Step 4: Chạy — kỳ vọng PASS**
+- [x] **Step 4: Chạy — kỳ vọng PASS**
 
 Run: `cd frontend && npm run test:ci`
 Expected: PASS — `ExerciseFormComponent` 10 test; các spec Task 6 và spec cũ vẫn xanh; không test nào failed.
@@ -6738,7 +6738,7 @@ Kiểm tay (compose chạy Task 1–6): `docker compose -f deploy/docker-compose
 - Lưu thành công → `/thu-vien/bai-tap?bai=<id>`, aside hiện bài vừa lưu với liều "10–12", "90s"; "Huỷ" ở trang sửa quay về đúng bài đó.
 - Tab qua ô/nút: viền focus 2px `--primary`; placeholder màu `--faint`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add frontend/projects/admin/src/app/exercises frontend/projects/admin/src/app/app.routes.ts
 git commit -F - <<'EOF'
@@ -6770,7 +6770,7 @@ Cập nhật `CLAUDE.md`: bảng page key `AdThuVien` → route thật `/thu-vie
 
 **Owns:** —
 
-- [ ] **Step 1: Chạy e2e thư viện — kỳ vọng FAIL (undefined)**
+- [x] **Step 1: Chạy e2e thư viện — kỳ vọng FAIL (undefined)**
 
 Run (compose chạy Task 1–7; `deploy/.env` có `AUTH_PERMIT_PER_MINUTE=1000`):
 ```bash
@@ -6779,7 +6779,7 @@ cd frontend && npm run e2e -- ../features/thu-vien/bai-tap/thu-vien-bai-tap.feat
 ```
 Expected: FAIL — `3 scenarios (3 undefined)`; Background `coach "Coach Duobexiuuu" đã đăng nhập` đã bind, các step `thư viện có bài …`, `coach thêm bài …`, `coach tìm bài với từ khoá …` báo `Undefined`.
 
-- [ ] **Step 2: Viết step definitions**
+- [x] **Step 2: Viết step definitions**
 
 `frontend/e2e/support/world.ts` — thêm field trong `E2EWorld`, sau `importResult`:
 ```ts
@@ -6901,7 +6901,7 @@ và câu route ngay dưới bảng:
 +Route web admin dùng tiếng Việt (ADR-f02-ho-so-hoc-vien-008): đã có `/dashboard` (trang đích), `/hoc-vien/moi`, `/hoc-vien/:id`, `/hoc-vien/:id/sua`, `/thu-vien/bai-tap` (`?bai=<id>` chọn sẵn bài), `/thu-vien/bai-tap/moi`, `/thu-vien/bai-tap/:id/sua`. Route của màn chưa làm trong bảng vẫn là gợi ý — khi làm, đặt tiếng Việt dưới tiền tố `/hoc-vien/:id/…` (màn theo học viên) hoặc `/thu-vien/…` (thư viện dùng chung).
 ```
 
-- [ ] **Step 3: Chạy — kỳ vọng PASS**
+- [x] **Step 3: Chạy — kỳ vọng PASS**
 
 Run:
 ```bash
@@ -6924,7 +6924,7 @@ Expected: PASS (Task 8 không đổi backend; 2 scenario `@web` bị lọc khỏ
 
 Kiểm tay lần cuối (manual verification của tech-design §6): so màn Thư viện và Thêm/Sửa bài với prototype ở **390px** và **1280px** (`AdThuVien`, kiểu form `AdTaoHoSo`) theo checklist Step 8 Task 6 và Step 4 Task 7; rail active đúng mục ở cả 3 route thư viện. Đo p95 (NFR-f03-thu-vien-bai-tap-001): thêm bài qua API cho đủ 500 bài trong thư viện coach của compose, gọi `GET /api/admin/exercises` (không lọc, có `q`, có `muscleGroupId`) mỗi kiểu 50 lần bằng `curl -w '%{time_total}'`; p95 phải < 0,5 s.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 ```bash
 git add frontend/e2e/steps/exercise-library.steps.ts frontend/e2e/support/world.ts CLAUDE.md
 git commit -F - <<'EOF'
