@@ -1,5 +1,5 @@
 ---
-state: Draft
+state: Archived
 type: change
 date: 2026-11-26
 feature: hoc-vien/ho-so/ho-so-hoc-vien.feature
@@ -19,3 +19,6 @@ source: to-spec
 ## Attribution
 - **Commit:** f98c00e — docs(bdd): F02 hồ sơ học viên living doc (25 rules)   **Author:** Hoangduc1203BK · **When:** 2026-11-25
 - **Why:** PO chuẩn hoá form theo file Excel/Google Form để import (2026-11-26).
+
+## Living doc reference
+- `features/hoc-vien/ho-so/ho-so-hoc-vien.feature:136:145` — Rule @BR-f02-ho-so-hoc-vien-011
