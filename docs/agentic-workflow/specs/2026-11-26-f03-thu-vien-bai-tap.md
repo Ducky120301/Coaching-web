@@ -1,6 +1,6 @@
 ---
 doc-id: 2026-11-26-f03-thu-vien-bai-tap
-status: ready
+status: completed
 ---
 
 # Spec: F03 — Thư viện bài tập
